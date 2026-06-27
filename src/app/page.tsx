@@ -1,33 +1,29 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Heart, Shield, MessageCircle, Sparkles } from "lucide-react";
+import { Heart, Shield, MessageCircle, Sparkles, Search, AlertTriangle, Users } from "lucide-react";
 import Image from "next/image";
-import PixelCatDecoration from "@/components/ui/PixelCatDecoration";
 
 export default function HomePage() {
   return (
     <div className="flex flex-col">
       {/* Hero Section */}
       <section className="relative overflow-hidden">
-        {/* Decorative blobs */}
         <div className="absolute top-20 left-10 w-64 h-64 bg-sunny/10 rounded-full blur-3xl" />
         <div className="absolute bottom-10 right-10 w-80 h-80 bg-heart/5 rounded-full blur-3xl" />
 
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24 relative">
           <div className="text-center max-w-3xl mx-auto">
-            {/* Logo */}
-            <div className="flex justify-center mb-6 relative">
-              <div className="bg-sunny/20 rounded-3xl p-3 shadow-lg shadow-sunny/10">
-                <Image
-                  src="/favicon.ico"
-                  alt="ForeverHome AI"
-                  width={72}
-                  height={72}
-                  className="rounded-2xl"
-                />
-              </div>
-              <PixelCatDecoration />
+            {/* Logo - no container, bigger */}
+            <div className="flex justify-center mb-6">
+              <Image
+                src="/cat.png"
+                alt="ForeverHome AI"
+                width={96}
+                height={96}
+                className="w-24 h-24 object-contain"
+                priority
+              />
             </div>
 
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-cat-dark tracking-tight">
@@ -38,14 +34,14 @@ export default function HomePage() {
               </span>
             </h1>
             <p className="mt-5 text-lg sm:text-xl text-charcoal/60 max-w-2xl mx-auto leading-relaxed">
-              We help shelters find the perfect match the first time — and support
+              We help shelters find the perfect match the first time &mdash; and support
               adopters through the critical first 14 days so cats stay home for good.
             </p>
             <div className="mt-8 flex flex-col sm:flex-row gap-3 justify-center">
               <Link href="/dashboard">
                 <Button
                   size="lg"
-                  className="bg-sunny hover:bg-sunny/90 text-cat-dark text-base px-8 py-6 rounded-2xl shadow-lg shadow-sunny/20 font-semibold"
+                  className="bg-sunny hover:bg-sunny/90 text-cat-dark text-base px-8 py-6 rounded-2xl shadow-lg shadow-sunny/20 font-semibold cursor-pointer"
                 >
                   <Sparkles className="h-5 w-5 mr-2" />
                   Shelter Dashboard
@@ -55,7 +51,7 @@ export default function HomePage() {
                 <Button
                   size="lg"
                   variant="outline"
-                  className="text-base px-8 py-6 rounded-2xl border-2 border-sunny/30 text-cat-dark hover:bg-sunny-light font-semibold"
+                  className="text-base px-8 py-6 rounded-2xl border-2 border-sunny/30 text-cat-dark hover:bg-sunny-light font-semibold cursor-pointer"
                 >
                   <Heart className="h-5 w-5 mr-2 text-heart" />
                   Try the Demo
@@ -83,7 +79,7 @@ export default function HomePage() {
                 icon: Shield,
                 color: "bg-sunny/15 text-sunny",
                 title: "Smart Matching",
-                desc: "Our rules engine compares each cat's personality with an adopter's lifestyle — no black boxes, just transparent, caring guidance.",
+                desc: "Our rules engine compares each cat\u2019s personality with an adopter\u2019s lifestyle \u2014 no black boxes, just transparent, caring guidance.",
               },
               {
                 icon: Heart,
@@ -95,7 +91,7 @@ export default function HomePage() {
                 icon: MessageCircle,
                 color: "bg-sunny/15 text-sunny",
                 title: "Progress Tracking",
-                desc: "Daily check-ins build a visual timeline showing how each cat is adjusting — giving shelters visibility without the phone calls.",
+                desc: "Daily check-ins build a visual timeline showing how each cat is adjusting \u2014 giving shelters visibility without the phone calls.",
               },
             ].map((item, i) => (
               <Card
@@ -131,22 +127,22 @@ export default function HomePage() {
           <div className="grid sm:grid-cols-2 gap-5 max-w-3xl mx-auto">
             {[
               {
-                emoji: "🔍",
+                icon: Search,
                 title: "Transparent rules",
                 desc: "Every assessment shows exactly which rules were triggered and why.",
               },
               {
-                emoji: "",
+                icon: AlertTriangle,
                 title: "Safety first",
                 desc: "Medical concerns are immediately escalated. AI never provides veterinary advice.",
               },
               {
-                emoji: "💛",
+                icon: Heart,
                 title: "Compassionate language",
-                desc: "High risk doesn't mean a bad adopter. Results are explained without judgment.",
+                desc: "High risk doesn\u2019t mean a bad adopter. Results are explained without judgment.",
               },
               {
-                emoji: "🤝",
+                icon: Users,
                 title: "Human decisions",
                 desc: "Shelter staff always make the final call. ForeverHome is a support tool, not a replacement.",
               },
@@ -155,7 +151,9 @@ export default function HomePage() {
                 key={i}
                 className="flex items-start gap-3 p-4 bg-warm-cream rounded-2xl border border-sunny/15"
               >
-                <span className="text-2xl mt-0.5">{item.emoji}</span>
+                <div className="p-2 bg-sunny/10 rounded-xl shrink-0">
+                  <item.icon className="h-5 w-5 text-sunny" />
+                </div>
                 <div>
                   <p className="font-semibold text-cat-dark text-sm">{item.title}</p>
                   <p className="text-xs text-charcoal/60 mt-0.5">{item.desc}</p>
@@ -168,11 +166,6 @@ export default function HomePage() {
 
       {/* CTA */}
       <section className="bg-sunny py-16 relative overflow-hidden">
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-5 left-10 text-6xl"></div>
-          <div className="absolute bottom-5 right-20 text-5xl">🐾</div>
-          <div className="absolute top-10 right-10 text-4xl">🐾</div>
-        </div>
         <div className="max-w-3xl mx-auto px-4 text-center relative">
           <h2 className="text-3xl font-extrabold text-cat-dark mb-3">
             See it in action
@@ -184,7 +177,7 @@ export default function HomePage() {
           <Link href="/cats">
             <Button
               size="lg"
-              className="bg-cat-dark hover:bg-cat-dark/90 text-sunny text-lg px-10 py-6 rounded-2xl shadow-lg font-semibold"
+              className="bg-cat-dark hover:bg-cat-dark/90 text-sunny text-lg px-10 py-6 rounded-2xl shadow-lg font-semibold cursor-pointer"
             >
               Start the Demo
             </Button>

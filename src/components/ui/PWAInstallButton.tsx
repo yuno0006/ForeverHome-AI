@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -53,7 +53,7 @@ export default function PWAInstallButton() {
         </button>
         <div className="flex items-start gap-3">
           <div className="p-2 bg-sunny/15 rounded-xl shrink-0">
-            <Image src="/favicon.ico" alt="" width={28} height={28} className="rounded-lg" />
+            <Image src="/cat.png" alt="" width={28} height={28} className="rounded-lg" />
           </div>
           <div className="flex-1">
             <p className="font-bold text-cat-dark text-sm">Install ForeverHome</p>
