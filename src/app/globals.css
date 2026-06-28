@@ -39,61 +39,73 @@
   --color-risk-high: var(--risk-high);
   --color-charcoal: var(--charcoal);
   --color-surface: var(--card);
-  --color-surface-hover: #FFF5EB;
+  --color-surface-hover: #FFF1E6;
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
   --radius-2xl: calc(var(--radius) + 8px);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-nunito);
+  --font-mono: var(--font-nunito);
 }
 
 :root {
-  --radius: 1rem;
-  --background: #FFF8F0;
-  --foreground: #2D3436;
+  --radius: 1.25rem;
+  --background: #FFF9F4;
+  --foreground: #3D3530;
   --card: #FFFFFF;
-  --card-foreground: #2D3436;
+  --card-foreground: #3D3530;
   --popover: #FFFFFF;
-  --popover-foreground: #2D3436;
-  --primary: #1B4332;
+  --popover-foreground: #3D3530;
+  --primary: #E8814A;
   --primary-foreground: #FFFFFF;
-  --secondary: #F0FDF4;
-  --secondary-foreground: #1B4332;
-  --muted: #F5F5F4;
-  --muted-foreground: #78716C;
-  --accent: #E07A5F;
+  --secondary: #FFF1E6;
+  --secondary-foreground: #B5552A;
+  --muted: #F5EFE8;
+  --muted-foreground: #8A7E72;
+  --accent: #6B9080;
   --accent-foreground: #FFFFFF;
-  --destructive: #E63946;
+  --destructive: #D9614C;
   --destructive-foreground: #FFFFFF;
-  --border: #E7E5E4;
-  --input: #E7E5E4;
-  --ring: #1B4332;
-  --warm-cream: #FFF8F0;
-  --sunny: #1B4332;
-  --sunny-light: #F0FDF4;
-  --heart: #E07A5F;
-  --heart-light: #FEF2F0;
-  --cat-dark: #2D3436;
-  --risk-low: #40916C;
-  --risk-moderate: #E9C46A;
-  --risk-high: #E63946;
-  --charcoal: #2D3436;
+  --border: #F0E6DB;
+  --input: #F0E6DB;
+  --ring: #E8814A;
+  --warm-cream: #FFF9F4;
+  --sunny: #E8814A;
+  --sunny-light: #FFF1E6;
+  --heart: #E8814A;
+  --heart-light: #FFF1E6;
+  --cat-dark: #3D3530;
+  --risk-low: #6B9080;
+  --risk-moderate: #E9B949;
+  --risk-high: #D9614C;
+  --charcoal: #3D3530;
   --sidebar-background: #FFFFFF;
-  --sidebar-foreground: #2D3436;
-  --sidebar-primary: #1B4332;
+  --sidebar-foreground: #3D3530;
+  --sidebar-primary: #E8814A;
   --sidebar-primary-foreground: #FFFFFF;
-  --sidebar-accent: #F0FDF4;
-  --sidebar-accent-foreground: #1B4332;
-  --sidebar-border: #E7E5E4;
-  --sidebar-ring: #1B4332;
+  --sidebar-accent: #FFF1E6;
+  --sidebar-accent-foreground: #B5552A;
+  --sidebar-border: #F0E6DB;
+  --sidebar-ring: #E8814A;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans), "Segoe UI", Arial, Helvetica, sans-serif;
+  /* Subtle warm paw-print motif scattered across the page background */
+  background-image:
+    radial-gradient(circle at 12% 18%, rgba(232, 129, 74, 0.05) 0px, transparent 220px),
+    radial-gradient(circle at 88% 72%, rgba(107, 144, 128, 0.05) 0px, transparent 240px);
+  background-attachment: fixed;
+}
+
+/* Reusable soft paw-print decoration helper.
+   Apply .paw-pattern to a positioned element to overlay a faint tiled paw motif. */
+.paw-pattern {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='90' height='90' viewBox='0 0 90 90'%3E%3Cg fill='%23E8814A' fill-opacity='0.06'%3E%3Cellipse cx='45' cy='52' rx='12' ry='10'/%3E%3Cellipse cx='30' cy='34' rx='5' ry='7'/%3E%3Cellipse cx='45' cy='28' rx='5' ry='7'/%3E%3Cellipse cx='60' cy='34' rx='5' ry='7'/%3E%3C/g%3E%3C/svg%3E");
+  background-repeat: repeat;
 }
 
 /* Cute scrollbar */
@@ -108,5 +120,5 @@ body {
   border-radius: 999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #2D6A4F;
+  background: #D9614C;
 }
