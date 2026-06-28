@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { ArrowLeft, Loader2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,8 +15,15 @@ import {
   SelectContent,
   SelectItem,
 } from "@/components/ui/select";
+import { toast } from "sonner";
+import { useAuth } from "@/hooks/useAuth";
+import { createCat, uploadCatPhoto } from "@/lib/catService";
 
 export default function AddNewCatPage() {
+  const router = useRouter();
+  const { user, userDoc } = useAuth();
+  const [saving, setSaving] = useState(false);
+
   const [form, setForm] = useState({
     name: "",
     age: "",
@@ -42,8 +50,6 @@ export default function AddNewCatPage() {
     status: "available",
   });
 
-  const [submitted, setSubmitted] = useState(false);
-
   const handleChange = (field: string, value: string | boolean | null) => {
     setForm((prev) => ({ ...prev, [field]: value }));
   };
@@ -59,11 +65,63 @@ export default function AddNewCatPage() {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSubmitted(true);
-    // No Firestore yet - just show success
-    setTimeout(() => setSubmitted(false), 3000);
+    setSaving(true);
+
+    const shelterId = userDoc?.shelterId || "demo-shelter";
+    const createdBy = user?.uid || "demo-user";
+
+    try {
+      // Create the cat document first
+      const catId = await createCat({
+        name: form.name,
+        age: Number(form.age),
+        sex: form.sex as "male" | "female",
+        lifeStage: form.lifeStage as "kitten" | "young" | "adult" | "senior",
+        neutered: form.neutered,
+        photo: "",
+        shelterId,
+        createdBy,
+        status: form.status as "available" | "adopted" | "pending" | "archived",
+        behavior: {
+          energy: form.energy,
+          sociability: form.sociability,
+          stressSensitivity: form.stressSensitivity,
+          handlingTolerance: form.handlingTolerance,
+          playNeeds: form.playNeeds,
+          comfortableWithChildren: form.comfortableWithChildren,
+          comfortableWithCats: form.comfortableWithCats,
+          comfortableWithDogs: form.comfortableWithDogs,
+          noiseTolerance: form.noiseTolerance,
+          needsVerticalSpace: form.needsVerticalSpace,
+          indoorOnlyRequired: form.indoorOnlyRequired,
+        },
+        care: {
+          knownMedicalNeeds: form.knownMedicalNeeds,
+          medicationNeeds: form.medicationNeeds,
+          fivStatus: form.fivStatus,
+          specialNotes: form.specialNotes,
+        },
+      });
+
+      // Upload photo if selected
+      if (form.photo) {
+        try {
+          await uploadCatPhoto(shelterId, catId, form.photo);
+        } catch (uploadError) {
+          console.error("Photo upload failed:", uploadError);
+          // Continue without photo - already set to empty string
+        }
+      }
+
+      toast.success("Cat profile created!");
+      router.push("/shelter/cats");
+    } catch (error) {
+      console.error("Failed to create cat:", error);
+      toast.error("Failed to save. Please try again.");
+      setSaving(false);
+    }
   };
 
   return (
@@ -77,12 +135,6 @@ export default function AddNewCatPage() {
         </Link>
         <h1 className="text-2xl font-bold text-cat-dark">Add New Cat</h1>
       </div>
-
-      {submitted && (
-        <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-2xl text-sm">
-          Cat profile saved successfully!
-        </div>
-      )}
 
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Basic Info */}
@@ -434,9 +486,17 @@ export default function AddNewCatPage() {
           </Link>
           <Button
             type="submit"
+            disabled={saving}
             className="cursor-pointer bg-sunny hover:bg-sunny/80 text-cat-dark"
           >
-            Save Cat Profile
+            {saving ? (
+              <>
+                <Loader2 className="size-4 mr-1 animate-spin" />
+                Saving...
+              </>
+            ) : (
+              "Save Cat Profile"
+            )}
           </Button>
         </div>
       </form>
