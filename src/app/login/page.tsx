@@ -10,11 +10,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { UserDocument } from "@/types/user";
 
 function LoginPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { login, loginWithGoogle, role } = useAuth();
+  const { login, loginWithGoogle } = useAuth();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -24,10 +25,22 @@ function LoginPageContent() {
 
   const redirectTo = searchParams.get("redirect");
 
-  function getRedirectPath(userRole: string | null): string {
-    if (redirectTo) return redirectTo;
-    if (userRole === "shelter_staff") return "/shelter/dashboard";
-    return "/dashboard";
+  function redirectFromDoc(doc: UserDocument | null) {
+    // Incomplete or missing profile -> always onboard.
+    if (!doc || !doc.onboardingComplete) {
+      router.replace("/onboarding");
+      return;
+    }
+    // Onboarding complete: honor explicit redirect target if present.
+    if (redirectTo) {
+      router.replace(redirectTo);
+      return;
+    }
+    if (doc.role === "shelter_staff") {
+      router.replace("/shelter/dashboard");
+      return;
+    }
+    router.replace("/dashboard");
   }
 
   async function handleSubmit(e: FormEvent) {
@@ -36,10 +49,8 @@ function LoginPageContent() {
     setLoading(true);
 
     try {
-      await login(email, password);
-      setTimeout(() => {
-        router.push(getRedirectPath(role));
-      }, 100);
+      const doc = await login(email, password);
+      redirectFromDoc(doc);
     } catch (err: unknown) {
       const message =
         err instanceof Error ? err.message : "Login failed. Please try again.";
@@ -53,10 +64,8 @@ function LoginPageContent() {
     setGoogleLoading(true);
 
     try {
-      await loginWithGoogle();
-      setTimeout(() => {
-        router.push(getRedirectPath(role));
-      }, 100);
+      const doc = await loginWithGoogle();
+      redirectFromDoc(doc);
     } catch (err: unknown) {
       const message =
         err instanceof Error

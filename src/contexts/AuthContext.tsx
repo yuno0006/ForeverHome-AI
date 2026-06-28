@@ -23,14 +23,15 @@ export interface AuthContextValue {
   userDoc: UserDocument | null;
   role: UserRole | null;
   loading: boolean;
-  login: (email: string, password: string) => Promise<void>;
-  loginWithGoogle: () => Promise<void>;
+  login: (email: string, password: string) => Promise<UserDocument | null>;
+  loginWithGoogle: () => Promise<UserDocument | null>;
   register: (
     email: string,
     password: string,
     role: UserRole,
     displayName: string
-  ) => Promise<void>;
+  ) => Promise<UserDocument | null>;
+  refreshUserDoc: () => Promise<UserDocument | null>;
   logout: () => Promise<void>;
 }
 
@@ -68,24 +69,23 @@ export function AuthProvider({ children }: AuthProviderProps) {
     return () => unsubscribe();
   }, []);
 
-  const login = useCallback(async (email: string, password: string) => {
-    try {
+  const login = useCallback(
+    async (email: string, password: string): Promise<UserDocument | null> => {
       const credential = await loginWithEmail(email, password);
       const doc = await fetchUserDocument(credential.user.uid);
+      setUser(credential.user);
       setUserDoc(doc);
-    } catch (error) {
-      throw error;
-    }
-  }, []);
+      return doc;
+    },
+    []
+  );
 
-  const loginWithGoogle = useCallback(async () => {
-    try {
-      const credential = await loginWithGoogleFn();
-      const doc = await fetchUserDocument(credential.user.uid);
-      setUserDoc(doc);
-    } catch (error) {
-      throw error;
-    }
+  const loginWithGoogle = useCallback(async (): Promise<UserDocument | null> => {
+    const credential = await loginWithGoogleFn();
+    const doc = await fetchUserDocument(credential.user.uid);
+    setUser(credential.user);
+    setUserDoc(doc);
+    return doc;
   }, []);
 
   const register = useCallback(
@@ -94,31 +94,36 @@ export function AuthProvider({ children }: AuthProviderProps) {
       password: string,
       role: UserRole,
       displayName: string
-    ) => {
-      try {
-        const credential = await registerWithEmail(
-          email,
-          password,
-          role,
-          displayName
-        );
-        const doc = await fetchUserDocument(credential.user.uid);
-        setUserDoc(doc);
-      } catch (error) {
-        throw error;
-      }
+    ): Promise<UserDocument | null> => {
+      const credential = await registerWithEmail(
+        email,
+        password,
+        role,
+        displayName
+      );
+      const doc = await fetchUserDocument(credential.user.uid);
+      setUser(credential.user);
+      setUserDoc(doc);
+      return doc;
     },
     []
   );
 
-  const logout = useCallback(async () => {
-    try {
-      await logoutUser();
-      setUser(null);
+  const refreshUserDoc = useCallback(async (): Promise<UserDocument | null> => {
+    const currentUser = auth.currentUser;
+    if (!currentUser) {
       setUserDoc(null);
-    } catch (error) {
-      throw error;
+      return null;
     }
+    const doc = await fetchUserDocument(currentUser.uid);
+    setUserDoc(doc);
+    return doc;
+  }, []);
+
+  const logout = useCallback(async () => {
+    await logoutUser();
+    setUser(null);
+    setUserDoc(null);
   }, []);
 
   const role: UserRole | null = userDoc?.role ?? null;
@@ -133,6 +138,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         login,
         loginWithGoogle,
         register,
+        refreshUserDoc,
         logout,
       }}
     >

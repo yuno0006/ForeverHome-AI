@@ -11,9 +11,12 @@ interface AuthGuardProps {
 }
 
 export function AuthGuard({ children, requiredRole }: AuthGuardProps) {
-  const { user, role, loading } = useAuth();
+  const { user, userDoc, role, loading } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
+
+  const onboardingIncomplete = !!user && userDoc?.onboardingComplete === false;
+  const onOnboarding = pathname === "/onboarding";
 
   useEffect(() => {
     if (loading) return;
@@ -24,12 +27,27 @@ export function AuthGuard({ children, requiredRole }: AuthGuardProps) {
       return;
     }
 
+    // Authenticated but onboarding not finished - send to onboarding
+    if (onboardingIncomplete && !onOnboarding) {
+      router.replace("/onboarding");
+      return;
+    }
+
     // Role mismatch - redirect to home
     if (requiredRole && role !== requiredRole) {
       router.replace("/");
       return;
     }
-  }, [user, role, loading, requiredRole, router, pathname]);
+  }, [
+    user,
+    role,
+    loading,
+    requiredRole,
+    router,
+    pathname,
+    onboardingIncomplete,
+    onOnboarding,
+  ]);
 
   // Show loading spinner while auth resolves
   if (loading) {
@@ -42,6 +60,7 @@ export function AuthGuard({ children, requiredRole }: AuthGuardProps) {
 
   // Do not render children until auth check passes
   if (!user) return null;
+  if (onboardingIncomplete && !onOnboarding) return null;
   if (requiredRole && role !== requiredRole) return null;
 
   return <>{children}</>;

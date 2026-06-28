@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState, FormEvent } from "react";
 import { useRouter } from "next/navigation";
@@ -77,11 +77,8 @@ export default function RegisterPage() {
 
     try {
       await register(email, password, selectedRole!, displayName.trim());
-      if (selectedRole === "shelter_staff") {
-        router.push("/shelter/dashboard");
-      } else {
-        router.push("/dashboard");
-      }
+      // New users always go through onboarding.
+      router.replace("/onboarding");
     } catch (err: unknown) {
       const message =
         err instanceof Error
@@ -98,7 +95,9 @@ export default function RegisterPage() {
 
     try {
       await loginWithGoogle();
-      router.push("/dashboard");
+      // New / unverified Google users always onboard; AuthGuard and the
+      // onboarding page redirect them onward if already complete.
+      router.replace("/onboarding");
     } catch (err: unknown) {
       const message =
         err instanceof Error

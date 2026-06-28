@@ -56,7 +56,10 @@ export async function loginWithEmail(email: string, password: string) {
 
 /**
  * Sign in with Google popup.
- * If no Firestore user doc exists, one will be created with "adopter" role.
+ * If no Firestore user doc exists, a placeholder doc is created with
+ * onboardingComplete: false so the onboarding flow can let the user pick
+ * their real role. The "adopter" role here is only a temporary default and
+ * is overwritten once the user completes onboarding.
  */
 export async function loginWithGoogle() {
   const provider = new GoogleAuthProvider();
@@ -70,6 +73,7 @@ export async function loginWithGoogle() {
       uid: user.uid,
       email: user.email!,
       displayName: user.displayName || "User",
+      // Temporary default. Onboarding lets the user choose their real role.
       role: "adopter",
       photoURL: user.photoURL || null,
       onboardingComplete: false,
@@ -127,4 +131,12 @@ export async function updateUserDocument(
 ) {
   const docRef = doc(db, "users", uid);
   await updateDoc(docRef, data);
+}
+
+/**
+ * Update only the role field of a user document.
+ */
+export async function updateUserRole(uid: string, role: UserRole) {
+  const docRef = doc(db, "users", uid);
+  await updateDoc(docRef, { role });
 }
