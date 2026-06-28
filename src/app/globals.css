@@ -38,6 +38,8 @@
   --color-risk-moderate: var(--risk-moderate);
   --color-risk-high: var(--risk-high);
   --color-charcoal: var(--charcoal);
+  --color-surface: var(--card);
+  --color-surface-hover: #FFF5EB;
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -49,43 +51,43 @@
 
 :root {
   --radius: 1rem;
-  --background: #FFF9E6;
-  --foreground: #1A1A1A;
+  --background: #FFF8F0;
+  --foreground: #2D3436;
   --card: #FFFFFF;
-  --card-foreground: #1A1A1A;
+  --card-foreground: #2D3436;
   --popover: #FFFFFF;
-  --popover-foreground: #1A1A1A;
-  --primary: #FFC107;
-  --primary-foreground: #1A1A1A;
-  --secondary: #FFF3CD;
-  --secondary-foreground: #1A1A1A;
-  --muted: #FFF3CD;
-  --muted-foreground: #6B5E4A;
-  --accent: #E53935;
+  --popover-foreground: #2D3436;
+  --primary: #1B4332;
+  --primary-foreground: #FFFFFF;
+  --secondary: #F0FDF4;
+  --secondary-foreground: #1B4332;
+  --muted: #F5F5F4;
+  --muted-foreground: #78716C;
+  --accent: #E07A5F;
   --accent-foreground: #FFFFFF;
-  --destructive: #E53935;
+  --destructive: #E63946;
   --destructive-foreground: #FFFFFF;
-  --border: #FFE082;
-  --input: #FFE082;
-  --ring: #FFC107;
-  --warm-cream: #FFF9E6;
-  --sunny: #FFC107;
-  --sunny-light: #FFF3CD;
-  --heart: #E53935;
-  --heart-light: #FFEBEE;
-  --cat-dark: #1A1A1A;
-  --risk-low: #66BB6A;
-  --risk-moderate: #FFA726;
-  --risk-high: #EF5350;
-  --charcoal: #1A1A1A;
-  --sidebar-background: #FFF9E6;
-  --sidebar-foreground: #1A1A1A;
-  --sidebar-primary: #FFC107;
-  --sidebar-primary-foreground: #1A1A1A;
-  --sidebar-accent: #FFF3CD;
-  --sidebar-accent-foreground: #1A1A1A;
-  --sidebar-border: #FFE082;
-  --sidebar-ring: #FFC107;
+  --border: #E7E5E4;
+  --input: #E7E5E4;
+  --ring: #1B4332;
+  --warm-cream: #FFF8F0;
+  --sunny: #1B4332;
+  --sunny-light: #F0FDF4;
+  --heart: #E07A5F;
+  --heart-light: #FEF2F0;
+  --cat-dark: #2D3436;
+  --risk-low: #40916C;
+  --risk-moderate: #E9C46A;
+  --risk-high: #E63946;
+  --charcoal: #2D3436;
+  --sidebar-background: #FFFFFF;
+  --sidebar-foreground: #2D3436;
+  --sidebar-primary: #1B4332;
+  --sidebar-primary-foreground: #FFFFFF;
+  --sidebar-accent: #F0FDF4;
+  --sidebar-accent-foreground: #1B4332;
+  --sidebar-border: #E7E5E4;
+  --sidebar-ring: #1B4332;
 }
 
 body {
@@ -102,9 +104,9 @@ body {
   background: var(--warm-cream);
 }
 ::-webkit-scrollbar-thumb {
-  background: var(--sunny);
+  background: var(--primary);
   border-radius: 999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #FFB300;
+  background: #2D6A4F;
 }
