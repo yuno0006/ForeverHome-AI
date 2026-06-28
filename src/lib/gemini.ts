@@ -1,8 +1,20 @@
 // Gemini AI integration for Adoption Counselor and 14-Day Coach
-// Falls back to deterministic responses when API key is not configured
+// Cascades through 5 model tiers — if one hits rate limit or server error, tries the next
+// Falls back to deterministic responses when API key is not configured or all models exhausted
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
-const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+
+const MODEL_TIERS = [
+  "gemini-2.5-flash",
+  "gemini-3.5-flash",
+  "gemini-3-flash",
+  "gemini-3.1-flash-lite",
+  "gemini-2.5-flash-lite",
+];
+
+function getModelUrl(model: string): string {
+  return `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${GEMINI_API_KEY}`;
+}
 
 interface GeminiResponse {
   candidates?: {
@@ -15,25 +27,57 @@ interface GeminiResponse {
 async function callGemini(prompt: string): Promise<string | null> {
   if (!GEMINI_API_KEY) return null;
 
-  try {
-    const res = await fetch(GEMINI_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: {
-          temperature: 0.7,
-          maxOutputTokens: 500,
-        },
-      }),
-    });
+  for (const model of MODEL_TIERS) {
+    try {
+      const res = await fetch(getModelUrl(model), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: {
+            temperature: 0.7,
+            maxOutputTokens: 500,
+          },
+        }),
+      });
 
-    if (!res.ok) return null;
-    const data: GeminiResponse = await res.json();
-    return data.candidates?.[0]?.content?.parts?.[0]?.text ?? null;
-  } catch {
-    return null;
+      if (res.ok) {
+        const data: GeminiResponse = await res.json();
+        const text = data.candidates?.[0]?.content?.parts?.[0]?.text ?? null;
+        if (text) {
+          console.log(`[Gemini] Success with model: ${model}`);
+          return text;
+        }
+        // No text in response, try next model
+        console.log(`[Gemini] Empty response from ${model}, trying next`);
+        continue;
+      }
+
+      // 400 or 403 — bad request or forbidden, no point retrying other models
+      if (res.status === 400 || res.status === 403) {
+        console.log(`[Gemini] ${res.status} from ${model} — not retryable, aborting`);
+        return null;
+      }
+
+      // 429 (rate limit) or 5xx (server error) — try next model
+      if (res.status === 429 || res.status >= 500) {
+        console.log(`[Gemini] ${res.status} from ${model}, trying next model`);
+        continue;
+      }
+
+      // Other error codes — try next model
+      console.log(`[Gemini] Unexpected ${res.status} from ${model}, trying next model`);
+      continue;
+    } catch (error) {
+      // Network error — try next model
+      console.log(`[Gemini] Network error with ${model}, trying next model`);
+      continue;
+    }
   }
+
+  // All models exhausted
+  console.log("[Gemini] All model tiers exhausted, returning null");
+  return null;
 }
 
 // ─── Adoption Counselor ────────────────────────────────
