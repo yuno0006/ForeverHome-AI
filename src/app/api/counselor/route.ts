@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { generateCounselorExplanation } from "@/lib/gemini";
 import { getFallbackExplanation } from "@/lib/fallbackExplanations";
+import { logAIInteractionAsync } from "@/lib/aiLoggingService";
 
 export async function POST(req: NextRequest) {
   try {
@@ -19,6 +20,15 @@ export async function POST(req: NextRequest) {
 
     const source = explanation ? "gemini" : "fallback";
     const finalExplanation = explanation || getFallbackExplanation(compatibilityResult);
+
+    // Log AI interaction (fire-and-forget, never blocks response)
+    logAIInteractionAsync({
+      uid: adopter?.id || "guest",
+      catId: cat?.id || "unknown",
+      question: JSON.stringify({ compatibilityLevel: compatibilityResult?.level, cat: cat?.name }),
+      response: finalExplanation,
+      source,
+    });
 
     return NextResponse.json({
       explanation: finalExplanation,

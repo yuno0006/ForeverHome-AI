@@ -1,28 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, X, LogOut, User, LayoutDashboard } from "lucide-react";
+import { Heart, Home, LogOut, Menu, X, Bookmark, LayoutDashboard, Cat, MessageCircle, Sparkles, Info } from "lucide-react";
+import Image from "next/image";
+import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/hooks/useAuth";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import {
-  DropdownMenu,
-  DropdownMenuTrigger,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuLabel,
-} from "@/components/ui/dropdown-menu";
-import {
-  Sheet,
-  SheetTrigger,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetClose,
-} from "@/components/ui/sheet";
-import { Button } from "@/components/ui/button";
+import { getIdToken } from "@/lib/auth";
 
 function getInitials(name: string | undefined | null): string {
   if (!name) return "U";
@@ -38,21 +23,46 @@ export default function Header() {
   const { user, userDoc, role, loading, logout } = useAuth();
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [savedCount, setSavedCount] = useState(0);
 
-  const isActive = (href: string) => pathname === href;
+  const isActive = (path: string) => pathname === path || pathname.startsWith(path + "/");
+
+  useEffect(() => {
+    if (user) {
+      getIdToken().then((token) => {
+        fetch(`/api/saved?uid=${encodeURIComponent(user.uid)}`, {
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+        })
+          .then((r) => r.json())
+          .then((d) => setSavedCount((d.saved || []).length))
+          .catch(() => {});
+      });
+    }
+  }, [user]);
 
   const getNavLinks = () => {
-    if (!user) {
-      return [{ href: "/cats", label: "Cats" }];
-    }
+    const alwaysLinks = [
+      { href: "/", label: "Home", icon: Home },
+      { href: "/cats", label: "Cats", icon: Cat },
+      { href: "/coach/barnaby-adoption-1", label: "AI Coach", icon: MessageCircle },
+      { href: "/assessment/new", label: "Quiz", icon: Sparkles },
+      { href: "/about", label: "About", icon: Info },
+    ];
+    if (!user) return alwaysLinks;
     if (role === "adopter") {
       return [
-        { href: "/cats", label: "Cats" },
-        { href: "/dashboard", label: "My Assessments" },
-        { href: "/coach/barnaby-adoption-1", label: "Coach" },
+        ...alwaysLinks,
+        { href: "/saved", label: `Wishlist (${savedCount})`, icon: Bookmark },
+        { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
       ];
     }
-    return [{ href: "/cats", label: "Cats" }];
+    if (role === "shelter_staff") {
+      return [
+        ...alwaysLinks,
+        { href: "/shelter/dashboard", label: "Shelter Hub", icon: LayoutDashboard },
+      ];
+    }
+    return alwaysLinks;
   };
 
   const navLinks = getNavLinks();
@@ -63,224 +73,133 @@ export default function Header() {
   };
 
   return (
-    <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-sunny/20">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
-          {/* Logo + Brand */}
-          <Link href="/" className="flex items-center gap-2.5">
-            <img
-              src="/cat.png"
-              alt="ForeverHome AI"
-              width={40}
-              height={40}
-              className="w-10 h-10 object-contain"
-            />
-            <span className="text-lg font-bold text-cat-dark">
-              ForeverHome<span className="text-heart">AI</span>
-            </span>
-          </Link>
-
-          {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center gap-1">
-            {navLinks.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className={`px-3 py-2 text-sm font-medium rounded-xl transition-all duration-200 cursor-pointer ${
-                  isActive(link.href)
-                    ? "bg-sunny-light text-cat-dark"
-                    : "text-charcoal/70 hover:text-cat-dark hover:bg-sunny-light"
-                }`}
-              >
-                {link.label}
-              </Link>
-            ))}
-          </nav>
-
-          {/* Desktop Right Section */}
-          <div className="hidden md:flex items-center gap-2">
-            {loading ? (
-              <div className="h-8 w-8 animate-pulse rounded-full bg-sunny-light" />
-            ) : !user ? (
-              <>
-                <Link href="/login">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="cursor-pointer text-charcoal/70 hover:text-cat-dark"
-                  >
-                    Login
-                  </Button>
-                </Link>
-                <Link href="/register">
-                  <Button
-                    size="sm"
-                    className="cursor-pointer bg-sunny hover:bg-sunny/80 text-cat-dark"
-                  >
-                    Register
-                  </Button>
-                </Link>
-              </>
-            ) : (
-              <DropdownMenu>
-                <DropdownMenuTrigger className="cursor-pointer rounded-full outline-none focus-visible:ring-2 focus-visible:ring-sunny transition-all duration-150">
-                  <Avatar>
-                    {user.photoURL ? (
-                      <AvatarImage src={user.photoURL} alt={userDoc?.displayName || "User"} />
-                    ) : null}
-                    <AvatarFallback className="bg-sunny-light text-cat-dark text-xs font-medium">
-                      {getInitials(userDoc?.displayName)}
-                    </AvatarFallback>
-                  </Avatar>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" sideOffset={8} className="w-56">
-                  <DropdownMenuLabel className="font-normal">
-                    <div className="flex flex-col gap-0.5">
-                      <p className="text-sm font-medium text-cat-dark">
-                        {userDoc?.displayName}
-                      </p>
-                      <p className="text-xs text-charcoal/50">{userDoc?.email}</p>
-                    </div>
-                  </DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem className="cursor-pointer" render={<Link href="/profile" />}>
-                    <User className="size-4" />
-                    Profile
-                  </DropdownMenuItem>
-                  <DropdownMenuItem className="cursor-pointer" render={<Link href={getDashboardHref()} />}>
-                    <LayoutDashboard className="size-4" />
-                    Dashboard
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    className="cursor-pointer text-heart"
-                    onClick={() => logout()}
-                  >
-                    <LogOut className="size-4" />
-                    Sign out
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            )}
+    <header className="sticky top-0 z-50 glass border-b-2 border-cocoa/10">
+      <div className="max-w-6xl mx-auto px-4 py-3.5 flex items-center justify-between">
+        {/* Logo */}
+        <Link href="/" className="flex items-center gap-2.5 group">
+          <div className="relative w-[45px] h-[45px] rounded-xl bg-cocoa flex items-center justify-center border-2 border-cocoa shadow-[3px_3px_0px_0px_rgba(255,107,107,1)] group-hover:shadow-[5px_5px_0px_0px_rgba(255,107,107,1)] group-hover:-translate-y-0.5 transition-all overflow-hidden">
+            <Image src="/cat.png" alt="Logo" width={56} height={56} className="w-full h-full object-cover" />
           </div>
+          <div className="flex flex-col">
+            <span className="font-display font-black text-xl tracking-tight text-cocoa leading-none">
+              ForeverHome <span className="text-coral">AI</span>
+            </span>
+            <span className="text-[10px] font-bold text-cocoa/50 tracking-[0.1em] uppercase mt-0.5">
+              Cat Adoption
+            </span>
+          </div>
+        </Link>
 
-          {/* Mobile Menu Button */}
-          <div className="md:hidden">
-            <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
-              <SheetTrigger className="p-2 rounded-xl hover:bg-sunny-light transition-colors duration-200 cursor-pointer">
-                <Menu className="h-5 w-5 text-cat-dark" />
-              </SheetTrigger>
-              <SheetContent side="right" className="w-[280px] bg-warm-cream">
-                <SheetHeader>
-                  <SheetTitle className="flex items-center gap-2">
-                    <img src="/cat.png" alt="" width={32} height={32} className="w-8 h-8" />
-                    <span className="text-cat-dark font-bold">
-                      ForeverHome<span className="text-heart">AI</span>
-                    </span>
-                  </SheetTitle>
-                </SheetHeader>
+        {/* Desktop Links — always show: Home, Cats, AI Coach, Quiz, About */}
+        <div className="hidden lg:flex items-center gap-1 bg-white/60 border-2 border-cocoa/10 rounded-full p-1">
+          {navLinks.map((link) => (
+            <Link
+              key={link.href}
+              href={link.href}
+              className={`relative flex items-center gap-2 px-3.5 py-2 rounded-full font-bold text-xs transition-all ${
+                isActive(link.href)
+                  ? "bg-cocoa text-cream shadow-[2px_2px_0px_0px_rgba(255,107,107,1)]"
+                  : "text-cocoa/70 hover:bg-cocoa/5"
+              }`}
+            >
+              <link.icon className={`w-4 h-4 ${isActive(link.href) ? "text-coral" : ""}`} />
+              {link.label}
+            </Link>
+          ))}
+        </div>
 
-                <nav className="flex flex-col gap-1 px-4 mt-4">
-                  {navLinks.map((link) => (
-                    <Link
-                      key={link.href}
-                      href={link.href}
-                      onClick={() => setMobileOpen(false)}
-                      className={`px-3 py-2.5 text-sm font-medium rounded-xl transition-all duration-200 cursor-pointer ${
-                        isActive(link.href)
-                          ? "bg-sunny-light text-cat-dark"
-                          : "text-charcoal/70 hover:text-cat-dark hover:bg-sunny-light"
-                      }`}
-                    >
-                      {link.label}
-                    </Link>
-                  ))}
-
-                  {role === "shelter_staff" && (
-                    <>
-                      <div className="my-2 h-px bg-sunny/20" />
-                      {[
-                        { href: "/shelter/dashboard", label: "Dashboard" },
-                        { href: "/shelter/cats", label: "Cat Management" },
-                        { href: "/shelter/adoptions", label: "Adoptions" },
-                        { href: "/shelter/insights", label: "Insights" },
-                        { href: "/shelter/staff", label: "Staff" },
-                      ].map((link) => (
-                        <Link
-                          key={link.href}
-                          href={link.href}
-                          onClick={() => setMobileOpen(false)}
-                          className={`px-3 py-2.5 text-sm font-medium rounded-xl transition-all duration-200 cursor-pointer ${
-                            isActive(link.href)
-                              ? "bg-sunny-light text-cat-dark"
-                              : "text-charcoal/70 hover:text-cat-dark hover:bg-sunny-light"
-                          }`}
-                        >
-                          {link.label}
-                        </Link>
-                      ))}
-                    </>
-                  )}
-                </nav>
-
-                <div className="mt-auto px-4 pb-4 pt-4 border-t border-sunny/20">
-                  {!user ? (
-                    <div className="flex flex-col gap-2">
-                      <Link href="/login" onClick={() => setMobileOpen(false)}>
-                        <Button variant="ghost" className="w-full justify-center cursor-pointer">
-                          Login
-                        </Button>
-                      </Link>
-                      <Link href="/register" onClick={() => setMobileOpen(false)}>
-                        <Button className="w-full justify-center cursor-pointer bg-sunny hover:bg-sunny/80 text-cat-dark">
-                          Register
-                        </Button>
-                      </Link>
-                    </div>
+        {/* User Actions */}
+        <div className="flex items-center gap-2">
+          {loading ? (
+            <div className="h-8 w-8 animate-pulse rounded-full bg-cocoa/10" />
+          ) : !user ? (
+            <Link
+              href="/login"
+              className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-cocoa text-cream font-bold text-sm border-2 border-cocoa shadow-[3px_3px_0px_0px_rgba(255,107,107,1)] hover:shadow-[5px_5px_0px_0px_rgba(255,107,107,1)] hover:-translate-y-0.5 transition-all active:scale-95"
+            >
+              <Heart className="w-4 h-4" />
+              <span>Sign In</span>
+            </Link>
+          ) : (
+            <div className="flex items-center gap-1.5">
+              <Link href="/profile" className="flex items-center gap-2 px-3.5 py-2 rounded-full bg-white border-2 border-cocoa/15 hover:border-cocoa hover:shadow-[3px_3px_0px_0px_rgba(42,29,20,1)] transition-all">
+                <div className="w-8 h-8 rounded-lg overflow-hidden flex-shrink-0 border-2 border-cocoa/10">
+                  {user.photoURL ? (
+                    <Image
+                      src={user.photoURL}
+                      alt={userDoc?.displayName || "User"}
+                      width={32}
+                      height={32}
+                      className="w-full h-full object-cover"
+                    />
                   ) : (
-                    <div className="flex flex-col gap-2">
-                      <div className="flex items-center gap-3 px-3 py-2">
-                        <Avatar size="sm">
-                          {user.photoURL ? (
-                            <AvatarImage src={user.photoURL} alt={userDoc?.displayName || "User"} />
-                          ) : null}
-                          <AvatarFallback className="bg-sunny-light text-cat-dark text-xs">
-                            {getInitials(userDoc?.displayName)}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div className="flex flex-col">
-                          <span className="text-sm font-medium text-cat-dark">
-                            {userDoc?.displayName}
-                          </span>
-                          <span className="text-xs text-charcoal/50">{userDoc?.email}</span>
-                        </div>
-                      </div>
-                      <Link
-                        href="/profile"
-                        onClick={() => setMobileOpen(false)}
-                        className="flex items-center gap-2 px-3 py-2.5 text-sm font-medium text-charcoal/70 hover:text-cat-dark hover:bg-sunny-light rounded-xl transition-all duration-200 cursor-pointer"
-                      >
-                        <User className="size-4" />
-                        Profile
-                      </Link>
-                      <button
-                        onClick={() => {
-                          logout();
-                          setMobileOpen(false);
-                        }}
-                        className="flex items-center gap-2 px-3 py-2.5 text-sm font-medium text-heart hover:bg-heart/10 rounded-xl transition-all duration-200 cursor-pointer w-full text-left"
-                      >
-                        <LogOut className="size-4" />
-                        Sign out
-                      </button>
+                    <div className="w-full h-full bg-coral flex items-center justify-center text-white text-xs font-medium">
+                      {getInitials(userDoc?.displayName)}
                     </div>
                   )}
                 </div>
-              </SheetContent>
-            </Sheet>
-          </div>
+                <span className="text-sm font-bold text-cocoa hidden sm:inline">
+                  {userDoc?.displayName?.split(' ')[0] || 'Profile'}
+                </span>
+              </Link>
+              <button
+                onClick={() => logout()}
+                className="hidden lg:flex items-center gap-1.5 px-3 py-2 rounded-full border-2 border-coral/20 text-coral hover:bg-coral/10 transition-all text-xs font-bold"
+                title="Sign out"
+              >
+                <LogOut className="w-4 h-4" />
+              </button>
+            </div>
+          )}
+
+          <button
+            className="lg:hidden p-3 rounded-xl bg-cocoa/15 hover:bg-cocoa/25 transition-colors border-2 border-cocoa/25 shadow-[2px_2px_0px_0px_rgba(42,29,20,1)]"
+            onClick={() => setMobileOpen(!mobileOpen)}
+            aria-label={mobileOpen ? "Close menu" : "Open menu"}
+          >
+            {mobileOpen ? <X className="w-6 h-6 text-cocoa" /> : <Menu className="w-6 h-6 text-cocoa" />}
+          </button>
         </div>
       </div>
+
+      {/* Menu Drawer */}
+      <AnimatePresence>
+        {mobileOpen && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            className="overflow-hidden border-t-2 border-cocoa/10 bg-cream"
+          >
+            <div className="p-4 space-y-2">
+              {navLinks.map((link) => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  onClick={() => setMobileOpen(false)}
+                  className={`flex items-center gap-3 p-3.5 rounded-2xl font-bold transition-all ${
+                    isActive(link.href)
+                      ? "bg-cocoa text-cream"
+                      : "text-cocoa/70 hover:bg-cocoa/5"
+                  }`}
+                >
+                  <link.icon className="w-5 h-5" />
+                  {link.label}
+                </Link>
+              ))}
+              {user && (
+                <button
+                  onClick={() => { setMobileOpen(false); logout(); }}
+                  className="flex items-center gap-3 p-3.5 rounded-2xl font-bold text-coral hover:bg-coral/10 transition-all w-full text-left"
+                >
+                  <LogOut className="w-5 h-5" />
+                  Sign out
+                </button>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </header>
   );
 }

@@ -6,7 +6,7 @@ import dynamic from "next/dynamic";
 const Lottie = dynamic(() => import("lottie-react"), { ssr: false });
 
 export default function LottieCatRunner() {
-  const [catData, setCatData] = useState<any>(null);
+  const [catData, setCatData] = useState<Record<string, unknown> | null>(null);
   const positionRef = useRef({ x: -100 });
   const containerRef = useRef<HTMLDivElement>(null);
   const catInnerRef = useRef<HTMLDivElement>(null);

@@ -39,3 +39,9 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# scratch/generated component export, not part of the app
+/nextjs-dashboard-page-component (1)/
+
+# local debug output
+tsc_errors.txt

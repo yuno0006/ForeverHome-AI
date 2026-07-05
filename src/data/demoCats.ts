@@ -8,8 +8,19 @@ export const demoCats: Cat[] = [
     lifeStage: "adult",
     sex: "male",
     neutered: true,
+    breed: "British Shorthair Mix",
+    color: "Blue (Gray)",
+    weight: "14 lbs",
     photo: "https://images.unsplash.com/photo-1573865526739-10659fec78a5?w=600&h=400&fit=crop",
+    photos: [
+      { url: "https://images.unsplash.com/photo-1573865526739-10659fec78a5?w=600&h=400&fit=crop", caption: "Barnaby in his favorite spot", isPrimary: true },
+      { url: "https://images.unsplash.com/photo-1518791841217-8f162f1e1131?w=600&h=400&fit=crop", caption: "Curious Barnaby exploring" },
+      { url: "https://images.unsplash.com/photo-1495360010541-f48722b34f7d?w=600&h=400&fit=crop", caption: "Barnaby enjoying a sunny window" }
+    ],
     status: "available",
+    arrivalDate: "2024-11-15",
+    daysInShelter: 45,
+    shelterId: "paws-haven",
     behavior: {
       energy: "low",
       sociability: "reserved",
@@ -27,9 +38,19 @@ export const demoCats: Cat[] = [
       knownMedicalNeeds: "None",
       medicationNeeds: "None",
       fivStatus: "negative",
-      specialNotes:
-        "Quiet and independent. Easily startled. Prefers calm environments. Ideal for a work-from-home owner in a quiet apartment.",
+      specialNotes: "Quiet and independent. Easily startled. Prefers calm environments. Ideal for a work-from-home owner in a quiet apartment.",
     },
+    personality: [
+      { trait: "Thoughtful Observer", description: "Barnaby prefers to watch from a distance before making his move. He's the philosopher of the cat world." },
+      { trait: "Routine Lover", description: "Thrives on predictable schedules. Meal times are sacred." },
+      { trait: "Gentle Soul", description: "Once he trusts you, he offers the slowest, most meaningful blinks." },
+      { trait: "Cozy Seeker", description: "Will find the warmest spot in any room and claim it as his throne." }
+    ],
+    backstory: "Barnaby was found as a stray in a quiet neighborhood, where he'd been living under a porch for several months. His finder noticed he was remarkably gentle but very shy. After being rescued, he spent weeks hiding in his kennel before slowly beginning to trust the shelter staff. Now, he greets his favorite caretakers with soft chirps and allows gentle pets. He's still learning that the world can be a safe place.",
+    idealHome: "A calm, quiet household with patient humans who understand that trust takes time. Perfect for a single person or couple who work from home. No young children. May do well with another calm, non-dominant cat. Needs a designated 'safe space' where he can retreat when overwhelmed.",
+    adoptionFee: 75,
+    microchipped: true,
+    vaccinated: true
   },
   {
     id: "luna",
@@ -38,8 +59,19 @@ export const demoCats: Cat[] = [
     lifeStage: "adult",
     sex: "female",
     neutered: true,
+    breed: "Domestic Shorthair",
+    color: "Tabby with White Patches",
+    weight: "10 lbs",
     photo: "https://images.unsplash.com/photo-1574158622682-e40e69881006?w=600&h=400&fit=crop",
+    photos: [
+      { url: "https://images.unsplash.com/photo-1574158622682-e40e69881006?w=600&h=400&fit=crop", caption: "Luna showing off her bright eyes", isPrimary: true },
+      { url: "https://images.unsplash.com/photo-1543852786-1cf6624b9987?w=600&h=400&fit=crop", caption: "Luna playing with her favorite feather toy" },
+      { url: "https://images.unsplash.com/photo-1494256997604-768d1f608cac?w=600&h=400&fit=crop", caption: "Luna lounging in cat tree" }
+    ],
     status: "available",
+    arrivalDate: "2024-12-01",
+    daysInShelter: 29,
+    shelterId: "whisker-wings",
     behavior: {
       energy: "medium",
       sociability: "outgoing",
@@ -57,9 +89,19 @@ export const demoCats: Cat[] = [
       knownMedicalNeeds: "None",
       medicationNeeds: "None",
       fivStatus: "negative",
-      specialNotes:
-        "Friendly, adaptable, and social. Curious about everything. Has lived with children, dogs, and cats. Great for first-time owners.",
+      specialNotes: "Friendly, adaptable, and social. Curious about everything. Has lived with children, dogs, and cats. Great for first-time owners.",
     },
+    personality: [
+      { trait: "Social Butterfly", description: "Luna has never met a stranger. She'll greet guests at the door and charm them within minutes." },
+      { trait: "Playful Prankster", description: "Known for 'hiding' toys around the house. Check your shoes before putting them on!" },
+      { trait: "Conversation Starter", description: "Has a lot to say and isn't afraid to share her opinions with chirps and trills." },
+      { trait: "Lap Connoisseur", description: "Will test every lap in the house and rate them. Currently seeking the gold standard." }
+    ],
+    backstory: "Luna came from a loving home that could no longer care for her due to a family emergency. She was surrendered with a detailed care journal from her previous family, who adored her. She lived with two children (ages 5 and 8), a golden retriever, and another cat. The transition to shelter life was hard, but she's remained her friendly, optimistic self, always hoping each visitor might be her new family.",
+    idealHome: "An active household looking for a social companion. Great with children of any age, other cats, and cat-friendly dogs. Perfect for first-time cat owners who want an easy, rewarding adoption experience. Will thrive in a home where she's included in daily activities.",
+    adoptionFee: 100,
+    microchipped: true,
+    vaccinated: true
   },
   {
     id: "milo",
@@ -68,8 +110,19 @@ export const demoCats: Cat[] = [
     lifeStage: "young",
     sex: "male",
     neutered: true,
+    breed: "Domestic Shorthair",
+    color: "Orange Tabby",
+    weight: "9 lbs",
     photo: "https://images.unsplash.com/photo-1592194996308-7b43878e84a6?w=600&h=400&fit=crop",
+    photos: [
+      { url: "https://images.unsplash.com/photo-1592194996308-7b43878e84a6?w=600&h=400&fit=crop", caption: "Milo mid-pounce", isPrimary: true },
+      { url: "https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=600&h=400&fit=crop", caption: "Milo showing his playful side" },
+      { url: "https://images.unsplash.com/photo-1573865526739-10659fec78a5?w=600&h=400&fit=crop", caption: "Milo's famous 'innocent' look" }
+    ],
     status: "available",
+    arrivalDate: "2024-12-20",
+    daysInShelter: 10,
+    shelterId: "meow-mountain",
     behavior: {
       energy: "high",
       sociability: "outgoing",
@@ -87,9 +140,19 @@ export const demoCats: Cat[] = [
       knownMedicalNeeds: "None",
       medicationNeeds: "None",
       fivStatus: "negative",
-      specialNotes:
-        "Young and energetic. Needs daily interactive play, climbing structures, and enrichment. May become destructive if understimulated.",
+      specialNotes: "Young and energetic. Needs daily interactive play, climbing structures, and enrichment. May become destructive if understimulated.",
     },
+    personality: [
+      { trait: "Zoomie Champion", description: "Holds the shelter record for most consecutive wall-runs. The parkour master." },
+      { trait: "Toy Enthusiast", description: "Has not met a toy he didn't immediately destroy with love. Wand toys are his specialty." },
+      { trait: "Chatty Cathy", description: "Very vocal, especially when he feels playtime has been delayed by even 30 seconds." },
+      { trait: "Cuddle Bug", description: "After the zoomies, crashes hard and becomes the world's most affectionate lap cat for exactly 20 minutes." }
+    ],
+    backstory: "Milo was found as a kitten wandering alone in a parking lot. Despite his rough start, he's grown into a confident, playful young cat with endless energy. The shelter staff call him 'The Orange Tornado' because of his daily parkour sessions. He's been waiting for an active family who can match his energy level and provide plenty of enrichment.",
+    idealHome: "Active individuals or families who can provide 30+ minutes of interactive play daily. Needs cat trees, climbing shelves, or a 'catio'. Will do well with another playful cat as a companion. Not recommended for those seeking a calm, low-energy pet. Previous cat experience helpful but not required.",
+    adoptionFee: 125,
+    microchipped: true,
+    vaccinated: true
   },
   {
     id: "shadow",
@@ -98,8 +161,19 @@ export const demoCats: Cat[] = [
     lifeStage: "senior",
     sex: "male",
     neutered: true,
+    breed: "Domestic Longhair",
+    color: "Solid Black",
+    weight: "12 lbs",
     photo: "https://images.unsplash.com/photo-1518791841217-8f162f1e1131?w=600&h=400&fit=crop",
+    photos: [
+      { url: "https://images.unsplash.com/photo-1518791841217-8f162f1e1131?w=600&h=400&fit=crop", caption: "Shadow in a moment of contemplation", isPrimary: true },
+      { url: "https://images.unsplash.com/photo-1513360371669-4adf3dd7dff8?w=600&h=400&fit=crop", caption: "Shadow's beautiful long coat" },
+      { url: "https://images.unsplash.com/photo-1571566882372-1598d88abd90?w=600&h=400&fit=crop", caption: "Shadow enjoying gentle pets" }
+    ],
     status: "available",
+    arrivalDate: "2024-10-01",
+    daysInShelter: 90,
+    shelterId: "paws-haven",
     behavior: {
       energy: "low",
       sociability: "moderate",
@@ -117,9 +191,19 @@ export const demoCats: Cat[] = [
       knownMedicalNeeds: "Arthritis — requires joint supplement daily",
       medicationNeeds: "Joint supplement (daily)",
       fivStatus: "negative",
-      specialNotes:
-        "Calm and affectionate senior cat. Needs a stable routine and experienced owner. May need help jumping onto high surfaces. Best in a quiet household with older children.",
+      specialNotes: "Calm and affectionate senior cat. Needs a stable routine and experienced owner. May need help jumping onto high surfaces. Best in a quiet household with older children.",
     },
+    personality: [
+      { trait: "Wise Elder", description: "Shadow has seen things. He carries himself with the dignity of a cat who understands life's mysteries." },
+      { trait: "Patient Companion", description: "Will sit beside you for hours, offering quiet comfort with his presence." },
+      { trait: "Selective Sociable", description: "Chooses his people carefully, but once chosen, you are family forever." },
+      { trait: "Sunbeam Connoisseur", description: "Can detect and relocate to sunbeams with remarkable precision throughout the day." }
+    ],
+    backstory: "Shadow's owner passed away after 10 wonderful years together. He spent his first month at the shelter confused and grieving, often waiting by the door for someone who would never return. With time and patience from the staff, he's begun to open his heart again. He's gentle, loving, and ready to share his golden years with someone who will treasure him.",
+    idealHome: "A calm, quiet home with someone who appreciates the quiet companionship of a senior cat. No dogs, and children should be teenagers or older. Needs easy access to litter boxes (low-sided) and soft, accessible sleeping spots. Someone willing to give joint supplements daily and monitor for any health changes. Previous senior cat experience a plus.",
+    adoptionFee: 50,
+    microchipped: true,
+    vaccinated: true
   },
   {
     id: "pepper",
@@ -128,8 +212,19 @@ export const demoCats: Cat[] = [
     lifeStage: "young",
     sex: "female",
     neutered: true,
+    breed: "Domestic Shorthair",
+    color: "Tuxedo (Black and White)",
+    weight: "8 lbs",
     photo: "https://images.unsplash.com/photo-1561948955-570b270e7c36?w=600&h=400&fit=crop",
+    photos: [
+      { url: "https://images.unsplash.com/photo-1561948955-570b270e7c36?w=600&h=400&fit=crop", caption: "Pepper showing her tuxedo pattern", isPrimary: true },
+      { url: "https://images.unsplash.com/photo-1543852786-1cf6624b9987?w=600&h=400&fit=crop", caption: "Pepper in playful mode" },
+      { url: "https://images.unsplash.com/photo-1495360010541-f48722b34f7d?w=600&h=400&fit=crop", caption: "Pepper on her cat tree" }
+    ],
     status: "available",
+    arrivalDate: "2024-12-15",
+    daysInShelter: 15,
+    shelterId: "meow-mountain",
     behavior: {
       energy: "high",
       sociability: "outgoing",
@@ -147,9 +242,19 @@ export const demoCats: Cat[] = [
       knownMedicalNeeds: "None",
       medicationNeeds: "None",
       fivStatus: "negative",
-      specialNotes:
-        "Playful climber who requires enrichment. Needs cat trees, puzzle feeders, and daily interactive play. Will become destructive without stimulation. Great for active owners.",
+      specialNotes: "Playful climber who requires enrichment. Needs cat trees, puzzle feeders, and daily interactive play. Will become destructive without stimulation. Great for active owners.",
     },
+    personality: [
+      { trait: "Problem Solver", description: "Figures out puzzle feeders in record time. The shelter has had to upgrade to 'expert level' puzzles." },
+      { trait: "Acrobat", description: "Can scale any cat tree in under 3 seconds. Holds the vertical space speed record." },
+      { trait: "Social Catalyst", description: "Helps shy cats come out of their shells by initiating play sessions." },
+      { trait: "Drama Queen", description: "Will dramatically flop over for belly rubs, but only on her terms." }
+    ],
+    backstory: "Pepper was part of a TNR (Trap-Neuter-Return) program but was clearly not a feral cat—she walked right up to the trapper and demanded pets. She was clearly someone's pet who was abandoned. Despite this, she's remained incredibly trusting of humans and other animals. She's the shelter's 'social facilitator,' often helping new, shy cats adjust by initiating gentle play.",
+    idealHome: "An active home with plenty of vertical space (cat trees, shelves). Great with kids, other cats, and cat-friendly dogs. Needs interactive play sessions and mental enrichment daily. Perfect for someone who wants an entertaining, engaging companion who will keep them on their toes. Experienced cat owners preferred but enthusiastic beginners welcome.",
+    adoptionFee: 125,
+    microchipped: true,
+    vaccinated: true
   },
   {
     id: "mochi",
@@ -158,8 +263,19 @@ export const demoCats: Cat[] = [
     lifeStage: "adult",
     sex: "female",
     neutered: true,
+    breed: "Domestic Shorthair",
+    color: "Cream and White",
+    weight: "11 lbs",
     photo: "https://images.unsplash.com/photo-1571566882372-1598d88abd90?w=600&h=400&fit=crop",
+    photos: [
+      { url: "https://images.unsplash.com/photo-1571566882372-1598d88abd90?w=600&h=400&fit=crop", caption: "Sweet Mochi asking for pets", isPrimary: true },
+      { url: "https://images.unsplash.com/photo-1561948955-570b270e7c36?w=600&h=400&fit=crop", caption: "Mochi in her favorite cozy spot" },
+      { url: "https://images.unsplash.com/photo-1543852786-1cf6624b9987?w=600&h=400&fit=crop", caption: "Mochi's gentle smile" }
+    ],
     status: "available",
+    arrivalDate: "2024-11-01",
+    daysInShelter: 59,
+    shelterId: "meow-mountain",
     behavior: {
       energy: "medium",
       sociability: "outgoing",
@@ -177,12 +293,183 @@ export const demoCats: Cat[] = [
       knownMedicalNeeds: "FIV+ (Feline Immunodeficiency Virus) — requires monitoring",
       medicationNeeds: "None currently, regular vet check-ups required",
       fivStatus: "positive",
-      specialNotes:
-        "Gentle and affectionate. Loves attention and being held. FIV+ but lives a normal healthy life. Needs indoor-only home with a knowledgeable adopter. Selective with other cats.",
+      specialNotes: "Gentle and affectionate. Loves attention and being held. FIV+ but lives a normal healthy life. Needs indoor-only home with a knowledgeable adopter. Selective with other cats.",
     },
+    personality: [
+      { trait: "Gentle Soul", description: "Mochi approaches everything with a soft, careful touch. Even her play is gentle." },
+      { trait: "Lap Magnet", description: "Will find any available lap and make it her personal throne. Very affectionate." },
+      { trait: "Patient Teacher", description: "Helps new cat owners understand feline body language with clear, gentle communication." },
+      { trait: "Resilient Spirit", description: "Despite her FIV+ status, she lives each day with joy and doesn't let anything slow her down." }
+    ],
+    backstory: "Mochi was found as a stray and tested positive for FIV during her intake exam. Because of misconceptions about FIV+ cats, she's been overlooked many times. The truth is, FIV+ cats like Mochi can live long, healthy, normal lives! She's asymptomatic, playful, and full of love. She's been waiting for someone who sees past her diagnosis to the wonderful cat underneath.",
+    idealHome: "An indoor-only home (required for FIV+ cats) with someone educated about or willing to learn about FIV. Can live with other FIV+ cats, or as an only cat. No dogs. Great with gentle children. Needs regular vet check-ups (annually at minimum). Previous FIV+ cat experience a plus but not required—we'll provide all the education needed!",
+    adoptionFee: 50,
+    microchipped: true,
+    vaccinated: true
   },
+  {
+    id: "cleo",
+    name: "Cleo",
+    age: 4,
+    lifeStage: "adult",
+    sex: "female",
+    neutered: true,
+    breed: "Egyptian Mau Mix",
+    color: "Spotted Silver",
+    weight: "9 lbs",
+    photo: "https://images.unsplash.com/photo-1494256997604-768d1f608cac?w=600&h=400&fit=crop",
+    photos: [
+      { url: "https://images.unsplash.com/photo-1494256997604-768d1f608cac?w=600&h=400&fit=crop", caption: "Cleo showing her spotted coat", isPrimary: true },
+      { url: "https://images.unsplash.com/photo-1573865526739-10659fec78a5?w=600&h=400&fit=crop", caption: "Cleo's striking green eyes" },
+      { url: "https://images.unsplash.com/photo-1543852786-1cf6624b9987?w=600&h=400&fit=crop", caption: "Cleo in a playful pounce" }
+    ],
+    status: "available",
+    arrivalDate: "2024-12-10",
+    daysInShelter: 20,
+    shelterId: "whisker-wings",
+    behavior: {
+      energy: "high",
+      sociability: "moderate",
+      stressSensitivity: "moderate",
+      handlingTolerance: "moderate",
+      playNeeds: "high",
+      comfortableWithChildren: "no",
+      comfortableWithCats: "yes",
+      comfortableWithDogs: "unknown",
+      noiseTolerance: "moderate",
+      needsVerticalSpace: "high",
+      indoorOnlyRequired: true,
+    },
+    care: {
+      knownMedicalNeeds: "None",
+      medicationNeeds: "None",
+      fivStatus: "negative",
+      specialNotes: "Fast and athletic! Egyptian Mau mix with high prey drive. Needs space to run and interactive play. May be overwhelming for young children.",
+    },
+    personality: [
+      { trait: "Speed Demon", description: "One of the fastest cats at the shelter. Can run AND change direction mid-air." },
+      { trait: "Independent Spirit", description: "Affectionate on her own terms. She'll come to you when she wants attention." },
+      { trait: "Hunter Extraordinaire", description: "Has never lost a game of laser pointer. Takes her 'prey' very seriously." },
+      { trait: "Regal Presence", description: "Carries herself with the dignity of Egyptian royalty. She knows she's magnificent." }
+    ],
+    backstory: "Cleo was surrendered when her previous owner moved to a place that didn't allow pets. She's an Egyptian Mau mix, one of the few naturally spotted breeds, known for their speed and intelligence. She's been at the shelter longer than expected because her energy level can be intimidating, but for the right active home, she's an incredible companion.",
+    idealHome: "An active household with experienced cat owners. Needs vertical space and room to run. No young children (her speed can be overwhelming). May do well with another active cat for play. Someone who appreciates an independent but loving companion and won't be offended when she wants alone time.",
+    adoptionFee: 150,
+    microchipped: true,
+    vaccinated: true
+  },
+  {
+    id: "oliver",
+    name: "Oliver",
+    age: 8,
+    lifeStage: "adult",
+    sex: "male",
+    neutered: true,
+    breed: "Maine Coon Mix",
+    color: "Brown Tabby",
+    weight: "16 lbs",
+    photo: "https://images.unsplash.com/photo-1513360371669-4adf3dd7dff8?w=600&h=400&fit=crop",
+    photos: [
+      { url: "https://images.unsplash.com/photo-1513360371669-4adf3dd7dff8?w=600&h=400&fit=crop", caption: "Oliver showing his Maine Coon size", isPrimary: true },
+      { url: "https://images.unsplash.com/photo-1574158622682-e40e69881006?w=600&h=400&fit=crop", caption: "Oliver's majestic profile" },
+      { url: "https://images.unsplash.com/photo-1573865526739-10659fec78a5?w=600&h=400&fit=crop", caption: "Oliver requesting attention" }
+    ],
+    status: "available",
+    arrivalDate: "2024-12-05",
+    daysInShelter: 25,
+    shelterId: "whisker-wings",
+    behavior: {
+      energy: "medium",
+      sociability: "outgoing",
+      stressSensitivity: "low",
+      handlingTolerance: "high",
+      playNeeds: "moderate",
+      comfortableWithChildren: "yes",
+      comfortableWithCats: "yes",
+      comfortableWithDogs: "yes",
+      noiseTolerance: "high",
+      needsVerticalSpace: "moderate",
+      indoorOnlyRequired: true,
+    },
+    care: {
+      knownMedicalNeeds: "Mild dental disease — may need dental cleaning within the year",
+      medicationNeeds: "None currently",
+      fivStatus: "negative",
+      specialNotes: "Large, gentle giant with a heart of gold. Very social and dog-like in his attachment to people. Easygoing with everyone.",
+    },
+    personality: [
+      { trait: "Gentle Giant", description: "Despite his 16 lbs, he's incredibly careful and gentle with everyone he meets." },
+      { trait: "Dog in Cat's Clothing", description: "Follows his people from room to room, greets guests at the door, and comes when called." },
+      { trait: "Conversation Partner", description: "Has a distinctive chirpy meow and loves long 'conversations' with his humans." },
+      { trait: "Patient Uncle", description: "Known for letting kittens climb all over him without complaint." }
+    ],
+    backstory: "Oliver's family lost their home and had to surrender him after 8 years together. The separation was heartbreaking for everyone. Despite this major life change, Oliver has remained remarkably well-adjusted, trusting, and loving. He seems to understand that his family did what they had to do, and he's ready to find a new family to share his love with.",
+    idealHome: "Almost any loving home! Great with children of all ages, other cats, and cat-friendly dogs. Perfect for families who want a social, involved companion. His size means he needs sturdy furniture and a decent-sized litter box. May need dental work in the future, so someone willing to provide ongoing care.",
+    adoptionFee: 100,
+    microchipped: true,
+    vaccinated: true
+  },
+  {
+    id: "bella",
+    name: "Bella",
+    age: 2,
+    lifeStage: "young",
+    sex: "female",
+    neutered: true,
+    breed: "Siamese Mix",
+    color: "Seal Point",
+    weight: "8 lbs",
+    photo: "https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=600&h=400&fit=crop",
+    photos: [
+      { url: "https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=600&h=400&fit=crop", caption: "Bella's striking blue eyes", isPrimary: true },
+      { url: "https://images.unsplash.com/photo-1543852786-1cf6624b9987?w=600&h=400&fit=crop", caption: "Bella in elegant pose" },
+      { url: "https://images.unsplash.com/photo-1561948955-570b270e7c36?w=600&h=400&fit=crop", caption: "Bella's playful side" }
+    ],
+    status: "available",
+    arrivalDate: "2024-12-22",
+    daysInShelter: 8,
+    shelterId: "paws-haven",
+    behavior: {
+      energy: "medium",
+      sociability: "outgoing",
+      stressSensitivity: "moderate",
+      handlingTolerance: "high",
+      playNeeds: "moderate",
+      comfortableWithChildren: "yes",
+      comfortableWithCats: "no",
+      comfortableWithDogs: "unknown",
+      noiseTolerance: "moderate",
+      needsVerticalSpace: "moderate",
+      indoorOnlyRequired: true,
+    },
+    care: {
+      knownMedicalNeeds: "None",
+      medicationNeeds: "None",
+      fivStatus: "negative",
+      specialNotes: "Classic Siamese personality—vocal, intelligent, and bonded. Needs to be the only cat. Very people-focused.",
+    },
+    personality: [
+      { trait: "Conversationalist", description: "Has a lot to say and expects you to listen. Known for lengthy 'discussions.'" },
+      { trait: "Velcro Cat", description: "Follows her person everywhere. Privacy? What's that?" },
+      { trait: "Intelligent Problem-Solver", description: "Has figured out how to open cabinets. Child locks recommended." },
+      { trait: "Attention Seeker", description: "Will gently tap your face if you're looking at your phone instead of her." }
+    ],
+    backstory: "Bella was surrendered because she wasn't getting along with the other cats in her previous home. It's not that she's mean—she just wants to be the only queen in her castle. She's incredibly people-focused and affectionate, but other cats are competition for her human's attention. She'd thrive as an only cat where she can have all the love to herself.",
+    idealHome: "A home where she can be the only cat (required). Great with children who can respect her boundaries. Unknown with dogs. Perfect for someone who wants a deeply bonded, interactive relationship with their cat. Should be an indoor-only home. Someone who appreciates (or doesn't mind) a chatty cat!",
+    adoptionFee: 125,
+    microchipped: true,
+    vaccinated: true
+  }
 ];
 
 export function getCatById(id: string): Cat | undefined {
   return demoCats.find((cat) => cat.id === id);
+}
+
+export function getCatsByShelter(shelterId: string): Cat[] {
+  return demoCats.filter((cat) => cat.shelterId === shelterId);
+}
+
+export function getAvailableCats(): Cat[] {
+  return demoCats.filter((cat) => cat.status === "available");
 }

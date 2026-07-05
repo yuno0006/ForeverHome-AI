@@ -33,7 +33,7 @@ export default function AlternativeCats({ catIds }: AlternativeCatsProps) {
                     <img
                       src={cat.photo}
                       alt={cat.name}
-                      className="w-16 h-16 rounded-lg object-cover"
+                      className="w-20 h-20 rounded-lg object-cover"
                     />
                     <div className="flex-1">
                       <p className="font-semibold text-cat-dark">{cat.name}</p>

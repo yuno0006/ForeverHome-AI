@@ -269,11 +269,12 @@ function assessCompatibility(
     level = "low";
   }
 
-  // Recommend alternatives for high risk
+  // Recommend alternatives for high risk (non-recursive to prevent stack overflow)
   if (level === "high" || level === "moderate") {
     const otherCats = demoCats.filter((c) => c.id !== cat.id);
     for (const otherCat of otherCats) {
-      const otherResult = assessCompatibility(otherCat, adopter);
+      // Use internal assessment that doesn't find alternatives (prevents infinite recursion)
+      const otherResult = assessCompatibilityInternal(otherCat, adopter);
       if (otherResult.level === "low") {
         alternativeCatIds.push(otherCat.id);
       }
@@ -288,6 +289,174 @@ function assessCompatibility(
     requiresShelterReview: level === "high" || level === "moderate",
     alternativeCatIds,
   };
+}
+
+/**
+ * Internal compatibility assessment without alternative finding.
+ * Used to prevent infinite recursion when checking alternative cats.
+ */
+function assessCompatibilityInternal(
+  cat: Cat,
+  adopter: AdopterAnswers
+): { level: "low" | "moderate" | "high"; concerns: Concern[] } {
+  const concerns: Concern[] = [];
+
+  // Rule: stress-noise
+  if (
+    cat.behavior.stressSensitivity === "high" &&
+    adopter.householdNoise === "high"
+  ) {
+    concerns.push({
+      ruleId: "stress-noise",
+      severity: "significant",
+      description: "High stress sensitivity plus high-noise household",
+      triggeredBy: `${cat.name} has high stress sensitivity, and the household noise level is high.`,
+    });
+  }
+
+  // Rule: stress-children
+  if (
+    cat.behavior.comfortableWithChildren === "no" &&
+    hasYoungChildren(adopter)
+  ) {
+    concerns.push({
+      ruleId: "stress-children",
+      severity: "significant",
+      description: "Not observed comfortable with young children plus young children in home",
+      triggeredBy: `${cat.name} has not been observed as comfortable with young children, and the home includes children under 10.`,
+    });
+  }
+
+  // Rule: energy-absence
+  if (
+    cat.behavior.energy === "high" &&
+    adopter.hoursAway >= 10 &&
+    cat.behavior.needsVerticalSpace === "high" &&
+    !adopter.canProvideVerticalSpace
+  ) {
+    concerns.push({
+      ruleId: "energy-absence",
+      severity: "significant",
+      description: "High-energy cat plus long daily absence and limited enrichment",
+      triggeredBy: `${cat.name} is high-energy and needs vertical space, but the adopter is away 10+ hours and cannot provide vertical space.`,
+    });
+  }
+
+  // Rule: vertical-space
+  if (
+    cat.behavior.needsVerticalSpace === "high" &&
+    !adopter.canProvideVerticalSpace
+  ) {
+    concerns.push({
+      ruleId: "vertical-space",
+      severity: "moderate",
+      description: "Requires vertical space plus no climbing/enrichment plan",
+      triggeredBy: `${cat.name} needs vertical space, but the adopter cannot currently provide climbing structures.`,
+    });
+  }
+
+  // Rule: dog-incompatibility
+  if (
+    cat.behavior.comfortableWithDogs === "no" &&
+    adopter.existingPets.dogs > 0
+  ) {
+    concerns.push({
+      ruleId: "dog-incompatibility",
+      severity: "significant",
+      description: "Known incompatibility with dogs plus resident dog",
+      triggeredBy: `${cat.name} is known to be uncomfortable with dogs, and the home has ${adopter.existingPets.dogs} dog(s).`,
+    });
+  }
+
+  // Rule: special-care
+  if (
+    cat.care.knownMedicalNeeds !== "None" &&
+    !adopter.comfortableWithRoutineCare
+  ) {
+    concerns.push({
+      ruleId: "special-care",
+      severity: "significant",
+      description: "Special medical care plus adopter not comfortable administering care",
+      triggeredBy: `${cat.name} has medical needs (${cat.care.knownMedicalNeeds}), and the adopter is not comfortable with routine care.`,
+    });
+  }
+
+  // Rule: indoor-safety
+  if (
+    cat.behavior.indoorOnlyRequired &&
+    adopter.indoorSafety !== "secure"
+  ) {
+    concerns.push({
+      ruleId: "indoor-safety",
+      severity: "significant",
+      description: "Indoor-only requirement plus inability to provide secure indoor home",
+      triggeredBy: `${cat.name} requires an indoor-only home, but indoor safety is ${adopter.indoorSafety}.`,
+    });
+  }
+
+  // Rule: unknown-compatibility
+  const unknownFields: string[] = [];
+  if (cat.behavior.comfortableWithChildren === "unknown" && hasYoungChildren(adopter)) {
+    unknownFields.push("compatibility with children");
+  }
+  if (cat.behavior.comfortableWithCats === "unknown" && adopter.existingPets.cats > 0) {
+    unknownFields.push("compatibility with other cats");
+  }
+  if (cat.behavior.comfortableWithDogs === "unknown" && adopter.existingPets.dogs > 0) {
+    unknownFields.push("compatibility with dogs");
+  }
+
+  if (unknownFields.length > 0) {
+    concerns.push({
+      ruleId: "unknown-compatibility",
+      severity: "moderate",
+      description: `Compatibility value is unknown — request shelter review`,
+      triggeredBy: `${cat.name}'s ${unknownFields.join(", ")} is unknown.`,
+    });
+  }
+
+  // Rule: senior-cat-absence
+  if (
+    cat.lifeStage === "senior" &&
+    cat.care.knownMedicalNeeds !== "None" &&
+    adopter.hoursAway >= 10
+  ) {
+    concerns.push({
+      ruleId: "senior-cat-absence",
+      severity: "significant",
+      description: "Senior cat with medical needs plus long daily absence",
+      triggeredBy: `${cat.name} is a senior cat with medical needs (${cat.care.knownMedicalNeeds}), but the adopter is away ${adopter.hoursAway}+ hours daily.`,
+    });
+  }
+
+  // Rule: fiv-experience
+  if (
+    cat.care.fivStatus === "positive" &&
+    !adopter.specialNeedsExperience &&
+    !adopter.previousCatExperience
+  ) {
+    concerns.push({
+      ruleId: "fiv-experience",
+      severity: "moderate",
+      description: "FIV+ cat plus no special needs or cat experience",
+      triggeredBy: `${cat.name} is FIV+ and requires monitoring, but the adopter has no prior cat or special needs experience.`,
+    });
+  }
+
+  // Determine level
+  const significantConcerns = concerns.filter((c) => c.severity === "significant");
+  let level: "low" | "moderate" | "high";
+  if (significantConcerns.length >= 2) {
+    level = "high";
+  } else if (significantConcerns.length === 1) {
+    level = "moderate";
+  } else if (concerns.length > 0) {
+    level = "moderate";
+  } else {
+    level = "low";
+  }
+
+  return { level, concerns };
 }
 
 export { assessCompatibility };

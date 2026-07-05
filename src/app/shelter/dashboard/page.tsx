@@ -27,7 +27,7 @@ export default function ShelterDashboardPage() {
           Welcome back, {userDoc?.displayName || "Staff"}
         </h1>
         <p className="text-sm text-charcoal/60 mt-1">
-          Here's what's happening at your shelter today.
+          Here&apos;s what&apos;s happening at your shelter today.
         </p>
       </div>
 

@@ -1,353 +1,377 @@
+"use client";
+
+import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { motion, AnimatePresence } from "framer-motion";
 import {
-  Sparkles,
-  Brain,
-  HeartHandshake,
-  LineChart,
-  Check,
-  Search,
-  ShieldCheck,
-  MessageCircleHeart,
-  Users,
   Cat,
+  Heart,
+  Sparkles,
   ArrowRight,
+  ArrowUpRight,
   PawPrint,
-  Home,
+  Star,
+  Zap,
+  MessageCircle,
+  Quote,
 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import {
+  CatEarCard,
+  PawRating,
+  StickerBadge,
+  SectionTag,
+} from "@/components/ui/CatElements";
+import { FunFactsSlideshow } from "@/components/ui/FunFactsSlideshow";
+import confetti from "canvas-confetti";
 
-function Paw({ className = "" }: { className?: string }) {
-  return <PawPrint className={className} aria-hidden="true" />;
-}
+const heroCats = [
+  { name: "Barnaby", breed: "British Shorthair Mix", age: "6 yrs", img: "https://images.unsplash.com/photo-1573865526739-10659fec78a5?w=600&h=800&fit=crop", trait: "Gentle Soul" },
+  { name: "Luna", breed: "Siamese Mix", age: "3 yrs", img: "https://images.unsplash.com/photo-1518791841217-8f162f1e1131?w=600&h=800&fit=crop", trait: "Calm Queen" },
+  { name: "Milo", breed: "Orange Tabby", age: "1 yr", img: "https://images.unsplash.com/photo-1495360010541-f48722b34f7d?w=600&h=800&fit=crop", trait: "Playful" },
+  { name: "Shadow", breed: "Black Shorthair", age: "11 yrs", img: "https://images.unsplash.com/photo-1526336024174-e58f5cdd8e13?w=600&h=800&fit=crop", trait: "Wise" },
+  { name: "Pepper", breed: "Tuxedo", age: "1 yr", img: "https://images.unsplash.com/photo-1533743983669-94fa5c4338ec?w=600&h=800&fit=crop", trait: "Curious" },
+  { name: "Mochi", breed: "Calico", age: "5 yrs", img: "https://images.unsplash.com/photo-1501820488136-72669149e0d4?w=600&h=800&fit=crop", trait: "Sweet" },
+];
 
 export default function HomePage() {
+  const [selectedCat, setSelectedCat] = useState(0);
+  const [loved, setLoved] = useState(false);
+
+  const handleLove = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (!loved) {
+      setLoved(true);
+      confetti({ particleCount: 40, spread: 60, origin: { y: 0.6 }, colors: ["#FF6B6B", "#9B8CE0", "#5FC79B"] });
+    } else setLoved(false);
+  };
+
   return (
-    <div className="flex flex-col">
-      {/* ============ HERO ============ */}
-      <section className="relative overflow-hidden">
-        {/* Soft gradient blobs */}
-        <div className="pointer-events-none absolute -top-24 -left-16 h-80 w-80 rounded-full bg-primary/25 blur-3xl" />
-        <div className="pointer-events-none absolute top-10 right-0 h-96 w-96 rounded-full bg-accent/20 blur-3xl" />
-        <div className="pointer-events-none absolute bottom-0 left-1/3 h-72 w-72 rounded-full bg-secondary blur-3xl" />
+    <div className="min-h-screen pb-24 overflow-hidden">
+      {/* ===== HERO ===== */}
+      <section className="relative pt-10 sm:pt-16 pb-20 px-4 max-w-6xl mx-auto">
+        <div className="grid lg:grid-cols-[1.1fr_1fr] gap-12 lg:gap-8 items-center">
+          {/* Left */}
+          <motion.div
+            initial={{ opacity: 0, y: 24 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="space-y-7 relative"
+          >
+            {/* Floating sticker */}
+            <StickerBadge color="honey" rotate={-8} className="absolute -top-4 right-4 sm:right-20 animate-float z-20 hidden sm:inline-flex">
+              <Sparkles className="w-3.5 h-3.5" /> #hackthekitty 2026
+            </StickerBadge>
 
-        {/* Faint scattered paws */}
-        <Paw className="pointer-events-none absolute left-[8%] top-[22%] h-10 w-10 -rotate-12 text-primary/10" />
-        <Paw className="pointer-events-none absolute right-[12%] top-[30%] h-8 w-8 rotate-12 text-accent/15" />
-        <Paw className="pointer-events-none absolute left-[18%] bottom-[12%] h-7 w-7 rotate-6 text-primary/10" />
-        <Paw className="pointer-events-none absolute right-[22%] bottom-[18%] h-9 w-9 -rotate-6 text-accent/10" />
-
-        <div className="relative mx-auto max-w-6xl px-4 py-20 sm:px-6 sm:py-28 lg:px-8">
-          <div className="mx-auto max-w-3xl text-center">
-            {/* Logo */}
-            <div className="mb-8 flex justify-center">
-              <div className="rounded-3xl bg-card p-4 shadow-md ring-1 ring-border">
-                <Image
-                  src="/cat.png"
-                  alt="ForeverHome AI"
-                  width={100}
-                  height={100}
-                  className="h-[100px] w-[100px] object-contain"
-                  priority
-                />
-              </div>
-            </div>
-
-            {/* AI pill badge */}
-            <div className="mb-6 flex justify-center">
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-secondary px-4 py-1.5 text-sm font-bold text-secondary-foreground ring-1 ring-primary/15">
-                <Sparkles className="h-4 w-4" />
-                Powered by AI
+            <div className="inline-flex items-center gap-2 bg-white border-2 border-cocoa rounded-full pl-1.5 pr-4 py-1.5 shadow-[3px_3px_0px_0px_rgba(42,29,20,1)]">
+              <span className="flex items-center gap-1 bg-cocoa text-cream text-xs font-bold px-2.5 py-1 rounded-full">
+                <span className="w-1.5 h-1.5 rounded-full bg-sage animate-pulse" /> LIVE
               </span>
+              <span className="text-sm font-semibold text-cocoa">9 cats looking for homes</span>
             </div>
 
-            <h1 className="text-4xl font-extrabold tracking-tight text-cat-dark sm:text-5xl lg:text-6xl">
-              Every cat deserves a{" "}
-              <span className="text-primary">forever home</span>
+            <h1 className="font-display text-5xl sm:text-6xl lg:text-7xl font-black text-cocoa leading-[0.95] tracking-tight">
+              Every cat<br />
+              deserves a<br />
+              <span className="relative inline-block">
+                <span className="text-gradient-warm italic">forever</span>
+                <svg className="absolute -bottom-2 left-0 w-full" viewBox="0 0 300 24" fill="none" preserveAspectRatio="none">
+                  <path d="M6 16C70 6 230 6 294 16" stroke="#FF6B6B" strokeWidth="6" strokeLinecap="round" />
+                  <path d="M20 20C90 13 210 13 280 20" stroke="#F5B942" strokeWidth="4" strokeLinecap="round" opacity="0.6" />
+                </svg>
+              </span>{" "}
+              home.
             </h1>
 
-            <p className="mx-auto mt-5 max-w-2xl text-lg leading-relaxed text-muted-foreground sm:text-xl">
-              ForeverHome AI helps shelters find the right match the first time
-              &mdash; then supports adopters through the critical first 14 days so
-              cats stay home for good.
+            <p className="text-lg text-cocoa/70 font-medium max-w-md leading-relaxed">
+              Every forever home is a new base of operations. Meet adorable cats, get 
+              matched by our AI, and help one more feline peacefully rule the world.
             </p>
 
-            {/* CTAs */}
-            <div className="mt-9 flex flex-col justify-center gap-3 sm:flex-row">
+            <div className="flex flex-wrap gap-3 pt-1">
               <Link href="/cats">
-                <Button
-                  size="lg"
-                  className="w-full cursor-pointer rounded-2xl bg-primary px-8 py-6 text-base font-bold text-primary-foreground shadow-md shadow-primary/25 transition-all hover:-translate-y-0.5 hover:bg-primary/90 hover:shadow-lg sm:w-auto"
-                >
-                  <Sparkles className="mr-2 h-5 w-5" />
-                  Find Your Match
-                  <ArrowRight className="ml-2 h-5 w-5" />
-                </Button>
-              </Link>
-              <Link href="/register">
-                <Button
-                  size="lg"
-                  variant="outline"
-                  className="w-full cursor-pointer rounded-2xl border-2 border-primary/25 bg-card px-8 py-6 text-base font-bold text-cat-dark transition-all hover:-translate-y-0.5 hover:bg-secondary sm:w-auto"
-                >
-                  <Home className="mr-2 h-5 w-5 text-primary" />
-                  I&apos;m a Shelter
+                <Button className="bg-coral text-white hover:bg-coral-deep px-6 py-3 rounded-full font-bold shadow-[4px_4px_0px_0px_rgba(42,29,20,1)] hover:shadow-[6px_6px_0px_0px_rgba(42,29,20,1)] hover:-translate-y-0.5 transition-all" size="lg">
+                  <PawPrint className="w-5 h-5 mr-2" />
+                  Meet the Cats
+                  <ArrowRight className="w-4 h-4 ml-2" />
                 </Button>
               </Link>
             </div>
 
-            {/* Trust stats */}
-            <div className="mt-10 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm font-semibold text-muted-foreground">
-              <span className="inline-flex items-center gap-1.5">
-                <ShieldCheck className="h-4 w-4 text-accent" />
-                Transparent AI
-              </span>
-              <span className="text-border">&bull;</span>
-              <span className="inline-flex items-center gap-1.5">
-                <HeartHandshake className="h-4 w-4 text-primary" />
-                14-Day Coach
-              </span>
-              <span className="text-border">&bull;</span>
-              <span className="inline-flex items-center gap-1.5">
-                <Cat className="h-4 w-4 text-accent" />
-                Shelter-loved
-              </span>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ============ HOW IT WORKS ============ */}
-      <section className="py-16 sm:py-24">
-        <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
-          <div className="mb-14 text-center">
-            <span className="mb-3 inline-block rounded-full bg-secondary px-4 py-1.5 text-sm font-bold text-secondary-foreground">
-              How it works
-            </span>
-            <h2 className="text-3xl font-extrabold text-cat-dark sm:text-4xl">
-              Three steps to a happy adoption
-            </h2>
-          </div>
-
-          <div className="grid gap-6 md:grid-cols-3">
-            {[
-              {
-                icon: Brain,
-                badge: "bg-secondary text-primary",
-                title: "Smart Matching",
-                desc: "Our AI compares each cat\u2019s personality with an adopter\u2019s lifestyle \u2014 no black boxes, just transparent, caring guidance.",
-              },
-              {
-                icon: HeartHandshake,
-                badge: "bg-[#E9F1ED] text-accent",
-                title: "14-Day Coach",
-                desc: "After adoption, the AI coach helps adopters understand normal adjustment behaviors with daily check-ins and gentle support.",
-              },
-              {
-                icon: LineChart,
-                badge: "bg-secondary text-primary",
-                title: "Progress Tracking",
-                desc: "Daily check-ins build a visual timeline showing how each cat is settling in \u2014 giving shelters visibility without the phone calls.",
-              },
-            ].map((item) => (
-              <Card
-                key={item.title}
-                className="group rounded-3xl border-border bg-card shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md"
-              >
-                <CardContent className="p-7">
-                  <div
-                    className={`${item.badge} mb-5 flex h-14 w-14 items-center justify-center rounded-2xl transition-transform duration-300 group-hover:scale-110`}
-                  >
-                    <item.icon className="h-7 w-7" />
-                  </div>
-                  <h3 className="mb-2 text-xl font-bold text-cat-dark">
-                    {item.title}
-                  </h3>
-                  <p className="leading-relaxed text-muted-foreground">
-                    {item.desc}
+            {/* Stats row — factual, verifiable against demo data */}
+            <div className="flex items-center gap-6 pt-6 border-t-2 border-cocoa/10">
+              {[
+                { value: "9", label: "Cats available" },
+                { value: "14", label: "Day protocol", star: false },
+                { value: "3", label: "Partner shelters", star: false },
+              ].map((s) => (
+                <div key={s.label}>
+                  <p className="font-display text-3xl font-black text-cocoa flex items-center gap-1">
+                    {s.value}
+                    {s.star && <Star className="w-5 h-5 fill-honey text-honey" />}
                   </p>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+                  <p className="text-xs font-bold text-cocoa/50 uppercase tracking-wide">{s.label}</p>
+                </div>
+              ))}
+            </div>
+          </motion.div>
+
+          {/* Right - Interactive cat card stack */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.6, delay: 0.15 }}
+            className="relative"
+          >
+            {/* Decorative back cards */}
+            <div className="absolute inset-0 bg-lavender rounded-[32px] border-2 border-cocoa rotate-6 scale-95 opacity-40" />
+            <div className="absolute inset-0 bg-sage rounded-[32px] border-2 border-cocoa -rotate-3 scale-97 opacity-50" />
+
+            <CatEarCard earColor="coral" hover={false}>
+              <div className="relative aspect-[16/10] rounded-t-[26px] overflow-hidden">
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={selectedCat}
+                    initial={{ opacity: 0, scale: 1.05 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.3 }}
+                    className="absolute inset-0"
+                  >
+                    <Image src={heroCats[selectedCat].img} alt={heroCats[selectedCat].name} fill className="object-cover" priority />
+                  </motion.div>
+                </AnimatePresence>
+                <div className="absolute inset-0 bg-gradient-to-t from-cocoa/60 via-transparent to-transparent" />
+
+                {/* Compatibility sticker */}
+                <div className="absolute top-3 right-3">
+                  <StickerBadge color="sage" rotate={8}>
+                    <Sparkles className="w-3 h-3" /> Compatibility Check
+                  </StickerBadge>
+                </div>
+
+                {/* Love button */}
+                <button
+                  onClick={handleLove}
+                  className={`absolute top-3 left-3 w-10 h-10 rounded-2xl flex items-center justify-center border-2 border-cocoa shadow-[3px_3px_0px_0px_rgba(42,29,20,1)] transition-all active:scale-90 ${loved ? "bg-coral" : "bg-white"}`}
+                >
+                  <Heart className={`w-5 h-5 transition-all ${loved ? "text-white fill-white scale-110" : "text-cocoa"}`} />
+                </button>
+
+                {/* Name overlay */}
+                <div className="absolute bottom-3 left-4 right-4 flex items-end justify-between">
+                  <div>
+                    <h3 className="font-display text-2xl font-black text-white drop-shadow-lg">{heroCats[selectedCat].name}</h3>
+                    <p className="text-white/90 font-semibold text-sm drop-shadow">{heroCats[selectedCat].breed} · {heroCats[selectedCat].age}</p>
+                  </div>
+                  <Badge className="bg-honey text-cocoa">{heroCats[selectedCat].trait}</Badge>
+                </div>
+              </div>
+
+              <div className="p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <PawRating value={5} />
+                  <span className="text-xs font-bold text-cocoa/50">Loved by {120 + selectedCat * 7} people</span>
+                </div>
+
+                {/* Thumbnail strip */}
+                <div className="flex gap-2">
+                  {heroCats.map((cat, idx) => (
+                    <button
+                      key={cat.name}
+                      onClick={() => { setSelectedCat(idx); setLoved(false); }}
+                      className={`relative flex-1 aspect-square rounded-xl overflow-hidden border-2 transition-all ${selectedCat === idx ? "border-coral shadow-[2px_2px_0px_0px_rgba(42,29,20,1)] scale-105" : "border-cocoa/10 opacity-50 hover:opacity-100"}`}
+                    >
+                      <Image src={cat.img} alt={cat.name} fill className="object-cover" />
+                    </button>
+                  ))}
+                </div>
+
+                <Link href="/cats" className="block">
+                  <Button className="w-full bg-cocoa text-cream hover:bg-cocoa-soft rounded-full font-bold" >
+                    Browse All Cats
+                    <ArrowUpRight className="w-4 h-4 ml-2" />
+                  </Button>
+                </Link>
+              </div>
+            </CatEarCard>
+          </motion.div>
         </div>
       </section>
 
-      {/* ============ FOR SHELTERS & ADOPTERS ============ */}
-      <section className="py-16 sm:py-24">
-        <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
-          <div className="mb-14 text-center">
-            <span className="mb-3 inline-block rounded-full bg-secondary px-4 py-1.5 text-sm font-bold text-secondary-foreground">
-              Built for both sides
-            </span>
-            <h2 className="text-3xl font-extrabold text-cat-dark sm:text-4xl">
-              Value for everyone in the journey
-            </h2>
-          </div>
-
-          <div className="grid gap-6 lg:grid-cols-2">
-            {/* For Adopters */}
-            <div className="relative overflow-hidden rounded-3xl border border-primary/15 bg-secondary/60 p-8 sm:p-10">
-              <Paw className="pointer-events-none absolute -right-4 -top-4 h-24 w-24 rotate-12 text-primary/10" />
-              <div className="mb-6 flex items-center gap-3">
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary text-primary-foreground">
-                  <HeartHandshake className="h-6 w-6" />
-                </div>
-                <h3 className="text-2xl font-extrabold text-cat-dark">
-                  For Adopters
-                </h3>
-              </div>
-              <ul className="space-y-4">
-                {[
-                  "Find a cat that genuinely fits your home and lifestyle",
-                  "Understand what to expect in the first two weeks",
-                  "Daily AI coaching that reduces stress for you and your cat",
-                  "Honest, judgment-free guidance every step of the way",
-                ].map((line) => (
-                  <li key={line} className="flex items-start gap-3">
-                    <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/15 text-primary">
-                      <Check className="h-4 w-4" />
-                    </span>
-                    <span className="font-semibold text-cat-dark/80">{line}</span>
-                  </li>
-                ))}
-              </ul>
+      {/* ===== MARQUEE ===== */}
+      <section className="relative py-4 bg-cocoa border-y-2 border-cocoa overflow-hidden">
+        <div className="flex whitespace-nowrap animate-marquee">
+          {[...Array(2)].map((_, dup) => (
+            <div key={dup} className="flex items-center gap-8 pr-8">
+              {["Vaccinated 🩺", "Microchipped 🔖", "Spayed & Neutered ✂️", "Vet Checked ✅", "9 Lives Protocol 🐾", "Rule-Based Matching 📋", "Transparent Scoring 🔍"].map((item) => (
+                <span key={item} className="text-cream font-display font-bold text-lg flex items-center gap-8">
+                  {item}
+                  <PawPrint className="w-4 h-4 text-coral" />
+                </span>
+              ))}
             </div>
-
-            {/* For Shelters */}
-            <div className="relative overflow-hidden rounded-3xl border border-accent/20 bg-[#EDF3F0] p-8 sm:p-10">
-              <Paw className="pointer-events-none absolute -right-4 -top-4 h-24 w-24 rotate-12 text-accent/15" />
-              <div className="mb-6 flex items-center gap-3">
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-accent text-accent-foreground">
-                  <Users className="h-6 w-6" />
-                </div>
-                <h3 className="text-2xl font-extrabold text-cat-dark">
-                  For Shelters
-                </h3>
-              </div>
-              <ul className="space-y-4">
-                {[
-                  "Spot compatibility concerns before the adoption happens",
-                  "Reduce returns with better-matched placements",
-                  "See how each cat is adjusting without chasing phone calls",
-                  "Keep staff in control \u2014 AI supports, humans decide",
-                ].map((line) => (
-                  <li key={line} className="flex items-start gap-3">
-                    <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-accent/20 text-accent">
-                      <Check className="h-4 w-4" />
-                    </span>
-                    <span className="font-semibold text-cat-dark/80">{line}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
+          ))}
         </div>
       </section>
 
-      {/* ============ TRUST / PROMISE BAND ============ */}
-      <section className="bg-secondary/50 py-16 sm:py-24">
-        <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
-          <div className="mb-14 text-center">
-            <span className="mb-3 inline-block rounded-full bg-card px-4 py-1.5 text-sm font-bold text-primary ring-1 ring-primary/15">
-              Our promise
-            </span>
-            <h2 className="text-3xl font-extrabold text-cat-dark sm:text-4xl">
-              Built with love, designed with care
-            </h2>
-          </div>
+      {/* ===== HOW IT WORKS ===== */}
+      <section className="py-20 px-4 max-w-6xl mx-auto">
+        <div className="text-center mb-14 space-y-4">
+          <SectionTag>How it works</SectionTag>
+          <h2 className="font-display text-4xl sm:text-5xl font-black text-cocoa tracking-tight">
+            Three steps to your<br /><span className="text-gradient-warm">purr-fect match</span>
+          </h2>
+        </div>
 
-          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-            {[
-              {
-                icon: Search,
-                title: "Transparent rules",
-                desc: "Every assessment shows exactly which rules were triggered and why.",
-              },
-              {
-                icon: ShieldCheck,
-                title: "Safety first",
-                desc: "Medical concerns are escalated. AI never provides veterinary advice.",
-              },
-              {
-                icon: MessageCircleHeart,
-                title: "Compassionate language",
-                desc: "High risk doesn\u2019t mean a bad adopter. Results are explained without judgment.",
-              },
-              {
-                icon: Users,
-                title: "Human decisions",
-                desc: "Shelter staff always make the final call. ForeverHome is a support tool.",
-              },
-            ].map((item) => (
-              <div
-                key={item.title}
-                className="rounded-3xl border border-border bg-card p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md"
-              >
-                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-secondary text-primary">
-                  <item.icon className="h-6 w-6" />
+        <div className="grid md:grid-cols-3 gap-6 lg:gap-8">
+          {[
+            { step: "01", icon: Cat, title: "Browse & discover", desc: "Explore profiles with personality traits, photos, and real compatibility scores.", color: "coral" as const, rotate: -2 },
+            { step: "02", icon: Zap, title: "Take the quiz", desc: "Answer 5 scenario questions. Our rule engine identifies compatibility strengths and concerns for every cat.", color: "lavender" as const, rotate: 1 },
+            { step: "03", icon: MessageCircle, title: "9 Lives + maintenance", desc: "Follow the 9 Lives core curriculum, then continue with Days 10–14 in Maintenance Mode for long-term settling support.", color: "sage" as const, rotate: -1 },
+          ].map((item, idx) => (
+            <motion.div
+              key={item.step}
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: idx * 0.12 }}
+              style={{ rotate: `${item.rotate}deg` }}
+            >
+              <div className="bg-white rounded-3xl p-7 border-2 border-cocoa shadow-[6px_6px_0px_0px_rgba(42,29,20,1)] hover:shadow-[9px_9px_0px_0px_rgba(42,29,20,1)] hover:-translate-y-1 transition-all duration-300 relative h-full">
+                <span className="font-display absolute top-6 right-7 text-5xl font-black text-cocoa/8">{item.step}</span>
+                <div className={`w-14 h-14 rounded-2xl mb-6 flex items-center justify-center border-2 border-cocoa shadow-[3px_3px_0px_0px_rgba(42,29,20,1)] ${item.color === "coral" ? "bg-coral" : item.color === "lavender" ? "bg-lavender" : "bg-sage"}`}>
+                  <item.icon className="w-7 h-7 text-white" />
                 </div>
-                <p className="mb-1.5 text-base font-bold text-cat-dark">
-                  {item.title}
-                </p>
-                <p className="text-sm leading-relaxed text-muted-foreground">
-                  {item.desc}
-                </p>
+                <h3 className="font-display text-2xl font-black text-cocoa mb-3">{item.title}</h3>
+                <p className="text-cocoa/70 font-medium leading-relaxed">{item.desc}</p>
               </div>
-            ))}
-          </div>
+            </motion.div>
+          ))}
         </div>
       </section>
 
-      {/* ============ BIG CTA ============ */}
-      <section className="px-4 py-16 sm:px-6 sm:py-24 lg:px-8">
-        <div className="relative mx-auto max-w-5xl overflow-hidden rounded-[2rem] bg-gradient-to-br from-primary via-primary to-[#D9614C] px-6 py-16 text-center shadow-lg sm:px-12 sm:py-20">
-          {/* Paw motifs */}
-          <Paw className="pointer-events-none absolute left-8 top-8 h-12 w-12 -rotate-12 text-white/15" />
-          <Paw className="pointer-events-none absolute right-10 top-16 h-8 w-8 rotate-12 text-white/15" />
-          <Paw className="pointer-events-none absolute bottom-8 left-1/4 h-10 w-10 rotate-6 text-white/10" />
-          <Paw className="pointer-events-none absolute bottom-12 right-12 h-14 w-14 -rotate-6 text-white/10" />
+      {/* ===== TESTIMONIAL ===== */}
+      <section className="py-16 px-4 max-w-5xl mx-auto">
+        <div className="text-center mb-12">
+          <SectionTag>Happy families</SectionTag>
+        </div>
+        <div className="grid md:grid-cols-3 gap-6">
+          {[
+            { name: "Sarah M.", cat: "Luna", text: "The 9 Lives Dashboard helped me understand Luna's behavior so quickly. By Maintenance Mode, she felt completely at home.", rating: 5, color: "coral" as const },
+            { name: "James T.", cat: "Milo", text: "The compatibility report was honest about Milo's energy level. Knowing what to expect made all the difference for a first-time owner.", rating: 5, color: "lavender" as const },
+            { name: "Priya K.", cat: "Oliver", text: "Oliver's profile was spot-on — gentle, social, follows me everywhere. The daily tips made settling in so smooth.", rating: 5, color: "sage" as const },
+          ].map((t, i) => (
+            <motion.div
+              key={t.name}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: i * 0.1 }}
+              className="bg-white rounded-3xl p-6 border-2 border-cocoa shadow-[5px_5px_0px_0px_rgba(42,29,20,1)] relative"
+            >
+              <Quote className={`w-8 h-8 mb-3 ${t.color === "coral" ? "text-coral" : t.color === "lavender" ? "text-lavender" : "text-sage"}`} fill="currentColor" />
+              <p className="text-cocoa/80 font-medium leading-relaxed mb-4">&ldquo;{t.text}&rdquo;</p>
+              <PawRating value={t.rating} size={16} className="mb-3" />
+              <div className="flex items-center gap-3 pt-3 border-t-2 border-cocoa/10">
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center font-black text-white border-2 border-cocoa ${t.color === "coral" ? "bg-coral" : t.color === "lavender" ? "bg-lavender" : "bg-sage"}`}>
+                  {t.name[0]}
+                </div>
+                <div>
+                  <p className="font-bold text-cocoa text-sm">{t.name}</p>
+                  <p className="text-xs text-cocoa/50 font-semibold">Adopted {t.cat}</p>
+                </div>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      </section>
 
-          <div className="relative">
-            <div className="mb-6 flex justify-center">
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-white/20 px-4 py-1.5 text-sm font-bold text-white backdrop-blur-sm">
-                <Cat className="h-4 w-4" />
-                Ready when you are
-              </span>
-            </div>
-            <h2 className="text-3xl font-extrabold text-white sm:text-4xl lg:text-5xl">
-              Ready to find your purrfect match?
-            </h2>
-            <p className="mx-auto mt-4 max-w-xl text-lg leading-relaxed text-white/90">
-              Browse adoptable cats, run a transparent compatibility check, and meet
-              your AI coach for the first 14 days.
-            </p>
-            <div className="mt-9 flex flex-col justify-center gap-3 sm:flex-row">
+      {/* ===== WHY US - DARK ===== */}
+      <section className="py-16 px-4 max-w-5xl mx-auto">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.98 }}
+          whileInView={{ opacity: 1, scale: 1 }}
+          viewport={{ once: true }}
+          className="bg-cocoa rounded-[32px] p-10 sm:p-14 border-2 border-cocoa shadow-[8px_8px_0px_0px_rgba(255,107,107,1)] relative overflow-hidden noise-overlay"
+        >
+          <div className="absolute top-0 right-0 w-72 h-72 bg-coral/15 rounded-full blur-3xl" />
+          <div className="absolute bottom-0 left-0 w-72 h-72 bg-lavender/15 rounded-full blur-3xl" />
+          <div className="relative z-10 grid lg:grid-cols-2 gap-10 items-center">
+            <div className="space-y-5">
+              <SectionTag className="[&_span]:!text-honey [&_span]:!border-honey">The promise</SectionTag>
+              <h2 className="font-display text-4xl sm:text-5xl font-black text-cream leading-[1.05]">
+                More than adoption.
+                <br />
+                <span className="text-gradient-warm italic">A lifelong bond.</span>
+              </h2>
+              <p className="text-cream/70 font-medium leading-relaxed">
+                The first 14 days are critical. The 9 Lives Protocol builds the core bond in Days 1–9,
+                and Maintenance Mode keeps support going through Days 10–14 so your new cat feels safe and loved.
+              </p>
               <Link href="/cats">
-                <Button
-                  size="lg"
-                  className="w-full cursor-pointer rounded-2xl bg-card px-10 py-6 text-base font-bold text-primary shadow-md transition-all hover:-translate-y-0.5 hover:bg-white hover:shadow-lg sm:w-auto"
-                >
-                  <Sparkles className="mr-2 h-5 w-5" />
-                  Find Your Match
-                  <ArrowRight className="ml-2 h-5 w-5" />
-                </Button>
-              </Link>
-              <Link href="/register">
-                <Button
-                  size="lg"
-                  variant="outline"
-                  className="w-full cursor-pointer rounded-2xl border-2 border-white/60 bg-transparent px-10 py-6 text-base font-bold text-white transition-all hover:-translate-y-0.5 hover:bg-white/10 sm:w-auto"
-                >
-                  <Home className="mr-2 h-5 w-5" />
-                  I&apos;m a Shelter
+                <Button className="bg-honey text-cocoa hover:bg-honey/80 px-6 py-3 rounded-full font-bold shadow-[4px_4px_0px_0px_rgba(42,29,20,1)] hover:shadow-[6px_6px_0px_0px_rgba(42,29,20,1)] hover:-translate-y-0.5 transition-all mt-2" size="lg">
+                  <Heart className="w-5 h-5 mr-2" /> Start your journey
                 </Button>
               </Link>
             </div>
+            <div className="grid grid-cols-2 gap-4">
+              {[
+                { value: "9", label: "Lives protocol", c: "text-coral" },
+                { value: "24/7", label: "AI coach", c: "text-lavender" },
+                { value: "3", label: "Partner shelters", c: "text-sage" },
+                { value: "5", label: "Quiz questions", c: "text-honey" },
+              ].map((s) => (
+                <div key={s.label} className="bg-cream/10 backdrop-blur-sm p-5 rounded-2xl border-2 border-cream/20 text-center hover:bg-cream/15 transition-colors">
+                  <p className={`font-display text-3xl font-black ${s.c}`}>{s.value}</p>
+                  <p className="text-xs font-bold text-cream/60 uppercase tracking-wide mt-1">{s.label}</p>
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
+        </motion.div>
       </section>
+
+      {/* ===== FINAL CTA ===== */}
+      <section className="py-20 px-4 max-w-3xl mx-auto text-center">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="space-y-6"
+        >
+          <div className="w-20 h-20 mx-auto rounded-3xl bg-coral flex items-center justify-center border-2 border-cocoa shadow-[5px_5px_0px_0px_rgba(42,29,20,1)] animate-wiggle">
+            <PawPrint className="w-10 h-10 text-white" />
+          </div>
+          <h2 className="font-display text-4xl sm:text-6xl font-black text-cocoa tracking-tight leading-[0.95]">
+            Your next ruler<br /><span className="text-gradient-warm italic">is waiting.</span>
+          </h2>
+          <p className="text-cocoa/70 font-medium text-lg max-w-md mx-auto">
+            Take the 2-minute quiz or browse our cats today. Help one more feline establish their forever base of operations.
+          </p>
+          <div className="flex flex-wrap justify-center gap-3 pt-2">
+            <Link href="/cats">
+              <Button className="bg-coral text-white hover:bg-coral-deep px-6 py-3 rounded-full font-bold shadow-[4px_4px_0px_0px_rgba(42,29,20,1)] hover:shadow-[6px_6px_0px_0px_rgba(42,29,20,1)] hover:-translate-y-0.5 transition-all" size="lg">
+                <Cat className="w-5 h-5 mr-2" /> Browse Cats
+              </Button>
+            </Link>
+            <Link href="/assessment/barnaby">
+              <Button variant="outline" className="border-2 border-cocoa bg-transparent text-cocoa hover:bg-cocoa/5 px-6 py-3 rounded-full font-bold" size="lg">
+                <Sparkles className="w-4 h-4 mr-2" /> Take Quiz
+              </Button>
+            </Link>
+          </div>
+          <p className="text-xs text-cocoa/40 font-medium pt-1">
+            No account required — jump straight into the quiz
+          </p>
+        </motion.div>
+      </section>
+
+      {/* ===== FUN FACTS SLIDESHOW ===== */}
+      <FunFactsSlideshow />
+
     </div>
   );
 }

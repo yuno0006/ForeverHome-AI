@@ -16,13 +16,22 @@ import {
   updateUserDocument,
 } from "@/lib/auth";
 import { createShelter } from "@/lib/shelterService";
+import { saveAdopterProfile } from "@/lib/firestoreService";
 import { UserRole } from "@/types/user";
+import {
+  HomeType,
+  CatExperience,
+  WorkHours,
+  TravelFrequency,
+  HouseholdNoise,
+  PersonalityPreference,
+  AgePreference,
+} from "@/types/adopterProfile";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 
-type HomeType = "apartment" | "house" | "other";
 type PetExperience = "none" | "beginner" | "intermediate" | "experienced";
 
 const selectClasses =
@@ -45,9 +54,21 @@ export default function OnboardingPage() {
   const [homeType, setHomeType] = useState<HomeType>("apartment");
   const [adultsInHome, setAdultsInHome] = useState(1);
   const [hasChildren, setHasChildren] = useState(false);
+  const [childrenAges, setChildrenAges] = useState<string[]>([]);
   const [hasOtherPets, setHasOtherPets] = useState(false);
+  const [existingCats, setExistingCats] = useState(0);
+  const [existingDogs, setExistingDogs] = useState(0);
+  const [otherPets, setOtherPets] = useState("");
+  const [hasGarden, setHasGarden] = useState(false);
+  const [indoorOnlyPreference, setIndoorOnlyPreference] = useState(true);
   const [petExperience, setPetExperience] = useState<PetExperience>("none");
   const [hoursAwayDaily, setHoursAwayDaily] = useState(8);
+  const [workHours, setWorkHours] = useState<WorkHours>("out-part-day");
+  const [travelFrequency, setTravelFrequency] = useState<TravelFrequency>("occasional");
+  const [householdNoise, setHouseholdNoise] = useState<HouseholdNoise>("moderate");
+  const [personalityPreference, setPersonalityPreference] = useState<PersonalityPreference[]>([]);
+  const [agePreference, setAgePreference] = useState<AgePreference[]>([]);
+  const [specialNeedsOpenness, setSpecialNeedsOpenness] = useState(false);
 
   // Shelter fields
   const [shelterName, setShelterName] = useState("");
@@ -104,16 +125,45 @@ export default function OnboardingPage() {
     setError("");
     setSubmitting(true);
     try {
+      // Save adopter profile to Firestore subcollection
+      await saveAdopterProfile(user.uid, {
+        name: displayName.trim(),
+        profilePhoto: null,
+        email: user.email || "",
+        phone: null,
+        homeType,
+        hasChildren,
+        childrenAges: hasChildren ? childrenAges : [],
+        hasExistingPets: hasOtherPets,
+        existingPets: {
+          cats: hasOtherPets ? existingCats : 0,
+          dogs: hasOtherPets ? existingDogs : 0,
+          other: hasOtherPets && otherPets.trim() ? [otherPets.trim()] : [],
+        },
+        hasGarden,
+        indoorOnlyPreference,
+        workHours,
+        travelFrequency,
+        householdNoise,
+        catExperience: petExperience as CatExperience,
+        personalityPreference,
+        agePreference,
+        specialNeedsOpenness,
+      });
+
+      // Update user document with profile reference
       await updateUserDocument(user.uid, {
         role: "adopter",
         displayName: displayName.trim(),
         onboardingComplete: true,
         shelterId: null,
+        hasAdopterProfile: true,
+        // Keep legacy profile for backward compatibility during migration
         profile: {
-          homeType,
+          homeType: homeType === "condo" ? "apartment" : homeType,
           adultsInHome: Number(adultsInHome) || 0,
           hasChildren,
-          childrenAges: [],
+          childrenAges: hasChildren ? childrenAges : [],
           hasOtherPets,
           petExperience,
           hoursAwayDaily: Number(hoursAwayDaily) || 0,
@@ -144,7 +194,9 @@ export default function OnboardingPage() {
     setError("");
     setSubmitting(true);
     try {
-      const shelterId = `shelter-${user.uid}`;
+      // Shelter docs are keyed by the admin's uid so firestore.rules can look
+      // up `shelters/{request.auth.uid}` directly when checking admin rights.
+      const shelterId = user.uid;
       await createShelter(
         {
           name: shelterName.trim(),
@@ -183,57 +235,62 @@ export default function OnboardingPage() {
   // While auth resolves or we are about to redirect, show a friendly loader.
   if (loading || !user || userDoc?.onboardingComplete) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-warm-cream">
-        <Loader2 className="size-8 animate-spin text-sunny" />
+      <div className="flex min-h-screen items-center justify-center bg-cream">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-16 h-16 rounded-3xl bg-coral flex items-center justify-center border-2 border-cocoa shadow-[4px_4px_0px_0px_rgba(42,29,20,1)] animate-wiggle">
+            <PawPrint className="w-8 h-8 text-white" />
+          </div>
+          <p className="font-display text-cocoa font-bold">Loading your journey…</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-warm-cream px-4 py-10">
+    <div className="min-h-screen bg-cream px-4 py-10">
       <div className="mx-auto w-full max-w-2xl">
         {/* Header + progress */}
         <div className="mb-8 text-center">
-          <div className="mx-auto mb-4 flex size-14 items-center justify-center rounded-2xl bg-sunny-light">
-            <Cat className="size-7 text-sunny" />
+          <div className="mx-auto mb-4 w-16 h-16 rounded-3xl bg-coral flex items-center justify-center border-2 border-cocoa shadow-[4px_4px_0px_0px_rgba(42,29,20,1)]">
+            <Cat className="w-8 h-8 text-white" />
           </div>
-          <h1 className="text-3xl font-bold text-cat-dark">
-            Welcome to ForeverHome
+          <h1 className="font-display text-4xl sm:text-5xl font-black text-cocoa tracking-tight">
+            Welcome to<br /><span className="text-gradient-warm italic">ForeverHome</span>
           </h1>
-          <p className="mt-2 text-muted-foreground">
+          <p className="mt-3 text-cocoa/70 font-medium">
             Let&apos;s set things up so we can find the perfect match.
           </p>
         </div>
 
         <div className="mb-8">
-          <div className="mb-2 flex items-center justify-between text-xs font-medium text-muted-foreground">
+          <div className="mb-2 flex items-center justify-between text-xs font-bold text-cocoa/50 uppercase tracking-wide">
             <span>
               Step {step + 1} of {totalSteps}
             </span>
             <span>{progress}%</span>
           </div>
-          <div className="h-2 w-full overflow-hidden rounded-full bg-sunny-light">
+          <div className="h-3 w-full overflow-hidden rounded-full bg-white border-2 border-cocoa shadow-[2px_2px_0px_0px_rgba(42,29,20,0.5)]">
             <div
-              className="h-full rounded-full bg-sunny transition-all duration-300"
+              className="h-full rounded-full bg-coral transition-all duration-300"
               style={{ width: `${progress}%` }}
             />
           </div>
         </div>
 
         {error && (
-          <p
-            className="mb-6 rounded-xl bg-heart/10 px-4 py-3 text-sm font-medium text-heart"
+          <div
+            className="mb-6 rounded-2xl bg-coral/10 border-2 border-coral px-4 py-3 text-sm font-bold text-coral flex items-center gap-2"
             role="alert"
           >
-            {error}
-          </p>
+            <span className="text-lg">⚠️</span> {error}
+          </div>
         )}
 
         {/* STEP 1 — Role selection */}
         {step === 0 && (
           <div>
             <h2 className="mb-6 text-center text-xl font-semibold text-cat-dark">
-              How would you like to use ForeverHome?
+              Who are you?
             </h2>
             <div className="grid gap-4 sm:grid-cols-2">
               <button
@@ -277,7 +334,7 @@ export default function OnboardingPage() {
                 </div>
                 <div>
                   <p className="text-lg font-semibold text-cat-dark">
-                    I&apos;m Shelter Staff
+                    Shelter / Rescue (Beta)
                   </p>
                   <p className="mt-1 text-sm text-muted-foreground">
                     Manage cats &amp; adoptions
@@ -333,18 +390,39 @@ export default function OnboardingPage() {
                 >
                   <option value="apartment">Apartment</option>
                   <option value="house">House</option>
+                  <option value="condo">Condo</option>
                   <option value="other">Other</option>
                 </select>
               </div>
 
-              <div className="flex flex-col gap-1.5">
-                <Label htmlFor="adultsInHome">Adults in home</Label>
-                <Input
-                  id="adultsInHome"
-                  type="number"
-                  min={0}
-                  value={adultsInHome}
-                  onChange={(e) => setAdultsInHome(Number(e.target.value))}
+              <div className="flex items-center justify-between rounded-xl border border-sunny/20 bg-warm-cream/50 px-4 py-3">
+                <div>
+                  <p className="text-sm font-medium text-cat-dark">
+                    Garden or outdoor space
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Do you have a garden or yard?
+                  </p>
+                </div>
+                <Switch
+                  checked={hasGarden}
+                  onCheckedChange={(v) => setHasGarden(v)}
+                  disabled={submitting}
+                />
+              </div>
+
+              <div className="flex items-center justify-between rounded-xl border border-sunny/20 bg-warm-cream/50 px-4 py-3">
+                <div>
+                  <p className="text-sm font-medium text-cat-dark">
+                    Indoor-only preference
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Prefer an indoor-only cat?
+                  </p>
+                </div>
+                <Switch
+                  checked={indoorOnlyPreference}
+                  onCheckedChange={(v) => setIndoorOnlyPreference(v)}
                   disabled={submitting}
                 />
               </div>
@@ -365,6 +443,35 @@ export default function OnboardingPage() {
                 />
               </div>
 
+              {hasChildren && (
+                <div className="flex flex-col gap-1.5">
+                  <Label>Children ages</Label>
+                  <div className="flex flex-wrap gap-2">
+                    {["0-4", "5-9", "10-14", "15+"].map((age) => (
+                      <button
+                        key={age}
+                        type="button"
+                        onClick={() => {
+                          if (childrenAges.includes(age)) {
+                            setChildrenAges(childrenAges.filter((a) => a !== age));
+                          } else {
+                            setChildrenAges([...childrenAges, age]);
+                          }
+                        }}
+                        className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
+                          childrenAges.includes(age)
+                            ? "bg-sunny text-cat-dark"
+                            : "bg-sunny/10 text-cat-dark hover:bg-sunny/20"
+                        }`}
+                        disabled={submitting}
+                      >
+                        {age}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               <div className="flex items-center justify-between rounded-xl border border-sunny/20 bg-warm-cream/50 px-4 py-3">
                 <div>
                   <p className="text-sm font-medium text-cat-dark">
@@ -381,8 +488,35 @@ export default function OnboardingPage() {
                 />
               </div>
 
+              {hasOtherPets && (
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="flex flex-col gap-1.5">
+                    <Label htmlFor="existingCats">Cats</Label>
+                    <Input
+                      id="existingCats"
+                      type="number"
+                      min={0}
+                      value={existingCats}
+                      onChange={(e) => setExistingCats(Number(e.target.value))}
+                      disabled={submitting}
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <Label htmlFor="existingDogs">Dogs</Label>
+                    <Input
+                      id="existingDogs"
+                      type="number"
+                      min={0}
+                      value={existingDogs}
+                      onChange={(e) => setExistingDogs(Number(e.target.value))}
+                      disabled={submitting}
+                    />
+                  </div>
+                </div>
+              )}
+
               <div className="flex flex-col gap-1.5">
-                <Label htmlFor="petExperience">Pet experience</Label>
+                <Label htmlFor="petExperience">Cat experience</Label>
                 <select
                   id="petExperience"
                   className={selectClasses}
@@ -400,14 +534,115 @@ export default function OnboardingPage() {
               </div>
 
               <div className="flex flex-col gap-1.5">
-                <Label htmlFor="hoursAwayDaily">Hours away daily</Label>
-                <Input
-                  id="hoursAwayDaily"
-                  type="number"
-                  min={0}
-                  max={24}
-                  value={hoursAwayDaily}
-                  onChange={(e) => setHoursAwayDaily(Number(e.target.value))}
+                <Label htmlFor="workHours">Work schedule</Label>
+                <select
+                  id="workHours"
+                  className={selectClasses}
+                  value={workHours}
+                  onChange={(e) => setWorkHours(e.target.value as WorkHours)}
+                  disabled={submitting}
+                >
+                  <option value="home-most-day">Home most of the day</option>
+                  <option value="out-part-day">Out part of the day</option>
+                  <option value="out-most-day">Out most of the day</option>
+                  <option value="varies">Varies</option>
+                </select>
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="householdNoise">Household activity level</Label>
+                <select
+                  id="householdNoise"
+                  className={selectClasses}
+                  value={householdNoise}
+                  onChange={(e) => setHouseholdNoise(e.target.value as HouseholdNoise)}
+                  disabled={submitting}
+                >
+                  <option value="quiet">Quiet</option>
+                  <option value="moderate">Moderate</option>
+                  <option value="active">Active</option>
+                </select>
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <Label>Personality preference</Label>
+                <div className="flex flex-wrap gap-2">
+                  {[
+                    { value: "calm", label: "Calm" },
+                    { value: "playful", label: "Playful" },
+                    { value: "independent", label: "Independent" },
+                    { value: "affectionate", label: "Affectionate" },
+                  ].map(({ value, label }) => (
+                    <button
+                      key={value}
+                      type="button"
+                      onClick={() => {
+                        const pref = value as PersonalityPreference;
+                        if (personalityPreference.includes(pref)) {
+                          setPersonalityPreference(
+                            personalityPreference.filter((p) => p !== pref)
+                          );
+                        } else {
+                          setPersonalityPreference([...personalityPreference, pref]);
+                        }
+                      }}
+                      className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
+                        personalityPreference.includes(value as PersonalityPreference)
+                          ? "bg-sunny text-cat-dark"
+                          : "bg-sunny/10 text-cat-dark hover:bg-sunny/20"
+                      }`}
+                      disabled={submitting}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <Label>Age preference</Label>
+                <div className="flex flex-wrap gap-2">
+                  {[
+                    { value: "kitten", label: "Kitten" },
+                    { value: "adult", label: "Adult" },
+                    { value: "senior", label: "Senior" },
+                  ].map(({ value, label }) => (
+                    <button
+                      key={value}
+                      type="button"
+                      onClick={() => {
+                        const pref = value as AgePreference;
+                        if (agePreference.includes(pref)) {
+                          setAgePreference(agePreference.filter((p) => p !== pref));
+                        } else {
+                          setAgePreference([...agePreference, pref]);
+                        }
+                      }}
+                      className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
+                        agePreference.includes(value as AgePreference)
+                          ? "bg-sunny text-cat-dark"
+                          : "bg-sunny/10 text-cat-dark hover:bg-sunny/20"
+                      }`}
+                      disabled={submitting}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between rounded-xl border border-sunny/20 bg-warm-cream/50 px-4 py-3">
+                <div>
+                  <p className="text-sm font-medium text-cat-dark">
+                    Open to special needs cats
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Cats that need extra care and attention
+                  </p>
+                </div>
+                <Switch
+                  checked={specialNeedsOpenness}
+                  onCheckedChange={(v) => setSpecialNeedsOpenness(v)}
                   disabled={submitting}
                 />
               </div>

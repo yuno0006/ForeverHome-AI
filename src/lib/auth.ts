@@ -67,19 +67,25 @@ export async function loginWithGoogle() {
   const { user } = credential;
 
   // Check if user doc already exists
-  const existingDoc = await fetchUserDocument(user.uid);
-  if (!existingDoc) {
-    await createUserDocument(user.uid, {
-      uid: user.uid,
-      email: user.email!,
-      displayName: user.displayName || "User",
-      // Temporary default. Onboarding lets the user choose their real role.
-      role: "adopter",
-      photoURL: user.photoURL || null,
-      onboardingComplete: false,
-      shelterId: null,
-      profile: null,
-    });
+  try {
+    const existingDoc = await fetchUserDocument(user.uid);
+    if (!existingDoc) {
+      await createUserDocument(user.uid, {
+        uid: user.uid,
+        email: user.email!,
+        displayName: user.displayName || "User",
+        // Temporary default. Onboarding lets the user choose their real role.
+        role: "adopter",
+        photoURL: user.photoURL || null,
+        onboardingComplete: false,
+        shelterId: null,
+        profile: null,
+      });
+    }
+  } catch (err) {
+    // Firestore may be unreachable — the AuthContext will synthesize a doc,
+    // so onboarding still triggers. Just log and continue.
+    console.warn("Firestore unavailable during Google sign-in, user doc not persisted:", err);
   }
 
   return credential;
@@ -139,4 +145,15 @@ export async function updateUserDocument(
 export async function updateUserRole(uid: string, role: UserRole) {
   const docRef = doc(db, "users", uid);
   await updateDoc(docRef, { role });
+}
+
+/**
+ * Get the current user's Firebase ID token, for attaching to API requests
+ * as `Authorization: Bearer <token>` so server routes can verify identity.
+ * Returns null if no user is signed in.
+ */
+export async function getIdToken(): Promise<string | null> {
+  const user = auth.currentUser;
+  if (!user) return null;
+  return user.getIdToken();
 }

@@ -25,6 +25,8 @@ export interface CompatibilityResult {
 export interface Match {
   id: string;
   catId: string;
+  adopterId?: string;
+  adopterProfileId?: string;
   adopterAnswers: import("./adopter").AdopterAnswers;
   result: CompatibilityResult;
   timestamp: string;

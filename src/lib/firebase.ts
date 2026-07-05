@@ -19,6 +19,7 @@ if (getApps().length === 0) {
   app = getApps()[0];
 }
 
+// Use default Firestore database
 const db: Firestore = getFirestore(app);
 const auth: Auth = getAuth(app);
 const storage: FirebaseStorage = getStorage(app);

@@ -1,15 +1,12 @@
 // Gemini AI integration for Adoption Counselor and 14-Day Coach
-// Cascades through 5 model tiers — if one hits rate limit or server error, tries the next
-// Falls back to deterministic responses when API key is not configured or all models exhausted
+// Uses direct Gemini API calls with fast failover between models
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 
 const MODEL_TIERS = [
-  "gemini-2.5-flash",
   "gemini-3.5-flash",
-  "gemini-3-flash",
-  "gemini-3.1-flash-lite",
-  "gemini-2.5-flash-lite",
+  "gemini-3-flash-preview",
+  "gemini-2.5-flash",
 ];
 
 function getModelUrl(model: string): string {
@@ -24,11 +21,16 @@ interface GeminiResponse {
   }[];
 }
 
-async function callGemini(prompt: string): Promise<string | null> {
+async function callAI(prompt: string): Promise<string | null> {
   if (!GEMINI_API_KEY) return null;
+
+  const TIMEOUT_MS = 5000;
 
   for (const model of MODEL_TIERS) {
     try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), TIMEOUT_MS);
+
       const res = await fetch(getModelUrl(model), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -39,44 +41,30 @@ async function callGemini(prompt: string): Promise<string | null> {
             maxOutputTokens: 500,
           },
         }),
+        signal: controller.signal,
       });
+
+      clearTimeout(timeoutId);
 
       if (res.ok) {
         const data: GeminiResponse = await res.json();
         const text = data.candidates?.[0]?.content?.parts?.[0]?.text ?? null;
         if (text) {
-          console.log(`[Gemini] Success with model: ${model}`);
           return text;
         }
-        // No text in response, try next model
-        console.log(`[Gemini] Empty response from ${model}, trying next`);
         continue;
       }
 
-      // 400 or 403 — bad request or forbidden, no point retrying other models
       if (res.status === 400 || res.status === 403) {
-        console.log(`[Gemini] ${res.status} from ${model} — not retryable, aborting`);
         return null;
       }
 
-      // 429 (rate limit) or 5xx (server error) — try next model
-      if (res.status === 429 || res.status >= 500) {
-        console.log(`[Gemini] ${res.status} from ${model}, trying next model`);
-        continue;
-      }
-
-      // Other error codes — try next model
-      console.log(`[Gemini] Unexpected ${res.status} from ${model}, trying next model`);
       continue;
-    } catch (error) {
-      // Network error — try next model
-      console.log(`[Gemini] Network error with ${model}, trying next model`);
+    } catch {
       continue;
     }
   }
 
-  // All models exhausted
-  console.log("[Gemini] All model tiers exhausted, returning null");
   return null;
 }
 
@@ -110,7 +98,7 @@ Provide a clear, compassionate explanation of:
 
 Keep it under 200 words. Use simple language. Be supportive, not discouraging.`;
 
-  const result = await callGemini(prompt);
+  const result = await callAI(prompt);
   return result ?? fallbackCounselorExplanation(catName, riskLevel, concerns, strengths);
 }
 
@@ -154,11 +142,11 @@ Provide helpful, specific behavioral guidance. Consider:
 
 Keep response under 150 words. Be warm and reassuring. If the message mentions medical emergency symptoms (bleeding, not eating for 24+ hours, difficulty breathing, seizures), immediately advise contacting an emergency vet.`;
 
-  const result = await callGemini(prompt);
+  const result = await callAI(prompt);
   return result ?? fallbackCoachResponse(catName, adoptionDay, message);
 }
 
-function fallbackCoachResponse(catName: string, day: number, message: string): string {
+export function fallbackCoachResponse(catName: string, day: number, message: string): string {
   const lower = message.toLowerCase();
 
   if (lower.includes("hiding") || lower.includes("won't come out")) {

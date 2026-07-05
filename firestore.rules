@@ -1,0 +1,173 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // ============================================
+    // ADOPTER PROFILES
+    // ============================================
+    // Users can only read and write their own adopter profile.
+    // Profiles are stored as a subcollection under the user document.
+    // Path: users/{userId}/adopterProfile/{profileId}
+    // 
+    // Security: Ensures users cannot access other users' personal information.
+    // Validates: Requirements 10.1
+    match /users/{userId}/adopterProfile/{profileId} {
+      allow read, write: if request.auth.uid == userId;
+    }
+
+    // ============================================
+    // USER META (wishlist, etc.)
+    // ============================================
+    // Small per-user metadata documents such as the saved-cats wishlist,
+    // stored at users/{userId}/meta/{docId}. Same ownership rule as the
+    // adopter profile — only the owning user can read/write their own data.
+    match /users/{userId}/meta/{metaId} {
+      allow read, write: if request.auth.uid == userId;
+    }
+    
+    // ============================================
+    // ASSESSMENTS
+    // ============================================
+    // Users can only read assessments where they are the adopter.
+    // Users can only create assessments for themselves.
+    // 
+    // Security: Prevents users from viewing other users' assessment results.
+    // Validates: Requirements 10.2
+    match /assessments/{assessmentId} {
+      // Allow read if the authenticated user is the adopter of this assessment
+      allow read: if request.auth.uid == resource.data.adopterUid;
+      
+      // Allow create if the authenticated user is creating an assessment for themselves
+      allow create: if request.auth.uid == request.resource.data.adopterUid;
+      
+      // No update or delete - assessments are immutable once created
+      allow update, delete: if false;
+    }
+    
+    // ============================================
+    // AI LOGS
+    // ============================================
+    // AI logs are write-only for authenticated users.
+    // No user can read AI logs (admin-only access via Cloud Functions).
+    // 
+    // Security: Protects user privacy by preventing access to AI interaction history.
+    // Only system administrators can access logs for debugging/analytics.
+    // Validates: Requirements 10.3, 7.1
+    match /aiLogs/{logId} {
+      // Any authenticated user can create a log entry
+      allow create: if request.auth != null;
+      
+      // No read access for users - prevents privacy leaks
+      allow read: if false;
+      
+      // No update or delete - logs are immutable
+      allow update, delete: if false;
+    }
+    
+    // ============================================
+    // CATS
+    // ============================================
+    // Cats are publicly readable for browsing.
+    // Only shelter admins can write (create, update, delete) cats.
+    // 
+    // Security: Ensures only authorized shelter staff can manage cat listings.
+    // Write access requires the user to be an admin of the shelter.
+    match /cats/{catId} {
+      // Anyone can read cat listings (including unauthenticated users for browsing)
+      allow read: if true;
+      
+      // Write access (create, update, delete) only for shelter admins
+      // Verifies that the authenticated user is an admin of a shelter document
+      allow write: if request.auth != null && 
+        get(/databases/$(database)/documents/shelters/$(request.auth.uid)).data.adminUid == request.auth.uid;
+    }
+    
+    // ============================================
+    // SHELTERS
+    // ============================================
+    // Shelters are publicly readable for browsing.
+    // Only the shelter's admin can write.
+    // 
+    // Security: Allows public discovery of shelters while restricting
+    // modifications to verified shelter administrators only.
+    match /shelters/{shelterId} {
+      // Anyone can read shelter information
+      allow read: if true;
+      
+      // Only the shelter admin can update their own shelter document
+      allow update: if request.auth != null && 
+        resource.data.adminUid == request.auth.uid;
+      
+      // New shelters can be created by authenticated users (registration)
+      allow create: if request.auth != null && 
+        request.resource.data.adminUid == request.auth.uid;
+      
+      // No delete without admin rights
+      allow delete: if false;
+    }
+    
+    // ============================================
+    // ESCALATION REPORTS
+    // ============================================
+    // Reports are written by adopters, read by shelter staff.
+    match /escalationReports/{reportId} {
+      // Reports are created server-side by /api/escalation using the plain
+      // (unauthenticated) client SDK — there is no signed-in Firestore
+      // session on the server. We validate document shape instead of
+      // requiring request.auth, since create-only access to this collection
+      // can't be used to read or tamper with anyone else's data.
+      allow create: if request.resource.data.shelterId is string &&
+        request.resource.data.catName is string &&
+        request.resource.data.adopterName is string;
+      
+      // Shelter staff can read reports for their OWN shelter only.
+      // Shelters are keyed by their admin's uid (see onboarding flow),
+      // so resource.data.shelterId == request.auth.uid confirms both that
+      // the caller is a shelter admin AND that the report belongs to them —
+      // without this second check, any shelter admin could read every
+      // other shelter's escalation reports.
+      allow read: if request.auth != null && 
+        resource.data.shelterId == request.auth.uid &&
+        get(/databases/$(database)/documents/shelters/$(request.auth.uid)).data.adminUid == request.auth.uid;
+      
+      // No update or delete - reports are immutable
+      allow update, delete: if false;
+    }
+    
+    // ============================================
+    // SHELTER REVIEWS
+    // ============================================
+    // Reviews are publicly readable, writable by authenticated adopters.
+    match /shelterReviews/{reviewId} {
+      // Anyone can read reviews
+      allow read: if true;
+      
+      // Authenticated users can create reviews
+      allow create: if request.auth != null && 
+        request.resource.data.authorUid == request.auth.uid;
+      
+      // Users can only update/delete their own reviews
+      allow update, delete: if request.auth != null && 
+        resource.data.authorUid == request.auth.uid;
+    }
+    
+    // ============================================
+    // USERS (Root Collection)
+    // ============================================
+    // Users can read and write only their own user document.
+    // 
+    // Security: Ensures users can only access their own account information.
+    match /users/{userId} {
+      allow read, write: if request.auth.uid == userId;
+    }
+    
+    // ============================================
+    // DEFAULT DENY
+    // ============================================
+    // Deny access to any collection not explicitly covered above.
+    // This follows the principle of least privilege.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

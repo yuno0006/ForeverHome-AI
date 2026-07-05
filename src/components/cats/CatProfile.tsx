@@ -21,14 +21,24 @@ interface CatProfileProps {
 
 export default function CatProfile({ cat }: CatProfileProps) {
   return (
-    <Card className="border-border bg-white shadow-sm">
-      <CardHeader className="pb-2">
-        <CardTitle className="text-2xl text-cat-dark flex items-center gap-2">
-          <CatIcon className="h-6 w-6" />
-          {cat.name}&apos;s Profile
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
+    <Card className="border-border bg-white shadow-sm overflow-hidden">
+      {/* Cat Photo — big and properly fitted */}
+      <div className="relative h-56 overflow-hidden">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={cat.photo}
+          alt={cat.name}
+          className="w-full h-full object-cover"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
+        <div className="absolute bottom-3 left-3 right-3">
+          <h3 className="text-2xl font-bold text-white drop-shadow-lg">{cat.name}</h3>
+          <p className="text-sm text-white/80 drop-shadow font-semibold">
+            {cat.breed} · {cat.age} {cat.lifeStage === "kitten" ? "mo" : "yrs"} · {cat.sex}
+          </p>
+        </div>
+      </div>
+      <CardContent className="space-y-4 pt-4">
         <div className="grid grid-cols-2 gap-3 text-sm">
           <div>
             <span className="text-charcoal/50">Age:</span>{" "}

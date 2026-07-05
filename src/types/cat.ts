@@ -19,6 +19,17 @@ export interface CatCare {
   specialNotes: string;
 }
 
+export interface CatPersonality {
+  trait: string;
+  description: string;
+}
+
+export interface CatPhoto {
+  url: string;
+  caption?: string;
+  isPrimary?: boolean;
+}
+
 export interface Cat {
   id: string;
   name: string;
@@ -26,8 +37,21 @@ export interface Cat {
   lifeStage: "kitten" | "young" | "adult" | "senior";
   sex: "male" | "female";
   neutered: boolean;
+  breed: string;
+  color: string;
+  weight?: string;
   photo: string;
+  photos?: CatPhoto[];
   status: "available" | "adopted" | "pending";
+  arrivalDate: string;
+  daysInShelter?: number;
+  shelterId: string;
   behavior: CatBehavior;
   care: CatCare;
+  personality?: CatPersonality[];
+  backstory?: string;
+  idealHome?: string;
+  adoptionFee?: number;
+  microchipped?: boolean;
+  vaccinated?: boolean;
 }

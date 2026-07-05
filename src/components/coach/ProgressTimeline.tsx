@@ -12,7 +12,7 @@ function StatusIcon({ status }: { status: boolean | undefined }) {
   if (status) {
     return <Check className="h-4 w-4 text-risk-low" />;
   }
-  return <X className="h-4 w-4 text-charcoal/50" />;
+  return <X className="h-4 w-4 text-charcoal font-bold" />;
 }
 
 export default function ProgressTimeline({
@@ -67,7 +67,7 @@ export default function ProgressTimeline({
                 </span>
                 <span className="flex items-center gap-1">
                   {checkIn.hiding ? (
-                    <X className="h-4 w-4 text-charcoal/50" />
+                    <X className="h-4 w-4 text-charcoal font-bold" />
                   ) : (
                     <Check className="h-4 w-4 text-risk-low" />
                   )}
@@ -80,7 +80,7 @@ export default function ProgressTimeline({
               </div>
 
               {checkIn.notes && (
-                <p className="text-xs italic text-charcoal/50">
+                <p className="text-xs italic text-charcoal font-bold">
                   &quot;{checkIn.notes}&quot;
                 </p>
               )}
@@ -89,7 +89,7 @@ export default function ProgressTimeline({
         })}
 
         {sortedCheckIns.length > 0 && (
-          <div className="pt-2 text-xs text-charcoal/50 italic">
+          <div className="pt-2 text-xs text-charcoal font-bold italic">
             {sortedCheckIns.some((c) => c.hiding)
               ? "Stress-sensitive cats often take 1-2 weeks to feel comfortable in a new home. This is normal."
               : "Great progress! Your cat is settling in well."}
@@ -97,7 +97,7 @@ export default function ProgressTimeline({
         )}
 
         {sortedCheckIns.length === 0 && (
-          <p className="text-sm text-charcoal/50 text-center py-4">
+          <p className="text-sm text-charcoal font-bold text-center py-4">
             No check-ins yet. Start logging your cat&apos;s daily progress above.
           </p>
         )}

@@ -8,6 +8,7 @@ import {
   ReactNode,
 } from "react";
 import { User, onAuthStateChanged } from "firebase/auth";
+import { Timestamp } from "firebase/firestore";
 import { auth } from "@/lib/firebase";
 import { UserDocument, UserRole } from "@/types/user";
 import {
@@ -54,10 +55,37 @@ export function AuthProvider({ children }: AuthProviderProps) {
       if (firebaseUser) {
         try {
           const doc = await fetchUserDocument(firebaseUser.uid);
-          setUserDoc(doc);
+          if (doc) {
+            setUserDoc(doc);
+          } else {
+            // No Firestore doc yet (new user or empty DB) — synthesize from auth
+            console.log("No Firestore user doc found, synthesizing from auth");
+            setUserDoc({
+              uid: firebaseUser.uid,
+              email: firebaseUser.email || "",
+              displayName: firebaseUser.displayName || "User",
+              photoURL: firebaseUser.photoURL || null,
+              role: "adopter",
+              onboardingComplete: false,
+              shelterId: null,
+              profile: null,
+              createdAt: Timestamp.now(),
+            });
+          }
         } catch (error) {
-          console.error("Failed to fetch user document:", error);
-          setUserDoc(null);
+          console.error("Failed to fetch user document, synthesizing from auth:", error);
+          // Firestore unreachable — synthesize a doc so app knows user needs onboarding
+          setUserDoc({
+            uid: firebaseUser.uid,
+            email: firebaseUser.email || "",
+            displayName: firebaseUser.displayName || "User",
+            photoURL: firebaseUser.photoURL || null,
+            role: "adopter",
+            onboardingComplete: false,
+            shelterId: null,
+            profile: null,
+            createdAt: Timestamp.now(),
+          });
         }
       } else {
         setUserDoc(null);
@@ -82,10 +110,31 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const loginWithGoogle = useCallback(async (): Promise<UserDocument | null> => {
     const credential = await loginWithGoogleFn();
-    const doc = await fetchUserDocument(credential.user.uid);
+    try {
+      const doc = await fetchUserDocument(credential.user.uid);
+      if (doc) {
+        setUser(credential.user);
+        setUserDoc(doc);
+        return doc;
+      }
+    } catch (err) {
+      console.warn("Firestore fetch after Google login failed, synthesizing doc:", err);
+    }
+    // Fallback: synthesize a doc so onboarding still triggers
+    const syntheticDoc: UserDocument = {
+      uid: credential.user.uid,
+      email: credential.user.email || "",
+      displayName: credential.user.displayName || "User",
+      photoURL: credential.user.photoURL || null,
+      role: "adopter",
+      onboardingComplete: false,
+      shelterId: null,
+      profile: null,
+      createdAt: Timestamp.now(),
+    };
     setUser(credential.user);
-    setUserDoc(doc);
-    return doc;
+    setUserDoc(syntheticDoc);
+    return syntheticDoc;
   }, []);
 
   const register = useCallback(

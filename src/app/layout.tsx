@@ -1,10 +1,11 @@
 import type { Metadata, Viewport } from "next";
-import { Nunito } from "next/font/google";
+import { Nunito, Fraunces, Plus_Jakarta_Sans } from "next/font/google";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
-import LottieCatRunner from "@/components/ui/LottieCatRunner";
 import PWAInstallButton from "@/components/ui/PWAInstallButton";
 import { Providers } from "@/components/Providers";
+import { OnboardingGuard } from "@/components/auth/OnboardingGuard";
+import { CatBackground } from "@/components/CatBackground";
 import "./globals.css";
 
 const nunito = Nunito({
@@ -13,16 +14,31 @@ const nunito = Nunito({
   weight: ["400", "600", "700", "800"],
 });
 
+const fraunces = Fraunces({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "900"],
+  variable: "--font-fraunces",
+  display: "swap",
+});
+
+const jakarta = Plus_Jakarta_Sans({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800"],
+  variable: "--font-jakarta",
+  display: "swap",
+});
+
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
+  themeColor: "#FFFBF5",
 };
 
 export const metadata: Metadata = {
-  title: "ForeverHome AI - Every cat deserves a forever home",
+  title: "ForeverHome — Adopt Your Perfect Cat Companion",
   description:
-    "ForeverHome AI helps shelters identify compatibility concerns before adoption, supports adopters during the first 14 days, and tracks progress so shelters can see how each cat is adjusting.",
+    "Discover your ideal feline friend with AI-powered compatibility matching, the 9 Lives Protocol, and Days 10–14 of Maintenance Mode support.",
   manifest: "/manifest.json",
   icons: {
     icon: [
@@ -45,15 +61,18 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${nunito.variable} h-full antialiased`}
+      className={`${nunito.variable} ${fraunces.variable} ${jakarta.variable} h-full antialiased`}
+      suppressHydrationWarning
     >
-      <body className="min-h-full flex flex-col bg-warm-cream text-charcoal">
+      <body className="min-h-full flex flex-col bg-cream text-cocoa relative" suppressHydrationWarning>
+        <CatBackground />
         <Providers>
-          <Header />
-          <main className="flex-1">{children}</main>
-          <Footer />
-          <LottieCatRunner />
-          <PWAInstallButton />
+          <OnboardingGuard>
+            <Header />
+            <main className="relative z-10 flex-1">{children}</main>
+            <Footer />
+            <PWAInstallButton />
+          </OnboardingGuard>
         </Providers>
       </body>
     </html>

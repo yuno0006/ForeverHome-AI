@@ -13,6 +13,7 @@ import {
 } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { db, storage } from "@/lib/firebase";
+import { demoCats } from "@/data/demoCats";
 
 export interface CatDocument {
   id: string;
@@ -123,4 +124,56 @@ export async function uploadCatPhoto(
   const storageRef = ref(storage, `shelters/${shelterId}/cats/${catId}/${file.name}`);
   await uploadBytes(storageRef, file);
   return getDownloadURL(storageRef);
+}
+
+/**
+ * Seed a brand-new shelter with the 9 demo cat profiles, writing real
+ * documents to Firestore under `shelterId`. This is what lets a judge who
+ * just signed up as shelter staff see (and manage — edit/archive/etc.) real
+ * data immediately, instead of a read-only illustrative fallback.
+ *
+ * Safe to call multiple times — it's a no-op if the shelter already has cats.
+ */
+export async function seedDemoCatsForShelter(
+  shelterId: string,
+  createdBy: string,
+): Promise<number> {
+  const existing = await fetchCatsByShelter(shelterId);
+  if (existing.length > 0) return 0;
+
+  const created = await Promise.all(
+    demoCats.map((cat) =>
+      createCat({
+        name: cat.name,
+        age: cat.age,
+        sex: cat.sex,
+        lifeStage: cat.lifeStage,
+        neutered: cat.neutered,
+        photo: cat.photo,
+        shelterId,
+        createdBy,
+        status: cat.status === "adopted" ? "adopted" : "available",
+        behavior: {
+          energy: cat.behavior.energy,
+          sociability: cat.behavior.sociability,
+          stressSensitivity: cat.behavior.stressSensitivity,
+          handlingTolerance: cat.behavior.handlingTolerance,
+          playNeeds: cat.behavior.playNeeds,
+          comfortableWithChildren: cat.behavior.comfortableWithChildren,
+          comfortableWithCats: cat.behavior.comfortableWithCats,
+          comfortableWithDogs: cat.behavior.comfortableWithDogs,
+          noiseTolerance: cat.behavior.noiseTolerance,
+          needsVerticalSpace: cat.behavior.needsVerticalSpace,
+          indoorOnlyRequired: cat.behavior.indoorOnlyRequired,
+        },
+        care: {
+          knownMedicalNeeds: cat.care.knownMedicalNeeds,
+          medicationNeeds: cat.care.medicationNeeds,
+          fivStatus: cat.care.fivStatus,
+          specialNotes: cat.care.specialNotes,
+        },
+      })
+    )
+  );
+  return created.length;
 }

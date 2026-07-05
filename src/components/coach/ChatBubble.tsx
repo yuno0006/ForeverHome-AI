@@ -22,10 +22,10 @@ export default function ChatBubble({ message }: ChatBubbleProps) {
         )}
       </div>
       <div
-        className={`max-w-[80%] rounded-lg p-3 text-sm ${
+        className={`max-w-[80%] p-4 text-sm shadow-[2px_2px_0px_0px_rgba(42,29,20,0.1)] font-bold ${
           isUser
-            ? "bg-heart text-white"
-            : "bg-white border border-border text-foreground"
+            ? "bg-heart text-white rounded-3xl rounded-tr-sm border-2 border-heart"
+            : "bg-white border-2 border-cocoa/20 text-cat-dark rounded-3xl rounded-tl-sm"
         }`}
       >
         <p className="whitespace-pre-wrap leading-relaxed">{message.content}</p>

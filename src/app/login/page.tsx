@@ -186,7 +186,28 @@ function LoginPageContent() {
             )}
           </Button>
 
-          <p className="mt-6 text-center text-sm text-muted-foreground">
+          {/* Demo credentials — for judges & evaluators */}
+          <div className="mt-5 rounded-xl border-2 border-honey/40 bg-honey/5 p-4">
+            <p className="text-xs font-bold text-cocoa/50 uppercase tracking-wide mb-2">
+              Demo Credentials
+            </p>
+            <div className="space-y-1 text-xs font-mono text-cocoa/70">
+              <p>Email: <span className="font-semibold text-cocoa">demo@foreverhome.ai</span></p>
+              <p>Password: <span className="font-semibold text-cocoa">demo123456</span></p>
+            </div>
+            <p className="mt-2 text-[11px] text-cocoa/40 leading-relaxed">
+              Or skip login entirely —{" "}
+              <Link
+                href="/assessment/barnaby"
+                className="underline font-semibold text-cocoa/60 hover:text-cocoa"
+              >
+                try the quiz as a guest
+              </Link>
+              {" "}with a sample profile. No account required.
+            </p>
+          </div>
+
+          <p className="mt-4 text-center text-sm text-muted-foreground">
             Don&apos;t have an account?{" "}
             <Link
               href="/register"

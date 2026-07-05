@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { User, Mail, Shield } from "lucide-react";
+import { User, Mail, Shield, LogOut } from "lucide-react";
 import { toast } from "sonner";
 import { AdopterProfile, StaffProfile } from "@/types/user";
 
@@ -22,7 +22,7 @@ export default function ProfilePage() {
 }
 
 function ProfileContent() {
-  const { user, userDoc, role } = useAuth();
+  const { user, userDoc, role, logout } = useAuth();
   const [saving, setSaving] = useState(false);
 
   const [displayName, setDisplayName] = useState("");
@@ -104,24 +104,26 @@ function ProfileContent() {
       </div>
 
       {/* Avatar & Role */}
-      <Card className="bg-white border-sunny/20 rounded-2xl mb-6">
+      <Card className="bg-white border-2 border-cocoa/10 shadow-[4px_4px_0px_0px_rgba(42,29,20,1)] rounded-3xl mb-6 hover:-translate-y-1 transition-all">
         <CardContent className="pt-6">
           <div className="flex items-center gap-4">
-            <div className="h-16 w-16 rounded-full bg-sunny-light flex items-center justify-center overflow-hidden">
-              {user?.photoURL ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={user.photoURL}
-                  alt="Avatar"
-                  className="h-16 w-16 rounded-full object-cover"
-                />
-              ) : (
-                <User className="h-8 w-8 text-cat-dark" />
-              )}
+            <div className="h-16 w-16 rounded-full bg-gradient-to-tr from-coral to-coral-deep p-0.5 shadow-md flex items-center justify-center shrink-0">
+              <div className="h-full w-full rounded-full overflow-hidden bg-white flex items-center justify-center">
+                {user?.photoURL ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={user.photoURL}
+                    alt="Avatar"
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <User className="h-8 w-8 text-cocoa" />
+                )}
+              </div>
             </div>
             <div>
-              <p className="text-lg font-bold text-cat-dark">{displayName || "User"}</p>
-              <Badge className="bg-sunny/20 text-cat-dark mt-1">
+              <p className="text-lg font-bold text-cocoa">{displayName || "User"}</p>
+              <Badge className="bg-coral/10 text-cocoa border border-coral/20 mt-1">
                 <Shield className="h-3 w-3 mr-1" />
                 {role === "shelter_staff" ? "Shelter Staff" : "Adopter"}
               </Badge>
@@ -131,9 +133,9 @@ function ProfileContent() {
       </Card>
 
       {/* Common Fields */}
-      <Card className="bg-white border-sunny/20 rounded-2xl mb-6">
+      <Card className="bg-white border-2 border-cocoa/10 shadow-[4px_4px_0px_0px_rgba(42,29,20,1)] rounded-3xl mb-6 hover:-translate-y-1 transition-all">
         <CardHeader>
-          <CardTitle className="text-cat-dark">Account Information</CardTitle>
+          <CardTitle className="text-cocoa">Account Information</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div>
@@ -142,19 +144,19 @@ function ProfileContent() {
               id="displayName"
               value={displayName}
               onChange={(e) => setDisplayName(e.target.value)}
-              className="mt-1 border-sunny/20 rounded-xl"
+              className="mt-1 border-cocoa/20 rounded-xl focus:ring-2 focus:ring-coral/50 transition-all"
               placeholder="Your name"
             />
           </div>
           <div>
             <Label htmlFor="email">Email</Label>
             <div className="flex items-center gap-2 mt-1">
-              <Mail className="h-4 w-4 text-charcoal/50" />
+              <Mail className="h-4 w-4 text-cocoa/50" />
               <Input
                 id="email"
                 value={user?.email || ""}
                 readOnly
-                className="border-sunny/20 rounded-xl bg-warm-cream/50 text-charcoal/70"
+                className="border-cocoa/20 rounded-xl bg-cream-dark/50 text-cocoa/70"
               />
             </div>
           </div>
@@ -163,9 +165,9 @@ function ProfileContent() {
 
       {/* Adopter-specific fields */}
       {role === "adopter" && (
-        <Card className="bg-white border-sunny/20 rounded-2xl mb-6">
+        <Card className="bg-white border-2 border-cocoa/10 shadow-[4px_4px_0px_0px_rgba(42,29,20,1)] rounded-3xl mb-6 hover:-translate-y-1 transition-all">
           <CardHeader>
-            <CardTitle className="text-cat-dark">Home & Lifestyle</CardTitle>
+            <CardTitle className="text-cocoa">Home &amp; Lifestyle</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
@@ -174,7 +176,7 @@ function ProfileContent() {
                 id="homeType"
                 value={homeType}
                 onChange={(e) => setHomeType(e.target.value as "apartment" | "house" | "other")}
-                className="mt-1 w-full rounded-xl border border-sunny/20 bg-white px-3 py-2 text-sm text-cat-dark focus:outline-none focus:ring-2 focus:ring-sunny"
+                className="mt-1 w-full rounded-xl border border-cocoa/20 bg-white px-3 py-2 text-sm text-cocoa focus:outline-none focus:ring-2 focus:ring-coral"
               >
                 <option value="apartment">Apartment</option>
                 <option value="house">House</option>
@@ -190,7 +192,7 @@ function ProfileContent() {
                 min={1}
                 value={adultsInHome}
                 onChange={(e) => setAdultsInHome(Number(e.target.value))}
-                className="mt-1 border-sunny/20 rounded-xl"
+                className="mt-1 border-cocoa/20 rounded-xl focus:ring-2 focus:ring-coral/50 transition-all"
               />
             </div>
 
@@ -200,7 +202,7 @@ function ProfileContent() {
                 id="hasChildren"
                 checked={hasChildren}
                 onChange={(e) => setHasChildren(e.target.checked)}
-                className="h-4 w-4 rounded border-sunny/20 text-sunny focus:ring-sunny"
+                className="h-4 w-4 rounded border-cocoa/20 text-coral focus:ring-coral"
               />
               <Label htmlFor="hasChildren">Has children in home</Label>
             </div>
@@ -211,7 +213,7 @@ function ProfileContent() {
                 id="hasOtherPets"
                 checked={hasOtherPets}
                 onChange={(e) => setHasOtherPets(e.target.checked)}
-                className="h-4 w-4 rounded border-sunny/20 text-sunny focus:ring-sunny"
+                className="h-4 w-4 rounded border-cocoa/20 text-coral focus:ring-coral"
               />
               <Label htmlFor="hasOtherPets">Has other pets</Label>
             </div>
@@ -222,7 +224,7 @@ function ProfileContent() {
                 id="petExperience"
                 value={petExperience}
                 onChange={(e) => setPetExperience(e.target.value as "none" | "beginner" | "intermediate" | "experienced")}
-                className="mt-1 w-full rounded-xl border border-sunny/20 bg-white px-3 py-2 text-sm text-cat-dark focus:outline-none focus:ring-2 focus:ring-sunny"
+                className="mt-1 w-full rounded-xl border border-cocoa/20 bg-white px-3 py-2 text-sm text-cocoa focus:outline-none focus:ring-2 focus:ring-coral"
               >
                 <option value="none">None</option>
                 <option value="beginner">Beginner</option>
@@ -240,7 +242,7 @@ function ProfileContent() {
                 max={24}
                 value={hoursAwayDaily}
                 onChange={(e) => setHoursAwayDaily(Number(e.target.value))}
-                className="mt-1 border-sunny/20 rounded-xl"
+                className="mt-1 border-cocoa/20 rounded-xl focus:ring-2 focus:ring-coral/50 transition-all"
               />
             </div>
           </CardContent>
@@ -249,9 +251,9 @@ function ProfileContent() {
 
       {/* Staff-specific fields */}
       {role === "shelter_staff" && (
-        <Card className="bg-white border-sunny/20 rounded-2xl mb-6">
+        <Card className="bg-white border-2 border-cocoa/10 shadow-[4px_4px_0px_0px_rgba(42,29,20,1)] rounded-3xl mb-6 hover:-translate-y-1 transition-all">
           <CardHeader>
-            <CardTitle className="text-cat-dark">Staff Information</CardTitle>
+            <CardTitle className="text-cocoa">Staff Information</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
@@ -260,7 +262,7 @@ function ProfileContent() {
                 id="position"
                 value={position}
                 onChange={(e) => setPosition(e.target.value)}
-                className="mt-1 border-sunny/20 rounded-xl"
+                className="mt-1 border-cocoa/20 rounded-xl focus:ring-2 focus:ring-coral/50 transition-all"
                 placeholder="e.g., Adoption Coordinator"
               />
             </div>
@@ -270,13 +272,13 @@ function ProfileContent() {
               <Input
                 value={userDoc?.shelterId ? "ForeverHome Shelter" : "Not assigned"}
                 readOnly
-                className="mt-1 border-sunny/20 rounded-xl bg-warm-cream/50 text-charcoal/70"
+                className="mt-1 border-cocoa/20 rounded-xl bg-cream-dark/50 text-cocoa/70"
               />
             </div>
 
             <div className="flex items-center gap-2">
               <Label>Shelter Role</Label>
-              <Badge className="bg-sunny/20 text-cat-dark">
+              <Badge className="bg-coral/10 text-cocoa border border-coral/20">
                 {(userDoc?.profile as StaffProfile)?.shelterRole || "staff"}
               </Badge>
             </div>
@@ -284,13 +286,21 @@ function ProfileContent() {
         </Card>
       )}
 
-      {/* Save Button */}
+      {/* Save & Logout Buttons */}
       <Button
         onClick={handleSave}
         disabled={saving}
-        className="w-full bg-sunny hover:bg-sunny/90 text-cat-dark font-semibold rounded-xl h-11"
+        className="w-full bg-cocoa hover:bg-cocoa-soft text-cream font-semibold rounded-xl h-11 mb-3 border-2 border-cocoa shadow-[3px_3px_0px_0px_rgba(255,107,107,1)]"
       >
         {saving ? "Saving..." : "Save Changes"}
+      </Button>
+      <Button
+        variant="outline"
+        onClick={() => logout()}
+        className="w-full border-2 border-coral/30 text-coral hover:bg-coral/5 rounded-xl h-11 font-semibold"
+      >
+        <LogOut className="w-4 h-4 mr-2" />
+        Sign Out
       </Button>
     </div>
   );
