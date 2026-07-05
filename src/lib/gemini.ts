@@ -59,7 +59,7 @@ async function callModel(model: string, prompt: string, image?: ImageInput): Pro
         contents: [{ parts: buildParts(prompt, image) }],
         generationConfig: {
           temperature: 0.7,
-          maxOutputTokens: 500,
+          maxOutputTokens: 4096,
         },
       }),
       signal: controller.signal,
@@ -125,13 +125,13 @@ ${concerns.map((c) => `- ${c}`).join("\n")}
 Strengths identified:
 ${strengths.map((s) => `- ${s}`).join("\n")}
 
-Provide a clear, compassionate explanation of:
-1. Why this match has ${riskLevel} risk
-2. What the main concerns are and why they matter
-3. Practical steps to mitigate concerns if they choose to proceed
-4. Why alternative cats might be a better fit (if applicable)
+IMPORTANT: Provide a COMPLETE, thorough response. NEVER cut off mid-sentence. Write 3-4 full paragraphs covering ALL of the following:
+1. Why this match has ${riskLevel} risk — explain in detail
+2. What the main concerns are and why they matter for the cat's wellbeing
+3. Practical, specific steps to mitigate each concern if they choose to proceed
+4. Why alternative cats might be a better fit (if applicable) — be specific about which traits matter most
 
-Keep it under 200 words. Use simple language. Be supportive, not discouraging.`;
+Use simple, warm language. Be supportive, not discouraging. End with a friendly closing.`;
 
   const result = await callAI(prompt);
   return result ?? fallbackCounselorExplanation(catName, riskLevel, concerns, strengths);
@@ -158,8 +158,13 @@ export async function generateCoachResponse(
   catProfile: string,
   adoptionDay: number,
   message: string,
-  checkInContext: string
+  checkInContext: string,
+  image?: ImageInput
 ): Promise<string> {
+  const imageNote = image
+    ? `\n\nThe adopter has also shared a photo. Look at it carefully — describe what you see about the cat (breed, coat, body language, environment) and incorporate those observations into your guidance. If the photo shows a behavior or situation they're asking about, address it specifically.`
+    : "";
+
   const prompt = `You are the ForeverHome AI 14-Day Coach. You help cat adopters during the critical first 14 days after adoption.
 
 Cat: ${catName}
@@ -167,17 +172,20 @@ Cat Profile: ${catProfile}
 Current Day: ${adoptionDay}
 Recent Check-in Context: ${checkInContext}
 
-Adopter's Message: "${message}"
+Adopter's Message: "${message}"${imageNote}
 
-Provide helpful, specific behavioral guidance. Consider:
-- What phase of adjustment the cat is in (day ${adoptionDay} of 14)
-- The cat's specific personality and needs
-- What's normal vs concerning at this stage
-- Practical, actionable advice
+CRITICAL: The adopter asked a SPECIFIC question: "${message}". Your PRIMARY job is to ANSWER THAT QUESTION directly and completely. Do NOT just acknowledge the cat's mood and stop — give practical, specific advice that solves their problem.
 
-Keep response under 150 words. Be warm and reassuring. If the message mentions medical emergency symptoms (bleeding, not eating for 24+ hours, difficulty breathing, seizures), immediately advise contacting an emergency vet.`;
+Provide a COMPLETE, thorough response. NEVER cut off mid-sentence. Write 2-3 full paragraphs covering:
+- FIRST: Answer their specific question directly and clearly
+- What phase of adjustment the cat is in (day ${adoptionDay} of 14) — explain in context
+- The cat's specific personality and needs — reference the profile details
+- What's normal vs concerning at this stage — give clear benchmarks
+- Practical, actionable advice with specific steps they can try today
 
-  const result = await callAI(prompt);
+Be warm and reassuring — the adopter may be anxious. If the message mentions medical emergency symptoms (bleeding, not eating for 24+ hours, difficulty breathing, seizures), immediately advise contacting an emergency vet as your first and most prominent point.`;
+
+  const result = await callAI(prompt, image);
   return result ?? fallbackCoachResponse(catName, adoptionDay, message);
 }
 
@@ -221,7 +229,9 @@ You are the ForeverHome AI Assistant — a friendly, knowledgeable guide for the
 
 Your job right now is to help with GENERAL questions: how the site works, what to expect from cat ownership, general cat behavior/care advice, and pointing users toward the right page. You do NOT have access to any specific user's adopted cat or their check-in history — if someone asks about their specific adopted cat's day-to-day progress, tell them to open their dedicated coach from their Dashboard, since that's where the specialized, cat-specific coach lives.
 
-Keep answers warm, concise (under 150 words unless more detail is truly needed), and encouraging. If shown a photo of a cat, you can comment on its apparent breed, coat, body language, or general health appearance, with a light disclaimer that you're not a substitute for a vet.
+CRITICAL INSTRUCTION: ALWAYS provide COMPLETE, thorough answers. NEVER cut off mid-sentence or mid-thought. Structure your response in a clear, organized way — use line breaks, emoji bullets, or numbered steps to make it easy to read. Answer every part of the user's question fully. Be warm, encouraging, and genuinely helpful — like a knowledgeable friend who loves cats.
+
+If shown a photo of a cat, comment on its apparent breed, coat, body language, and general health appearance, with a light disclaimer that you're not a substitute for a vet.
 `.trim();
 
 export async function generateGeneralAssistantResponse(
@@ -234,7 +244,7 @@ export async function generateGeneralAssistantResponse(
 ${conversationContext ? `Recent conversation:\n${conversationContext}\n` : ""}
 User's message: "${message}"
 
-Respond directly and helpfully.`;
+Respond directly, thoroughly, and helpfully. Make sure your response is COMPLETE — do NOT cut off mid-thought. Cover every aspect of the user's question.`;
 
   return callAI(prompt, image);
 }

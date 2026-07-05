@@ -20,9 +20,10 @@ import MedicalEscalation from "@/components/coach/MedicalEscalation";
 import EmergencyContacts from "@/components/coach/EmergencyContacts";
 import SmartEscalationModal from "@/components/coach/SmartEscalationModal";
 import ProgressTimeline from "@/components/coach/ProgressTimeline";
+import { CatAvatar } from "@/components/chat/CatAvatar";
 import { CatMouseGame } from "@/components/CatMouseGame";
 import Link from "next/link";
-import { Send, AlertCircle, Heart, Trophy, PawPrint, ChevronRight, Sparkles, LogIn } from "lucide-react";
+import { Send, AlertCircle, Heart, Trophy, PawPrint, ChevronRight, Sparkles, LogIn, ImagePlus, X } from "lucide-react";
 
 export default function CoachPage() {
   const params = useParams();
@@ -41,6 +42,10 @@ export default function CoachPage() {
   );
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputValue, setInputValue] = useState("");
+  const [sending, setSending] = useState(false);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [showEmergency, setShowEmergency] = useState(false);
   const [showCelebration, setShowCelebration] = useState(false);
   const [showGame, setShowGame] = useState(false);
@@ -73,6 +78,22 @@ export default function CoachPage() {
     }
   }, [currentDay, checkIns.length]);
 
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith("image/")) return;
+    setImageFile(file);
+    const reader = new FileReader();
+    reader.onload = () => setImagePreview(reader.result as string);
+    reader.readAsDataURL(file);
+  };
+
+  const clearImage = () => {
+    setImageFile(null);
+    setImagePreview(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
   const handleSaveCheckIn = () => {
     if (todayAte === null || todayLitter === null || todayPlay === null) return;
     
@@ -102,7 +123,8 @@ export default function CoachPage() {
   };
 
   const handleSendMessage = async () => {
-    if (!inputValue.trim()) return;
+    if (!inputValue.trim() && !imageFile) return;
+    if (sending) return;
 
     // Check for medical emergency
     if (isMedicalEmergency(inputValue)) {
@@ -122,13 +144,22 @@ export default function CoachPage() {
     const userMsg: ChatMessage = {
       id: `msg-${Date.now()}`,
       role: "user",
-      content: inputValue,
+      content: inputValue.trim() || "Take a look at this photo of my cat",
       timestamp: new Date().toISOString(),
+      imagePreview: imagePreview || undefined,
     };
     setMessages((prev) => [...prev, userMsg]);
     setInputValue("");
+    setSending(true);
 
     try {
+      let imagePayload: { data: string; mimeType: string } | undefined;
+      if (imageFile && imagePreview) {
+        const base64 = imagePreview.split(",")[1];
+        imagePayload = { data: base64, mimeType: imageFile.type };
+      }
+      clearImage();
+
       // Call the AI coach API. Signed-in adopters use their own uid as the
       // profile reference (profiles are keyed by uid); everyone else falls
       // back to the "guest" demo profile used elsewhere in the app.
@@ -140,12 +171,13 @@ export default function CoachPage() {
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
         body: JSON.stringify({
-          message: inputValue,
+          message: userMsg.content,
           catName: cat?.name || "your cat",
           catProfile: `${cat?.behavior?.energy} energy, ${cat?.behavior?.stressSensitivity} stress sensitivity`,
           currentDay,
           checkIns: checkIns.slice(-3),
           adopterProfileId: user?.uid || "guest",
+          image: imagePayload,
         }),
       });
 
@@ -170,6 +202,8 @@ export default function CoachPage() {
         timestamp: new Date().toISOString(),
       };
       setMessages((prev) => [...prev, assistantMsg]);
+    } finally {
+      setSending(false);
     }
   };
 
@@ -524,13 +558,18 @@ export default function CoachPage() {
             adopterName="Adopter"
           />
           <Card className="border-2 border-cocoa bg-white flex flex-col h-[600px] shadow-[6px_6px_0px_0px_rgba(42,29,20,1)] rounded-3xl overflow-hidden">
-            <CardHeader className="pb-2 shrink-0">
-              <CardTitle className="text-lg text-cat-dark">
-                Behavioral Support Chat
-              </CardTitle>
-              <p className="text-xs text-charcoal font-bold">
-                Ask about {cat.name}&apos;s behavior — the AI knows their profile
-              </p>
+            <CardHeader className="pb-2 shrink-0 bg-gradient-to-r from-amber-50 to-orange-50 border-b border-amber-200/60">
+              <div className="flex items-center gap-3">
+                <CatAvatar size={36} />
+                <div>
+                  <CardTitle className="text-base text-cocoa font-display font-black">
+                    {cat.name}&apos;s Coach
+                  </CardTitle>
+                  <p className="text-xs text-cocoa/50 font-medium">
+                    AI knows {cat.name}&apos;s profile — ask anything
+                  </p>
+                </div>
+              </div>
             </CardHeader>
 
             {/* Messages */}
@@ -583,24 +622,70 @@ export default function CoachPage() {
               {messages.map((msg) => (
                 <ChatBubble key={msg.id} message={msg} />
               ))}
+              {/* Typing indicator */}
+              {sending && (
+                <div className="flex gap-3">
+                  <CatAvatar size={36} />
+                  <div className="bg-white border-2 border-amber-100/80 rounded-2xl rounded-tl-md shadow-[3px_3px_0px_0px_rgba(251,191,36,0.15)] px-4 py-3">
+                    <div className="flex items-center gap-1">
+                      <span className="w-2 h-2 rounded-full bg-amber-300 animate-bounce" style={{ animationDelay: "0ms" }} />
+                      <span className="w-2 h-2 rounded-full bg-amber-400 animate-bounce" style={{ animationDelay: "150ms" }} />
+                      <span className="w-2 h-2 rounded-full bg-amber-500 animate-bounce" style={{ animationDelay: "300ms" }} />
+                    </div>
+                  </div>
+                </div>
+              )}
               <div ref={chatEndRef} />
             </div>
 
             {/* Input */}
-            <div className="p-3 border-t border-border shrink-0">
+            <div className="p-3 border-t border-amber-200/60 bg-white/50 shrink-0">
+              {/* Image preview strip */}
+              {imagePreview && (
+                <div className="pb-2 relative inline-block">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={imagePreview}
+                    alt="Selected"
+                    className="h-14 w-14 object-cover rounded-xl border-2 border-amber-200"
+                  />
+                  <button
+                    onClick={clearImage}
+                    className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-cocoa text-white flex items-center justify-center hover:bg-cocoa/80 transition-colors"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </div>
+              )}
               <div className="flex gap-2">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleImageSelect}
+                />
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={!!imageFile || sending}
+                  className="shrink-0 w-9 h-9 rounded-full flex items-center justify-center text-cocoa/40 hover:text-coral hover:bg-coral/5 transition-colors disabled:opacity-30"
+                  title="Attach a photo of your cat"
+                >
+                  <ImagePlus className="w-5 h-5" />
+                </button>
                 <Input
-                  placeholder="Type your question..."
+                  placeholder={`Ask about ${cat.name}'s behavior...`}
                   value={inputValue}
                   onChange={(e) => setInputValue(e.target.value)}
                   onKeyDown={handleKeyDown}
-                  className="flex-1"
+                  disabled={sending}
+                  className="flex-1 border-2 border-amber-200/60 rounded-2xl focus:border-coral/40 focus:ring-0"
                 />
                 <Button
                   onClick={handleSendMessage}
-                  disabled={!inputValue.trim()}
+                  disabled={sending || (!inputValue.trim() && !imageFile)}
                   size="icon"
-                  className="bg-sunny hover:bg-sunny/90 text-white shrink-0"
+                  className="shrink-0 w-10 h-10 bg-gradient-to-br from-sunny to-amber-500 hover:from-amber-500 hover:to-amber-600 text-white rounded-full shadow-[2px_2px_0px_0px_rgba(42,29,20,0.15)] hover:shadow-none hover:translate-y-0.5 active:translate-y-1 transition-all disabled:opacity-40 disabled:shadow-none disabled:translate-y-0"
                 >
                   <Send className="h-4 w-4" />
                 </Button>
@@ -641,12 +726,13 @@ function generateLocalFallback(
   // Night activity / zoomies
   if (lowerQuestion.includes("3 am") || lowerQuestion.includes("night") || lowerQuestion.includes("running around") || lowerQuestion.includes("zoomies")) {
     return `Ah, the 3 AM Zoomies! This is **Life 3: The 3 AM Zoomies**.\n\n` +
-      `**What's happening:** Cats are crepuscular — they're naturally most active at dawn and dusk. ${catName} isn't being "bad"; they're following their biological rhythm.\n\n` +
-      `**The solution:**\n` +
-      `• Play with ${catName} for 15 minutes before YOUR bedtime using a wand toy or laser pointer\n` +
-      `• Feed a larger meal after play — cats naturally sleep after eating (the "hunt-eat-groom-sleep" cycle)\n` +
-      `• Ignore nighttime noise — reacting teaches them it gets attention\n\n` +
-      `**Why this works:** You're shifting ${catName}'s active period to align better with your schedule.`;
+      `**What's happening:** Cats are crepuscular — they're naturally most active at dawn and dusk. ${catName} isn't being "bad"; they're following their biological rhythm. On Day ${currentDay}, this is actually a positive sign — it means ${catName} feels safe enough to express natural energy rather than hiding.\n\n` +
+      `**The solution — reset their internal clock:**\n` +
+      `• **Evening play session:** Spend 15-20 minutes actively playing with ${catName} using a wand toy or laser pointer right before YOUR bedtime. Get them running, jumping, and panting.\n` +
+      `• **Feed after play:** Give ${catName} their largest meal right after the play session. Cats naturally follow a "hunt → eat → groom → sleep" cycle — you're tapping into their instinct.\n` +
+      `• **Ignore the noise:** If ${catName} wakes you at 3 AM, do NOT get up, feed them, or play with them. Any reaction — even negative — teaches them that 3 AM = attention. Use earplugs if needed for the first few nights.\n` +
+      `• **Enrich the environment:** Leave puzzle feeders or hidden treats around the house before bed so ${catName} has solo activities during their active hours.\n\n` +
+      `**Timeline:** With consistency, most cats shift their active period within 5-7 days. Stick with it — you're rewiring millions of years of crepuscular instinct!`;
   }
 
   // Return-related questions

@@ -255,8 +255,32 @@ function AIQuizWidget({ catName, catBreed, onStartAssessment }: { catName: strin
     <Card className="border-2 border-cocoa/20 bg-white shadow-[4px_4px_0px_0px_rgba(42,29,20,1)] rounded-2xl overflow-hidden">
       {/* Header */}
       <div className="bg-gradient-to-r from-lavender to-sage px-5 py-3.5 flex items-center gap-3">
-        <div className="w-9 h-9 rounded-xl bg-white flex items-center justify-center border-2 border-cocoa/20">
-          <Bot className="w-5 h-5 text-lavender-deep" />
+        <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center border-2 border-lavender/30 overflow-hidden">
+          <svg viewBox="0 0 64 64" width="28" height="28" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 20 L8 8 L22 16 Z" fill="#F59E0B" />
+            <path d="M13 19 L10 12 L18 17 Z" fill="#FCD34D" />
+            <path d="M52 20 L56 8 L42 16 Z" fill="#F59E0B" />
+            <path d="M51 19 L54 12 L46 17 Z" fill="#FCD34D" />
+            <ellipse cx="32" cy="34" rx="21" ry="18" fill="#FBBF24" />
+            <ellipse cx="32" cy="36" rx="19" ry="16" fill="#FDE68A" />
+            <ellipse cx="24" cy="31" rx="5" ry="5.5" fill="white" />
+            <ellipse cx="40" cy="31" rx="5" ry="5.5" fill="white" />
+            <ellipse cx="25" cy="31" rx="3" ry="3.5" fill="#1E293B" />
+            <ellipse cx="41" cy="31" rx="3" ry="3.5" fill="#1E293B" />
+            <circle cx="26.5" cy="29.5" r="1.2" fill="white" />
+            <circle cx="42.5" cy="29.5" r="1.2" fill="white" />
+            <path d="M30 36 L32 39 L34 36 Z" fill="#F472B6" />
+            <path d="M28 38 Q32 43 36 38" stroke="#64748B" strokeWidth="1.2" fill="none" strokeLinecap="round" />
+            <path d="M32 39 L32 40.5" stroke="#64748B" strokeWidth="1.2" strokeLinecap="round" />
+            <line x1="10" y1="34" x2="22" y2="36" stroke="#94A3B8" strokeWidth="0.8" strokeLinecap="round" />
+            <line x1="9" y1="38" x2="21" y2="38" stroke="#94A3B8" strokeWidth="0.8" strokeLinecap="round" />
+            <line x1="10" y1="42" x2="22" y2="40" stroke="#94A3B8" strokeWidth="0.8" strokeLinecap="round" />
+            <line x1="54" y1="34" x2="42" y2="36" stroke="#94A3B8" strokeWidth="0.8" strokeLinecap="round" />
+            <line x1="55" y1="38" x2="43" y2="38" stroke="#94A3B8" strokeWidth="0.8" strokeLinecap="round" />
+            <line x1="54" y1="42" x2="42" y2="40" stroke="#94A3B8" strokeWidth="0.8" strokeLinecap="round" />
+            <ellipse cx="18" cy="38" rx="4" ry="2.5" fill="#FCA5A5" opacity="0.4" />
+            <ellipse cx="46" cy="38" rx="4" ry="2.5" fill="#FCA5A5" opacity="0.4" />
+          </svg>
         </div>
         <div>
           <h3 className="font-display font-black text-white text-lg leading-tight">AI Quick Match</h3>
@@ -267,8 +291,18 @@ function AIQuizWidget({ catName, catBreed, onStartAssessment }: { catName: strin
       <CardContent className="p-5">
         {step === "intro" && (
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-4 text-center">
-            <div className="w-16 h-16 mx-auto rounded-2xl bg-lavender-light flex items-center justify-center border-2 border-lavender/30">
-              <MessageCircle className="w-8 h-8 text-lavender" />
+            <div className="w-16 h-16 mx-auto rounded-2xl bg-lavender-light flex items-center justify-center border-2 border-lavender/30 overflow-hidden">
+              <svg viewBox="0 0 64 64" width="36" height="36" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 20 L8 8 L22 16 Z" fill="#F59E0B" /><path d="M13 19 L10 12 L18 17 Z" fill="#FCD34D" />
+                <path d="M52 20 L56 8 L42 16 Z" fill="#F59E0B" /><path d="M51 19 L54 12 L46 17 Z" fill="#FCD34D" />
+                <ellipse cx="32" cy="34" rx="21" ry="18" fill="#FBBF24" /><ellipse cx="32" cy="36" rx="19" ry="16" fill="#FDE68A" />
+                <ellipse cx="24" cy="31" rx="5" ry="5.5" fill="white" /><ellipse cx="40" cy="31" rx="5" ry="5.5" fill="white" />
+                <ellipse cx="25" cy="31" rx="3" ry="3.5" fill="#1E293B" /><ellipse cx="41" cy="31" rx="3" ry="3.5" fill="#1E293B" />
+                <circle cx="26.5" cy="29.5" r="1.2" fill="white" /><circle cx="42.5" cy="29.5" r="1.2" fill="white" />
+                <path d="M30 36 L32 39 L34 36 Z" fill="#F472B6" />
+                <path d="M28 38 Q32 43 36 38" stroke="#64748B" strokeWidth="1.2" fill="none" strokeLinecap="round" />
+                <path d="M32 39 L32 40.5" stroke="#64748B" strokeWidth="1.2" strokeLinecap="round" />
+              </svg>
             </div>
             <div>
               <h4 className="font-display font-black text-cocoa text-xl">Is {catName} right for you?</h4>
@@ -297,10 +331,10 @@ function AIQuizWidget({ catName, catBreed, onStartAssessment }: { catName: strin
                   className={`flex ${m.role === "bot" ? "justify-start" : "justify-end"}`}
                 >
                   <div
-                    className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-sm font-medium ${
+                    className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-sm font-medium leading-relaxed ${
                       m.role === "bot"
-                        ? "bg-cream-dark text-cocoa rounded-tl-sm"
-                        : "bg-lavender text-white rounded-tr-sm"
+                        ? "bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-200/60 text-cocoa rounded-tl-sm shadow-[2px_2px_0px_0px_rgba(251,191,36,0.12)]"
+                        : "bg-gradient-to-br from-lavender to-lavender-deep text-white rounded-tr-sm shadow-[2px_2px_0px_0px_rgba(42,29,20,0.15)]"
                     }`}
                   >
                     {m.content}
@@ -327,11 +361,20 @@ function AIQuizWidget({ catName, catBreed, onStartAssessment }: { catName: strin
 
         {step === "result" && (
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-4 text-center">
-            <div className="w-14 h-14 mx-auto rounded-2xl bg-sage-light flex items-center justify-center border-2 border-sage/30">
+            <div className="w-14 h-14 mx-auto rounded-2xl bg-sage-light flex items-center justify-center border-2 border-sage/30 overflow-hidden">
               {loadingAI ? (
                 <Loader2 className="w-7 h-7 text-sage animate-spin" />
               ) : (
-                <Sparkles className="w-7 h-7 text-sage" />
+                <svg viewBox="0 0 64 64" width="30" height="30" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M12 20 L8 8 L22 16 Z" fill="#F59E0B" /><path d="M13 19 L10 12 L18 17 Z" fill="#FCD34D" />
+                  <path d="M52 20 L56 8 L42 16 Z" fill="#F59E0B" /><path d="M51 19 L54 12 L46 17 Z" fill="#FCD34D" />
+                  <ellipse cx="32" cy="34" rx="21" ry="18" fill="#FBBF24" /><ellipse cx="32" cy="36" rx="19" ry="16" fill="#FDE68A" />
+                  <ellipse cx="24" cy="31" rx="5" ry="5.5" fill="white" /><ellipse cx="40" cy="31" rx="5" ry="5.5" fill="white" />
+                  <ellipse cx="25" cy="31" rx="3" ry="3.5" fill="#1E293B" /><ellipse cx="41" cy="31" rx="3" ry="3.5" fill="#1E293B" />
+                  <circle cx="26.5" cy="29.5" r="1.2" fill="white" /><circle cx="42.5" cy="29.5" r="1.2" fill="white" />
+                  <path d="M30 36 L32 39 L34 36 Z" fill="#F472B6" />
+                  <path d="M28 38 Q32 43 36 38" stroke="#64748B" strokeWidth="1.2" fill="none" strokeLinecap="round" />
+                </svg>
               )}
             </div>
             <div>

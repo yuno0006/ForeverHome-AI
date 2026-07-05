@@ -5,8 +5,9 @@ import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { CatAvatar } from "@/components/chat/CatAvatar";
 import { useAuth } from "@/hooks/useAuth";
-import { Send, Sparkles, ImagePlus, X, ArrowRight, Loader2, LogIn } from "lucide-react";
+import { Send, ImagePlus, X, ArrowRight, Loader2, LogIn, PawPrint, Heart } from "lucide-react";
 
 interface AssistantMessage {
   id: string;
@@ -17,9 +18,9 @@ interface AssistantMessage {
 }
 
 const SUGGESTED_QUESTIONS = [
-  "How does ForeverHome AI work?",
-  "How does the compatibility quiz work?",
-  "What happens after I adopt a cat?",
+  { icon: "🐱", text: "How does ForeverHome AI work?" },
+  { icon: "🧩", text: "How does the compatibility quiz work?" },
+  { icon: "🏠", text: "What happens after I adopt a cat?" },
 ];
 
 // Illustrative — matches the same fixed demo entry used on the dashboard
@@ -28,7 +29,12 @@ const demoActiveAdoption = { id: "barnaby-adoption-1", catName: "Barnaby" };
 
 function getInitials(name: string | undefined | null): string {
   if (!name) return "U";
-  return name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);
+  return name
+    .split(" ")
+    .map((n) => n[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 2);
 }
 
 export default function GeneralAssistantPage() {
@@ -40,10 +46,16 @@ export default function GeneralAssistantPage() {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+  // Focus input on mount
+  useEffect(() => {
+    inputRef.current?.focus();
+  }, []);
 
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -115,6 +127,7 @@ export default function GeneralAssistantPage() {
       ]);
     } finally {
       setSending(false);
+      inputRef.current?.focus();
     }
   };
 
@@ -125,59 +138,87 @@ export default function GeneralAssistantPage() {
     }
   };
 
+  const isChatEmpty = messages.length === 0;
+
   return (
-    <div className="max-w-2xl mx-auto px-4 py-6 flex flex-col" style={{ minHeight: "calc(100vh - 80px)" }}>
-      {/* Header */}
-      <div className="mb-4">
-        <div className="flex items-center gap-2.5 mb-1">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-coral/20 to-honey/20 flex items-center justify-center border border-cocoa/10">
-            <Sparkles className="w-4.5 h-4.5 text-coral" />
+    <div className="flex flex-col h-full" style={{ minHeight: "calc(100vh - 80px)" }}>
+      {/* --- Header --- */}
+      <div className="shrink-0 bg-gradient-to-r from-amber-50 via-orange-50 to-rose-50 border-b border-amber-200/60 px-4 py-4 sm:px-6">
+        <div className="max-w-3xl mx-auto flex items-center gap-3">
+          <CatAvatar size={44} className="border-amber-300" />
+          <div className="flex-1 min-w-0">
+            <h1 className="font-display text-lg font-black text-cocoa leading-tight">
+              ForeverHome Assistant
+            </h1>
+            <p className="text-xs text-cocoa/60 font-medium flex items-center gap-1">
+              <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-400" />
+              Online — here to help you find your perfect cat companion
+            </p>
           </div>
-          <div>
-            <h1 className="font-display text-lg font-black text-cocoa leading-tight">ForeverHome Assistant</h1>
-            <p className="text-xs text-cocoa/50 font-medium">Ask me anything about adopting a cat</p>
-          </div>
+          {user && (
+            <Link
+              href={`/coach/${demoActiveAdoption.id}`}
+              className="hidden sm:flex items-center gap-1.5 text-xs font-bold text-coral hover:text-coral-deep transition-colors bg-white/60 rounded-full px-3 py-1.5 border border-coral/20"
+            >
+              <Heart className="w-3.5 h-3.5" />
+              {demoActiveAdoption.catName}&apos;s Coach
+            </Link>
+          )}
         </div>
       </div>
 
-      {/* Active adoption banner */}
+      {/* --- Active adoption banner (mobile) --- */}
       {user && (
-        <Link href={`/coach/${demoActiveAdoption.id}`} className="block mb-4">
-          <div className="flex items-center gap-3 bg-coral/5 border border-coral/20 rounded-xl px-4 py-3 hover:bg-coral/10 transition-colors">
-            <span className="text-lg">🐾</span>
-            <p className="text-sm font-bold text-cocoa flex-1">
+        <Link href={`/coach/${demoActiveAdoption.id}`} className="sm:hidden block shrink-0">
+          <div className="flex items-center gap-2.5 bg-coral/5 border-b border-coral/15 px-4 py-2.5 hover:bg-coral/10 transition-colors">
+            <span className="text-base">🐾</span>
+            <p className="text-xs font-bold text-cocoa flex-1">
               Continue {demoActiveAdoption.catName}&apos;s 9 Lives journey
             </p>
-            <ArrowRight className="w-4 h-4 text-coral" />
+            <ArrowRight className="w-3.5 h-3.5 text-coral" />
           </div>
         </Link>
       )}
 
-      {/* Guest note */}
+      {/* --- Guest note --- */}
       {!user && (
-        <div className="flex items-center gap-2 bg-honey/10 border border-honey/25 rounded-xl px-4 py-2.5 mb-4 text-xs text-cocoa/70">
+        <div className="shrink-0 flex items-center gap-2 bg-honey/10 border-b border-honey/20 px-4 py-2.5 text-xs text-cocoa/70">
           <LogIn className="w-3.5 h-3.5 text-honey shrink-0" />
           <span>
             You&apos;re chatting as a guest.{" "}
-            <Link href="/login" className="font-bold underline hover:text-cocoa">Sign in</Link>{" "}
+            <Link href="/login" className="font-bold underline hover:text-cocoa">
+              Sign in
+            </Link>{" "}
             to save your progress and unlock the 9 Lives Coach after adopting.
           </span>
         </div>
       )}
 
-      {/* Messages */}
-      <div className="flex-1 overflow-y-auto space-y-3 pb-3">
-        {messages.length === 0 && (
-          <div className="py-6">
-            <p className="text-sm text-cocoa/50 font-medium mb-3">Try asking:</p>
-            <div className="space-y-2">
+      {/* --- Messages area --- */}
+      <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-4 space-y-4">
+        {isChatEmpty && (
+          <div className="flex flex-col items-center justify-center py-12 text-center">
+            {/* Welcome card */}
+            <CatAvatar size={72} className="border-amber-300 mb-4 shadow-lg" />
+            <h2 className="font-display text-xl font-black text-cocoa mb-1">
+              Hi, I&apos;m your adoption assistant!{" "}
+              <span className="inline-block animate-bounce">🐱</span>
+            </h2>
+            <p className="text-sm text-cocoa/50 font-medium max-w-sm mb-6">
+              Ask me anything about adopting a cat, how the site works, or general cat care.
+            </p>
+
+            {/* Suggested question chips */}
+            <div className="w-full max-w-md space-y-2">
               {SUGGESTED_QUESTIONS.map((q) => (
                 <button
-                  key={q}
-                  onClick={() => handleSend(q)}
-                  className="block w-full text-left text-sm font-medium text-cocoa bg-white border border-cocoa/10 rounded-xl px-4 py-2.5 hover:border-coral/30 hover:bg-coral/5 transition-colors"
+                  key={q.text}
+                  onClick={() => handleSend(q.text)}
+                  className="w-full flex items-center gap-3 text-left text-sm font-medium text-cocoa bg-white border-2 border-amber-200/60 rounded-2xl px-4 py-3 hover:border-coral/40 hover:bg-coral/5 hover:shadow-[3px_3px_0px_0px_rgba(42,29,20,0.08)] active:translate-y-0.5 active:shadow-none transition-all"
                 >
-                  {q}
+                  <span className="text-xl shrink-0">{q.icon}</span>
+                  <span>{q.text}</span>
+                  <ArrowRight className="w-4 h-4 text-cocoa/25 ml-auto shrink-0" />
                 </button>
               ))}
             </div>
@@ -187,103 +228,128 @@ export default function GeneralAssistantPage() {
         {messages.map((msg) => {
           const isUser = msg.role === "user";
           return (
-            <div key={msg.id} className={`flex gap-2 ${isUser ? "flex-row-reverse" : ""}`}>
+            <div key={msg.id} className={`flex gap-3 ${isUser ? "flex-row-reverse" : ""}`}>
               {/* Avatar */}
-              <div className="shrink-0 w-7 h-7 rounded-full overflow-hidden flex items-center justify-center">
-                {isUser ? (
-                  user?.photoURL ? (
-                    <Image src={user.photoURL} alt="You" width={28} height={28} className="w-full h-full object-cover" />
+              {isUser ? (
+                <div className="shrink-0 w-8 h-8 rounded-full overflow-hidden flex items-center justify-center border-2 border-coral/30 shadow-sm">
+                  {user?.photoURL ? (
+                    <Image
+                      src={user.photoURL}
+                      alt="You"
+                      width={32}
+                      height={32}
+                      className="w-full h-full object-cover"
+                    />
                   ) : (
-                    <div className="w-full h-full bg-coral flex items-center justify-center text-white text-[10px] font-bold">
+                    <div className="w-full h-full bg-gradient-to-br from-coral to-coral-deep flex items-center justify-center text-white text-[10px] font-bold">
                       {getInitials(userDoc?.displayName || user?.displayName)}
                     </div>
-                  )
-                ) : (
-                  <div className="w-full h-full bg-gradient-to-br from-coral to-honey flex items-center justify-center">
-                    <Sparkles className="w-3.5 h-3.5 text-white" />
-                  </div>
-                )}
-              </div>
+                  )}
+                </div>
+              ) : (
+                <CatAvatar size={32} />
+              )}
 
               {/* Bubble */}
               <div
-                className={`max-w-[78%] px-3.5 py-2 text-sm rounded-2xl ${
+                className={`max-w-[80%] px-4 py-3 text-sm leading-relaxed ${
                   isUser
-                    ? "bg-coral text-white rounded-tr-sm"
-                    : "bg-white border border-cocoa/10 text-cocoa rounded-tl-sm"
+                    ? "bg-gradient-to-br from-coral to-coral-deep text-white rounded-2xl rounded-tr-md shadow-[3px_3px_0px_0px_rgba(42,29,20,0.15)]"
+                    : "bg-white border-2 border-amber-100/80 text-cocoa rounded-2xl rounded-tl-md shadow-[3px_3px_0px_0px_rgba(251,191,36,0.15)]"
                 }`}
               >
                 {msg.imagePreview && (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={msg.imagePreview} alt="Uploaded cat" className="rounded-lg mb-1.5 max-h-40 object-cover" />
+                  <img
+                    src={msg.imagePreview}
+                    alt="Uploaded cat"
+                    className="rounded-lg mb-2 max-h-48 object-cover w-full"
+                  />
                 )}
-                <p className="whitespace-pre-wrap leading-relaxed">{msg.content}</p>
+                <p className="whitespace-pre-wrap">{msg.content}</p>
               </div>
             </div>
           );
         })}
 
+        {/* Typing indicator */}
         {sending && (
-          <div className="flex gap-2">
-            <div className="shrink-0 w-7 h-7 rounded-full bg-gradient-to-br from-coral to-honey flex items-center justify-center">
-              <Sparkles className="w-3.5 h-3.5 text-white" />
-            </div>
-            <div className="bg-white border border-cocoa/10 rounded-2xl rounded-tl-sm px-3.5 py-2.5 flex items-center gap-1.5">
-              <Loader2 className="w-3.5 h-3.5 animate-spin text-cocoa/40" />
-              <span className="text-xs text-cocoa/40">Thinking...</span>
+          <div className="flex gap-3">
+            <CatAvatar size={32} />
+            <div className="bg-white border-2 border-amber-100/80 rounded-2xl rounded-tl-md shadow-[3px_3px_0px_0px_rgba(251,191,36,0.15)] px-4 py-3">
+              <div className="flex items-center gap-1">
+                <span className="w-2 h-2 rounded-full bg-amber-300 animate-bounce" style={{ animationDelay: "0ms" }} />
+                <span className="w-2 h-2 rounded-full bg-amber-400 animate-bounce" style={{ animationDelay: "150ms" }} />
+                <span className="w-2 h-2 rounded-full bg-amber-500 animate-bounce" style={{ animationDelay: "300ms" }} />
+              </div>
             </div>
           </div>
         )}
         <div ref={chatEndRef} />
       </div>
 
-      {/* Image preview strip */}
+      {/* --- Image preview strip --- */}
       {imagePreview && (
-        <div className="mb-2 relative inline-block">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={imagePreview} alt="Selected" className="h-16 w-16 object-cover rounded-lg border border-cocoa/15" />
-          <button
-            onClick={clearImage}
-            className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-cocoa text-white flex items-center justify-center"
-          >
-            <X className="w-3 h-3" />
-          </button>
+        <div className="shrink-0 px-4 sm:px-6 pb-2">
+          <div className="max-w-3xl mx-auto relative inline-block">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={imagePreview}
+              alt="Selected"
+              className="h-16 w-16 object-cover rounded-xl border-2 border-amber-200"
+            />
+            <button
+              onClick={clearImage}
+              className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-cocoa text-white flex items-center justify-center hover:bg-cocoa/80 transition-colors"
+            >
+              <X className="w-3 h-3" />
+            </button>
+          </div>
         </div>
       )}
 
-      {/* Input bar */}
-      <div className="flex items-center gap-2 pt-2 border-t border-cocoa/10">
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="image/*"
-          className="hidden"
-          onChange={handleImageSelect}
-        />
-        <button
-          onClick={() => fileInputRef.current?.click()}
-          disabled={!!imageFile || sending}
-          className="shrink-0 w-9 h-9 rounded-full flex items-center justify-center text-cocoa/50 hover:text-coral hover:bg-coral/5 transition-colors disabled:opacity-40"
-          title="Attach a photo of your cat"
-        >
-          <ImagePlus className="w-4.5 h-4.5" />
-        </button>
-        <Input
-          placeholder="Ask about adopting, the quiz, or anything else..."
-          value={inputValue}
-          onChange={(e) => setInputValue(e.target.value)}
-          onKeyDown={handleKeyDown}
-          disabled={sending}
-          className="flex-1 text-sm"
-        />
-        <Button
-          onClick={() => handleSend()}
-          disabled={sending || (!inputValue.trim() && !imageFile)}
-          size="icon"
-          className="shrink-0 bg-coral hover:bg-coral-deep text-white rounded-full"
-        >
-          <Send className="w-4 h-4" />
-        </Button>
+      {/* --- Input bar --- */}
+      <div className="shrink-0 border-t border-amber-200/60 bg-white/50 backdrop-blur-sm px-4 sm:px-6 py-3">
+        <div className="max-w-3xl mx-auto flex items-center gap-2">
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={handleImageSelect}
+          />
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            disabled={!!imageFile || sending}
+            className="shrink-0 w-9 h-9 rounded-full flex items-center justify-center text-cocoa/40 hover:text-coral hover:bg-coral/5 transition-colors disabled:opacity-30"
+            title="Attach a photo of your cat"
+          >
+            <ImagePlus className="w-5 h-5" />
+          </button>
+          <div className="flex-1 relative">
+            <Input
+              ref={inputRef}
+              placeholder="Ask about adopting, the quiz, or anything else..."
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              onKeyDown={handleKeyDown}
+              disabled={sending}
+              className="w-full text-sm pl-4 pr-4 py-2.5 border-2 border-amber-200/60 rounded-2xl focus:border-coral/40 focus:ring-0 bg-white"
+            />
+          </div>
+          <Button
+            onClick={() => handleSend()}
+            disabled={sending || (!inputValue.trim() && !imageFile)}
+            size="icon"
+            className="shrink-0 w-10 h-10 bg-gradient-to-br from-coral to-coral-deep hover:from-coral-deep hover:to-coral-deep text-white rounded-full shadow-[2px_2px_0px_0px_rgba(42,29,20,0.2)] hover:shadow-none hover:translate-y-0.5 active:translate-y-1 transition-all disabled:opacity-40 disabled:shadow-none disabled:translate-y-0"
+          >
+            <Send className="w-4 h-4" />
+          </Button>
+        </div>
+        <p className="text-[10px] text-cocoa/30 text-center mt-2 font-medium">
+          <PawPrint className="w-3 h-3 inline-block mr-1" />
+          ForeverHome AI provides general guidance, not veterinary advice.
+        </p>
       </div>
     </div>
   );

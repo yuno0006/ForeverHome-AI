@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { generateCoachResponse } from "@/lib/gemini";
+import { generateCoachResponse, ImageInput } from "@/lib/gemini";
 import { getCoachFallbackResponse } from "@/lib/fallbackExplanations";
 import { isMedicalEmergency } from "@/lib/medicalEscalation";
 import { fetchAdopterProfile } from "@/lib/firestoreService";
@@ -15,7 +15,8 @@ export async function POST(req: NextRequest) {
       catProfile, 
       currentDay, 
       checkIns,
-      adopterProfileId 
+      adopterProfileId,
+      image,
     } = body;
 
     // Validate required adopterProfileId parameter
@@ -84,13 +85,24 @@ ${profile.specialNeedsOpenness ? "- Open to special needs cats" : ""}
       ? `${profileContext}\n\nCat Context: ${catProfile}`
       : profileContext;
 
+    // Validate image payload if present
+    const validatedImage: ImageInput | undefined =
+      image &&
+      typeof image.data === "string" &&
+      image.data.length > 0 &&
+      typeof image.mimeType === "string" &&
+      image.mimeType.startsWith("image/")
+        ? { data: image.data, mimeType: image.mimeType }
+        : undefined;
+
     // Try Gemini AI first, fall back to deterministic
     const aiResponse = await generateCoachResponse(
       catName || "your cat",
       fullProfileContext,
       currentDay || 1,
       message,
-      checkInContext
+      checkInContext,
+      validatedImage
     );
 
     const source = aiResponse ? "gemini" : "fallback";

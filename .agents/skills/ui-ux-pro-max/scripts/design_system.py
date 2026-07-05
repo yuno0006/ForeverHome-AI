@@ -16,6 +16,7 @@ Usage:
 import csv
 import json
 import os
+import re
 import sys
 import io
 from datetime import datetime
@@ -566,6 +567,22 @@ def generate_design_system(query: str, project_name: str = None, output_format: 
 
 
 # ============ PERSISTENCE FUNCTIONS ============
+def _sanitize_slug(value: str, fallback: str = "default") -> str:
+    """
+    Turn arbitrary user-supplied text into a safe filesystem path segment.
+
+    Strips path separators, dot-segments, and any character outside
+    [a-z0-9-_] so the result can never be used to escape the intended
+    output directory (e.g. via "../../etc/passwd" or absolute paths).
+    """
+    slug = str(value or "").strip().lower().replace(" ", "-")
+    # Drop anything that isn't alphanumeric, hyphen, or underscore —
+    # this removes "/", "\\", "..", and other traversal-relevant chars.
+    slug = re.sub(r"[^a-z0-9\-_]", "", slug)
+    slug = re.sub(r"-{2,}", "-", slug).strip("-_")
+    return slug or fallback
+
+
 def persist_design_system(design_system: dict, page: str = None, output_dir: str = None, page_query: str = None) -> dict:
     """
     Persist design system to design-system/<project>/ folder using Master + Overrides pattern.
@@ -579,15 +596,21 @@ def persist_design_system(design_system: dict, page: str = None, output_dir: str
     Returns:
         dict with created file paths and status
     """
-    base_dir = Path(output_dir) if output_dir else Path.cwd()
+    base_dir = (Path(output_dir) if output_dir else Path.cwd()).resolve()
     
-    # Use project name for project-specific folder. Coalesce falsy values
-    # (missing key, explicit None, or "") so the .lower() below can't crash.
+    # Use project name for project-specific folder. Sanitize to prevent
+    # path traversal via crafted project_name/page values (e.g. "../../x").
     project_name = design_system.get("project_name") or "default"
-    project_slug = project_name.lower().replace(' ', '-')
+    project_slug = _sanitize_slug(project_name)
     
-    design_system_dir = base_dir / "design-system" / project_slug
-    pages_dir = design_system_dir / "pages"
+    design_system_dir = (base_dir / "design-system" / project_slug).resolve()
+    pages_dir = (design_system_dir / "pages").resolve()
+
+    # Defense in depth: confirm the resolved paths are still inside the
+    # intended design-system directory before touching the filesystem.
+    design_system_root = (base_dir / "design-system").resolve()
+    if design_system_root not in design_system_dir.parents and design_system_dir != design_system_root:
+        raise ValueError("Resolved design system path escapes the output directory")
     
     created_files = []
     
@@ -605,7 +628,10 @@ def persist_design_system(design_system: dict, page: str = None, output_dir: str
     
     # If page is specified, create page override file with intelligent content
     if page:
-        page_file = pages_dir / f"{page.lower().replace(' ', '-')}.md"
+        page_slug = _sanitize_slug(page, fallback="page")
+        page_file = (pages_dir / f"{page_slug}.md").resolve()
+        if pages_dir not in page_file.parents:
+            raise ValueError("Resolved page override path escapes the pages directory")
         page_content = format_page_override_md(design_system, page, page_query)
         with open(page_file, 'w', encoding='utf-8') as f:
             f.write(page_content)
