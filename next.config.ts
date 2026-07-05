@@ -14,6 +14,8 @@ const isDev = process.env.NODE_ENV === "development";
 const connectSrc = [
   "'self'",
   "https://*.googleapis.com",
+  "https://apis.google.com",
+  "https://accounts.google.com",
   "https://firestore.googleapis.com",
   "https://identitytoolkit.googleapis.com",
   "https://securetoken.googleapis.com",
@@ -33,7 +35,7 @@ const frameSrc = [
 
 const cspHeader = `
   default-src 'self';
-  script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""};
+  script-src 'self' 'unsafe-inline' https://apis.google.com${isDev ? " 'unsafe-eval'" : ""};
   style-src 'self' 'unsafe-inline';
   img-src 'self' blob: data: https://firebasestorage.googleapis.com https://lh3.googleusercontent.com https://images.unsplash.com https://*.unsplash.com;
   font-src 'self' data:;
