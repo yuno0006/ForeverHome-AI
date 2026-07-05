@@ -1,12 +1,22 @@
-// Gemini AI integration for Adoption Counselor and 14-Day Coach
-// Uses direct Gemini API calls with fast failover between models
+// Gemini AI integration for Adoption Counselor, General Assistant, and 14-Day Coach
+// Uses direct Gemini API calls with fast failover between models.
+//
+// Model strategy: try each main tier in order. If a tier is rate-limited
+// (HTTP 429 — quota exhausted), try that tier's "lite" counterpart before
+// moving on. Any other failure (network, 5xx, etc.) skips straight to the
+// next main tier without wasting a call on the lite variant.
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 
-const MODEL_TIERS = [
-  "gemini-3.5-flash",
-  "gemini-3-flash-preview",
-  "gemini-2.5-flash",
+interface ModelTier {
+  model: string;
+  lite?: string;
+}
+
+const MODEL_TIERS: ModelTier[] = [
+  { model: "gemini-3.5-flash", lite: "gemini-3.5-flash-lite" },
+  { model: "gemini-3-flash-preview", lite: "gemini-3-flash-lite-preview" },
+  { model: "gemini-2.5-flash", lite: "gemini-2.5-flash-lite" },
 ];
 
 function getModelUrl(model: string): string {
@@ -21,48 +31,73 @@ interface GeminiResponse {
   }[];
 }
 
-async function callAI(prompt: string): Promise<string | null> {
+export interface ImageInput {
+  /** Base64-encoded image data (no data URL prefix) */
+  data: string;
+  /** e.g. "image/jpeg", "image/png" */
+  mimeType: string;
+}
+
+function buildParts(prompt: string, image?: ImageInput) {
+  const parts: Record<string, unknown>[] = [{ text: prompt }];
+  if (image) {
+    parts.push({ inlineData: { mimeType: image.mimeType, data: image.data } });
+  }
+  return parts;
+}
+
+async function callModel(model: string, prompt: string, image?: ImageInput): Promise<{ text: string | null; status: number | null }> {
+  const TIMEOUT_MS = 8000;
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), TIMEOUT_MS);
+
+    const res = await fetch(getModelUrl(model), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        contents: [{ parts: buildParts(prompt, image) }],
+        generationConfig: {
+          temperature: 0.7,
+          maxOutputTokens: 500,
+        },
+      }),
+      signal: controller.signal,
+    });
+
+    clearTimeout(timeoutId);
+
+    if (res.ok) {
+      const data: GeminiResponse = await res.json();
+      const text = data.candidates?.[0]?.content?.parts?.[0]?.text ?? null;
+      return { text, status: res.status };
+    }
+
+    return { text: null, status: res.status };
+  } catch {
+    return { text: null, status: null };
+  }
+}
+
+async function callAI(prompt: string, image?: ImageInput): Promise<string | null> {
   if (!GEMINI_API_KEY) return null;
 
-  const TIMEOUT_MS = 5000;
+  for (const tier of MODEL_TIERS) {
+    const { text, status } = await callModel(tier.model, prompt, image);
+    if (text) return text;
 
-  for (const model of MODEL_TIERS) {
-    try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), TIMEOUT_MS);
+    // 400/403 means bad request or bad key — retrying other models won't help.
+    if (status === 400 || status === 403) return null;
 
-      const res = await fetch(getModelUrl(model), {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: {
-            temperature: 0.7,
-            maxOutputTokens: 500,
-          },
-        }),
-        signal: controller.signal,
-      });
-
-      clearTimeout(timeoutId);
-
-      if (res.ok) {
-        const data: GeminiResponse = await res.json();
-        const text = data.candidates?.[0]?.content?.parts?.[0]?.text ?? null;
-        if (text) {
-          return text;
-        }
-        continue;
-      }
-
-      if (res.status === 400 || res.status === 403) {
-        return null;
-      }
-
-      continue;
-    } catch {
-      continue;
+    // 429 = quota exhausted for this tier specifically. Try the lite
+    // counterpart before giving up on this tier entirely.
+    if (status === 429 && tier.lite) {
+      const liteResult = await callModel(tier.lite, prompt, image);
+      if (liteResult.text) return liteResult.text;
     }
+
+    // Any other outcome (5xx, timeout, network error, no lite available) —
+    // move on to the next main tier.
   }
 
   return null;
@@ -166,4 +201,59 @@ export function fallbackCoachResponse(catName: string, day: number, message: str
   }
 
   return `Thank you for checking in on day ${day}. ${catName} is still adjusting to their new home — every cat moves at their own pace. Keep providing a calm, predictable environment. If you have specific concerns, feel free to describe what you're seeing and I'll provide more targeted guidance.`;
+}
+
+// ─── General Site Assistant ────────────────────────────
+const SITE_KNOWLEDGE = `
+You are the ForeverHome AI Assistant — a friendly, knowledgeable guide for the ForeverHome AI cat adoption platform. Here's how the site works:
+
+1. BROWSE: Users browse available cats on the /cats page. Each cat has a detailed profile: behavior traits (energy, sociability, stress sensitivity), medical needs, personality, and backstory.
+
+2. COMPATIBILITY QUIZ: Users take a short quiz — first a few lifestyle questions (living space, work schedule, activity level, cat personality preference), then 5 scenario-based questions about handling real cat situations. This produces a Compatibility Report.
+
+3. COMPATIBILITY REPORT: Shows a Low/Moderate/High concern level, specific concerns and strengths, mitigation tips, and AI-recommended alternative cats ranked by fit — even if the current match is already great.
+
+4. ADOPTION REQUEST: From the report, users can click "Start Adoption Process" to send their contact info to the shelter. They get the shelter's phone, email, address, and hours immediately, plus a confirmation the shelter will follow up.
+
+5. POST-ADOPTION — THE 9 LIVES PROTOCOL: Once adopted, users get access to a dedicated 14-Day Coach for that specific cat (found on their Dashboard). It's a gamified system: 9 "Lives" (common challenges like hiding, not eating, litter box issues, night zoomies, scratching, etc.) unlock one per day across the first 9 days, with Days 10-14 as a maintenance phase. That coach knows the specific adopted cat's profile and daily check-ins.
+
+6. SHELTERS: Shelters can create accounts to manage their cat listings, view adoption requests, and track active adoptions.
+
+Your job right now is to help with GENERAL questions: how the site works, what to expect from cat ownership, general cat behavior/care advice, and pointing users toward the right page. You do NOT have access to any specific user's adopted cat or their check-in history — if someone asks about their specific adopted cat's day-to-day progress, tell them to open their dedicated coach from their Dashboard, since that's where the specialized, cat-specific coach lives.
+
+Keep answers warm, concise (under 150 words unless more detail is truly needed), and encouraging. If shown a photo of a cat, you can comment on its apparent breed, coat, body language, or general health appearance, with a light disclaimer that you're not a substitute for a vet.
+`.trim();
+
+export async function generateGeneralAssistantResponse(
+  message: string,
+  conversationContext: string,
+  image?: ImageInput
+): Promise<string | null> {
+  const prompt = `${SITE_KNOWLEDGE}
+
+${conversationContext ? `Recent conversation:\n${conversationContext}\n` : ""}
+User's message: "${message}"
+
+Respond directly and helpfully.`;
+
+  return callAI(prompt, image);
+}
+
+export function fallbackGeneralAssistantResponse(message: string): string {
+  const lower = message.toLowerCase();
+
+  if (lower.includes("how") && (lower.includes("work") || lower.includes("website") || lower.includes("site"))) {
+    return "ForeverHome AI helps you find your perfect cat companion! Browse available cats, take a quick compatibility quiz about your lifestyle, and get a personalized AI report showing your best matches. When you're ready, start the adoption process right from the report — we'll connect you with the shelter directly. Once you adopt, you get access to a 14-Day Coach to help you and your new cat settle in together.";
+  }
+  if (lower.includes("quiz") || lower.includes("assessment") || lower.includes("compatib")) {
+    return "The compatibility quiz starts with a few questions about your lifestyle (home, schedule, activity level), then 5 scenario questions about handling real situations with a cat. Based on your answers, we score your compatibility with cats and recommend the best matches — you can find it under the Quiz tab or on any cat's profile page.";
+  }
+  if (lower.includes("adopt") && !lower.includes("adopted")) {
+    return "To adopt: browse cats, run a compatibility assessment on the one you like, then click \"Start Adoption Process\" on your report. You'll fill in your contact details and we send your request straight to the shelter — you'll also get their phone, email, and address so you can follow up directly.";
+  }
+  if (lower.includes("9 lives") || lower.includes("14 day") || lower.includes("coach")) {
+    return "The 9 Lives Protocol is our post-adoption support system! Once you've adopted, open your dedicated Coach from your Dashboard. It walks you through 9 common early challenges (like hiding, appetite loss, or litter box issues) — one unlocks each day for the first 9 days, with days 10-14 as a settling-in phase.";
+  }
+
+  return "I'm the ForeverHome AI Assistant! I can help explain how the site works, what to expect when adopting a cat, or general cat care questions. If you've already adopted a cat and want day-to-day guidance for your specific companion, head to your Dashboard and open your dedicated Coach — that's where the cat-specific support lives.";
 }

@@ -39,7 +39,7 @@ export default function Header() {
     const alwaysLinks = [
       { href: "/", label: "Home", icon: Home },
       { href: "/cats", label: "Cats", icon: Cat },
-      { href: "/coach/barnaby-adoption-1", label: "AI Coach", icon: MessageCircle },
+      { href: "/coach", label: "AI Coach", icon: MessageCircle },
       { href: "/assessment/new", label: "Quiz", icon: Sparkles },
     ];
     if (!user) return [

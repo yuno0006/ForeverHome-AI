@@ -21,7 +21,8 @@ import EmergencyContacts from "@/components/coach/EmergencyContacts";
 import SmartEscalationModal from "@/components/coach/SmartEscalationModal";
 import ProgressTimeline from "@/components/coach/ProgressTimeline";
 import { CatMouseGame } from "@/components/CatMouseGame";
-import { Send, AlertCircle, Heart, Trophy, PawPrint, ChevronRight, Sparkles } from "lucide-react";
+import Link from "next/link";
+import { Send, AlertCircle, Heart, Trophy, PawPrint, ChevronRight, Sparkles, LogIn } from "lucide-react";
 
 export default function CoachPage() {
   const params = useParams();
@@ -308,6 +309,18 @@ export default function CoachPage() {
           For medical concerns, contact your veterinarian immediately.
         </p>
       </div>
+
+      {/* Guest sign-in nudge — chat still works, but progress won't be saved */}
+      {!user && (
+        <div className="flex items-center gap-2 bg-honey/10 border border-honey/25 rounded-xl px-4 py-2.5 mb-6 text-sm text-cocoa/70">
+          <LogIn className="w-4 h-4 text-honey shrink-0" />
+          <span>
+            You&apos;re trying this out as a guest.{" "}
+            <Link href="/login" className="font-bold underline hover:text-cocoa">Sign in</Link>{" "}
+            to save {cat.name}&apos;s check-ins and chat history.
+          </span>
+        </div>
+      )}
 
       {/* Emergency Contacts - Always visible */}
       <div className="mb-6">
