@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { CatAvatar } from "@/components/chat/CatAvatar";
 import { useAuth } from "@/hooks/useAuth";
-import { Send, ImagePlus, X, ArrowRight, Loader2, LogIn, PawPrint, Heart } from "lucide-react";
+import { Send, ImagePlus, X, ArrowRight, Loader2, LogIn, PawPrint, Heart, ShieldAlert } from "lucide-react";
 
 interface AssistantMessage {
   id: string;
@@ -48,9 +48,20 @@ export default function GeneralAssistantPage() {
   const chatEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  const [guestMessageCount, setGuestMessageCount] = useState(0);
+  const [showLoginGate, setShowLoginGate] = useState(false);
+
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+  // Load guest message count
+  useEffect(() => {
+    try {
+      const count = parseInt(sessionStorage.getItem("fh_guest_msg_count") || "0", 10);
+      setGuestMessageCount(isNaN(count) ? 0 : count);
+    } catch { /* noop */ }
+  }, []);
 
   // Focus input on mount
   useEffect(() => {
@@ -78,6 +89,12 @@ export default function GeneralAssistantPage() {
     if (!text.trim() && !imageFile) return;
     if (sending) return;
 
+    // Guest users: only 1 free message
+    if (!user && guestMessageCount >= 1) {
+      setShowLoginGate(true);
+      return;
+    }
+
     const userMsg: AssistantMessage = {
       id: `msg-${Date.now()}`,
       role: "user",
@@ -88,6 +105,13 @@ export default function GeneralAssistantPage() {
     setMessages((prev) => [...prev, userMsg]);
     setInputValue("");
     setSending(true);
+
+    // Track guest message count
+    if (!user) {
+      const newCount = guestMessageCount + 1;
+      setGuestMessageCount(newCount);
+      try { sessionStorage.setItem("fh_guest_msg_count", String(newCount)); } catch { /* noop */ }
+    }
 
     try {
       let imagePayload: { data: string; mimeType: string } | undefined;
@@ -148,7 +172,7 @@ export default function GeneralAssistantPage() {
           <CatAvatar size={44} className="border-amber-300" />
           <div className="flex-1 min-w-0">
             <h1 className="font-display text-lg font-black text-cocoa leading-tight">
-              ForeverHome Assistant
+              Mr. Cat 🐱
             </h1>
             <p className="text-xs text-cocoa/60 font-medium flex items-center gap-1">
               <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-400" />
@@ -181,16 +205,38 @@ export default function GeneralAssistantPage() {
       )}
 
       {/* --- Guest note --- */}
-      {!user && (
+      {!user && guestMessageCount < 1 && (
         <div className="shrink-0 flex items-center gap-2 bg-honey/10 border-b border-honey/20 px-4 py-2.5 text-xs text-cocoa/70">
           <LogIn className="w-3.5 h-3.5 text-honey shrink-0" />
           <span>
-            You&apos;re chatting as a guest.{" "}
+            <strong>1 free message</strong> as a guest.{" "}
             <Link href="/login" className="font-bold underline hover:text-cocoa">
               Sign in
             </Link>{" "}
-            to save your progress and unlock the 9 Lives Coach after adopting.
+            to unlock unlimited chats and the 9 Lives Coach after adopting.
           </span>
+        </div>
+      )}
+      {/* --- Login gate after 1 message --- */}
+      {showLoginGate && !user && (
+        <div className="shrink-0 bg-coral/10 border-b-2 border-coral/30 px-4 py-4 text-center">
+          <ShieldAlert className="h-7 w-7 text-coral mx-auto mb-1.5" />
+          <h3 className="font-bold text-cocoa text-sm mb-1">Free trial complete!</h3>
+          <p className="text-xs text-cocoa/70 mb-3">
+            Sign in to continue chatting with Mr. Cat and save your progress.
+          </p>
+          <div className="flex gap-2 justify-center">
+            <Link href="/login?redirect=/coach">
+              <Button size="sm" className="bg-coral text-white hover:bg-coral-deep rounded-full text-xs font-bold">
+                <LogIn className="w-3.5 h-3.5 mr-1" /> Sign In
+              </Button>
+            </Link>
+            <Link href="/register">
+              <Button size="sm" variant="outline" className="rounded-full border-2 border-cocoa/30 text-xs font-bold">
+                Create Account
+              </Button>
+            </Link>
+          </div>
         </div>
       )}
 
@@ -201,7 +247,7 @@ export default function GeneralAssistantPage() {
             {/* Welcome card */}
             <CatAvatar size={72} className="border-amber-300 mb-4 shadow-lg" />
             <h2 className="font-display text-xl font-black text-cocoa mb-1">
-              Hi, I&apos;m your adoption assistant!{" "}
+              Hi, I&apos;m Mr. Cat!{" "}
               <span className="inline-block animate-bounce">🐱</span>
             </h2>
             <p className="text-sm text-cocoa/50 font-medium max-w-sm mb-6">

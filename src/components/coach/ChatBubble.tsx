@@ -20,7 +20,7 @@ export default function ChatBubble({ message }: ChatBubbleProps) {
     <div className={`flex gap-3 ${isUser ? "flex-row-reverse" : ""}`}>
       {/* Avatar */}
       {isUser ? (
-        <div className="shrink-0 w-9 h-9 rounded-full overflow-hidden flex items-center justify-center border-2 border-coral/30 shadow-sm">
+        <div className="shrink-0 w-9 h-9 rounded-full overflow-hidden flex items-center justify-center ring-2 ring-coral/20 shadow-md shadow-coral/10 bg-white">
           {user?.photoURL ? (
             <Image
               src={user.photoURL}
@@ -41,10 +41,10 @@ export default function ChatBubble({ message }: ChatBubbleProps) {
 
       {/* Bubble */}
       <div
-        className={`max-w-[80%] px-4 py-3 text-sm leading-relaxed ${
+        className={`max-w-[80%] px-5 py-3.5 text-sm leading-relaxed transition-all duration-300 hover:shadow-lg ${
           isUser
-            ? "bg-gradient-to-br from-coral to-coral-deep text-white rounded-2xl rounded-tr-md shadow-[3px_3px_0px_0px_rgba(42,29,20,0.15)]"
-            : "bg-white border-2 border-amber-100/80 text-cocoa rounded-2xl rounded-tl-md shadow-[3px_3px_0px_0px_rgba(251,191,36,0.15)]"
+            ? "bg-gradient-to-br from-coral to-coral-deep text-white rounded-2xl rounded-tr-sm shadow-md shadow-coral/20"
+            : "bg-white/90 backdrop-blur-md border border-white/60 text-cocoa rounded-2xl rounded-tl-sm shadow-md shadow-cocoa/5"
         }`}
       >
         {message.isEmergency && (

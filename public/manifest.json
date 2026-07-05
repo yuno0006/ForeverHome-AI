@@ -4,16 +4,10 @@
   "description": "Preventing cat returns before they happen - AI-powered cat adoption matching and 14-day post-adoption support.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#FFF8F0",
-  "theme_color": "#1B4332",
+  "background_color": "#FFFBF5",
+  "theme_color": "#FFFBF5",
   "orientation": "portrait-primary",
   "icons": [
-    {
-      "src": "/cat.png",
-      "sizes": "any",
-      "type": "image/png",
-      "purpose": "any"
-    },
     {
       "src": "/icons/icon-192.png",
       "sizes": "192x192",

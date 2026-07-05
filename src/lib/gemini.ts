@@ -165,7 +165,21 @@ export async function generateCoachResponse(
     ? `\n\nThe adopter has also shared a photo. Look at it carefully — describe what you see about the cat (breed, coat, body language, environment) and incorporate those observations into your guidance. If the photo shows a behavior or situation they're asking about, address it specifically.`
     : "";
 
-  const prompt = `You are the ForeverHome AI 14-Day Coach. You help cat adopters during the critical first 14 days after adoption.
+  const isGreeting = /^(hi|hello|hey|yo|sup|good (morning|afternoon|evening)|howdy)[\s!.]*$/i.test(message.trim());
+  const isChitchat = /^(how are you|what('s| is) up|how('s| is) it going|wyd)[\s?]*$/i.test(message.trim());
+  const isShort = message.trim().split(/\s+/).length <= 4 && !message.includes("?");
+  const shouldBeBrief = isGreeting || isChitchat || isShort;
+
+  const lengthInstruction = shouldBeBrief
+    ? `KEEP IT SHORT: The adopter just said a simple "${message.trim()}". Respond with ONE friendly sentence welcoming them, introduce yourself as Mr. Cat, and ask how you can help with ${catName} today. Be warm but minimal — no paragraphs.`
+    : `Provide a COMPLETE, thorough response. Write 2-3 full paragraphs covering:
+- FIRST: Answer their specific question directly and clearly
+- What phase of adjustment the cat is in (day ${adoptionDay} of 14) — explain in context
+- The cat's specific personality and needs — reference the profile details
+- What's normal vs concerning at this stage — give clear benchmarks
+- Practical, actionable advice with specific steps they can try today`;  
+
+  const prompt = `You are Mr. Cat, the ForeverHome AI 14-Day Coach. You help cat adopters during the critical first 14 days after adoption. You are warm, knowledgeable, and genuinely love helping cats and their humans.
 
 Cat: ${catName}
 Cat Profile: ${catProfile}
@@ -174,16 +188,9 @@ Recent Check-in Context: ${checkInContext}
 
 Adopter's Message: "${message}"${imageNote}
 
-CRITICAL: The adopter asked a SPECIFIC question: "${message}". Your PRIMARY job is to ANSWER THAT QUESTION directly and completely. Do NOT just acknowledge the cat's mood and stop — give practical, specific advice that solves their problem.
+${lengthInstruction}
 
-Provide a COMPLETE, thorough response. NEVER cut off mid-sentence. Write 2-3 full paragraphs covering:
-- FIRST: Answer their specific question directly and clearly
-- What phase of adjustment the cat is in (day ${adoptionDay} of 14) — explain in context
-- The cat's specific personality and needs — reference the profile details
-- What's normal vs concerning at this stage — give clear benchmarks
-- Practical, actionable advice with specific steps they can try today
-
-Be warm and reassuring — the adopter may be anxious. If the message mentions medical emergency symptoms (bleeding, not eating for 24+ hours, difficulty breathing, seizures), immediately advise contacting an emergency vet as your first and most prominent point.`;
+Be warm and reassuring — the adopter may be anxious. If the message mentions medical emergency symptoms (bleeding, not eating for 24+ hours, difficulty breathing, seizures), immediately advise contacting an emergency vet as your first and most prominent point. NEVER cut off mid-sentence.`;
 
   const result = await callAI(prompt, image);
   return result ?? fallbackCoachResponse(catName, adoptionDay, message);
@@ -213,7 +220,7 @@ export function fallbackCoachResponse(catName: string, day: number, message: str
 
 // ─── General Site Assistant ────────────────────────────
 const SITE_KNOWLEDGE = `
-You are the ForeverHome AI Assistant — a friendly, knowledgeable guide for the ForeverHome AI cat adoption platform. Here's how the site works:
+You are Mr. Cat, the ForeverHome AI Assistant — a friendly, knowledgeable guide for the ForeverHome AI cat adoption platform. Here's how the site works:
 
 1. BROWSE: Users browse available cats on the /cats page. Each cat has a detailed profile: behavior traits (energy, sociability, stress sensitivity), medical needs, personality, and backstory.
 
@@ -229,7 +236,7 @@ You are the ForeverHome AI Assistant — a friendly, knowledgeable guide for the
 
 Your job right now is to help with GENERAL questions: how the site works, what to expect from cat ownership, general cat behavior/care advice, and pointing users toward the right page. You do NOT have access to any specific user's adopted cat or their check-in history — if someone asks about their specific adopted cat's day-to-day progress, tell them to open their dedicated coach from their Dashboard, since that's where the specialized, cat-specific coach lives.
 
-CRITICAL INSTRUCTION: ALWAYS provide COMPLETE, thorough answers. NEVER cut off mid-sentence or mid-thought. Structure your response in a clear, organized way — use line breaks, emoji bullets, or numbered steps to make it easy to read. Answer every part of the user's question fully. Be warm, encouraging, and genuinely helpful — like a knowledgeable friend who loves cats.
+RESPONSE STYLE: Match your response length to the question. If someone says "hi" or "hello", respond with ONE friendly sentence introducing yourself as Mr. Cat and asking how you can help. If they ask a detailed question, give a detailed answer. Structure detailed responses in a clear, organized way — use line breaks, emoji bullets, or numbered steps to make it easy to read. Never cut off mid-sentence. Be warm, encouraging, and genuinely helpful — like a knowledgeable friend who loves cats.
 
 If shown a photo of a cat, comment on its apparent breed, coat, body language, and general health appearance, with a light disclaimer that you're not a substitute for a vet.
 `.trim();
@@ -239,12 +246,17 @@ export async function generateGeneralAssistantResponse(
   conversationContext: string,
   image?: ImageInput
 ): Promise<string | null> {
+  const isGreeting = /^(hi|hello|hey|yo|sup|good (morning|afternoon|evening)|howdy)[\s!.]*$/i.test(message.trim());
+  const isChitchat = /^(how are you|what('s| is) up|how('s| is) it going|wyd)[\s?]*$/i.test(message.trim());
+
+  const lengthNote = (isGreeting || isChitchat)
+    ? `\n\nSTYLE: The user just said a simple greeting. Keep your response to ONE friendly sentence. Introduce yourself as Mr. Cat and ask how you can help them find their perfect cat companion. Do NOT give a long explanation.`
+    : `\n\nRespond directly, thoroughly, and helpfully. Make sure your response is COMPLETE — do NOT cut off mid-thought. Cover every aspect of the user's question.`;
+
   const prompt = `${SITE_KNOWLEDGE}
 
 ${conversationContext ? `Recent conversation:\n${conversationContext}\n` : ""}
-User's message: "${message}"
-
-Respond directly, thoroughly, and helpfully. Make sure your response is COMPLETE — do NOT cut off mid-thought. Cover every aspect of the user's question.`;
+User's message: "${message}"${lengthNote}`;
 
   return callAI(prompt, image);
 }

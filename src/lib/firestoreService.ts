@@ -510,6 +510,87 @@ export async function saveCatToWishlist(uid: string, catId: string): Promise<str
  * @param uid - User's unique ID
  * @param catId - Cat ID to remove
  */
+// ─── Coach Chat Persistence ────────────────────────────
+
+export interface CoachMessageRecord {
+  id: string;
+  role: "user" | "assistant" | "system";
+  content: string;
+  timestamp: string;
+  isEmergency?: boolean;
+  imagePreview?: string;
+}
+
+/**
+ * Save a single coach chat message to Firestore.
+ * Path: users/{uid}/coachChats/{adoptionId}/messages/{msgId}
+ */
+export async function saveCoachMessage(
+  uid: string,
+  adoptionId: string,
+  message: CoachMessageRecord
+): Promise<void> {
+  if (!uid || uid.trim() === "" || uid === "guest") {
+    // Guest: store in sessionStorage
+    try {
+      const key = `fh_coach_${adoptionId}`;
+      const stored = JSON.parse(sessionStorage.getItem(key) || "[]");
+      stored.push(message);
+      sessionStorage.setItem(key, JSON.stringify(stored));
+    } catch { /* noop */ }
+    return;
+  }
+
+  if (!USE_FIRESTORE) {
+    try {
+      const key = `fh_coach_${adoptionId}`;
+      const stored = JSON.parse(sessionStorage.getItem(key) || "[]");
+      stored.push(message);
+      sessionStorage.setItem(key, JSON.stringify(stored));
+    } catch { /* noop */ }
+    return;
+  }
+
+  try {
+    const msgRef = doc(db, "users", uid, "coachChats", adoptionId, "messages", message.id);
+    await setDoc(msgRef, message);
+  } catch (err) {
+    console.error("Failed to save coach message:", err);
+  }
+}
+
+/**
+ * Fetch all coach chat messages for an adoption from Firestore.
+ */
+export async function fetchCoachMessages(
+  uid: string,
+  adoptionId: string
+): Promise<CoachMessageRecord[]> {
+  if (!uid || uid.trim() === "" || uid === "guest") {
+    try {
+      const key = `fh_coach_${adoptionId}`;
+      return JSON.parse(sessionStorage.getItem(key) || "[]");
+    } catch { return []; }
+  }
+
+  if (!USE_FIRESTORE) {
+    try {
+      const key = `fh_coach_${adoptionId}`;
+      return JSON.parse(sessionStorage.getItem(key) || "[]");
+    } catch { return []; }
+  }
+
+  try {
+    const colRef = collection(db, "users", uid, "coachChats", adoptionId, "messages");
+    const q = query(colRef, orderBy("timestamp", "asc"));
+    const snapshot = await getDocs(q);
+    return snapshot.docs.map((d) => ({ id: d.id, ...d.data() }) as CoachMessageRecord);
+  } catch (err) {
+    console.error("Failed to fetch coach messages:", err);
+    return [];
+  }
+}
+
 export async function removeCatFromWishlist(uid: string, catId: string): Promise<string[]> {
   if (!uid || uid.trim() === "") throw new Error("Invalid UID: UID cannot be empty");
 

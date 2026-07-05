@@ -10,6 +10,7 @@ import { getCatById } from "@/data/demoCats";
 import { demoCheckIns } from "@/data/demoCheckIns";
 import { useAuth } from "@/hooks/useAuth";
 import { getIdToken } from "@/lib/auth";
+import { saveCoachMessage, fetchCoachMessages } from "@/lib/firestoreService";
 import { nineLives, getCurrentLife, getLivesProgress, protocolCompletionMessage } from "@/data/nineLivesProtocol";
 import { isMedicalEmergency } from "@/lib/medicalEscalation";
 import { getCoachFallbackResponse } from "@/lib/fallbackExplanations";
@@ -23,7 +24,7 @@ import ProgressTimeline from "@/components/coach/ProgressTimeline";
 import { CatAvatar } from "@/components/chat/CatAvatar";
 import { CatMouseGame } from "@/components/CatMouseGame";
 import Link from "next/link";
-import { Send, AlertCircle, Heart, Trophy, PawPrint, ChevronRight, Sparkles, LogIn, ImagePlus, X } from "lucide-react";
+import { Send, AlertCircle, Heart, Trophy, PawPrint, ChevronRight, Sparkles, LogIn, ImagePlus, X, ShieldAlert } from "lucide-react";
 
 export default function CoachPage() {
   const params = useParams();
@@ -49,6 +50,8 @@ export default function CoachPage() {
   const [showEmergency, setShowEmergency] = useState(false);
   const [showCelebration, setShowCelebration] = useState(false);
   const [showGame, setShowGame] = useState(false);
+  const [guestMessageCount, setGuestMessageCount] = useState(0);
+  const [showLoginGate, setShowLoginGate] = useState(false);
   
   // New 9 Lives check-in state
   const [todayAte, setTodayAte] = useState<boolean | null>(null);
@@ -77,6 +80,22 @@ export default function CoachPage() {
       setShowCelebration(true);
     }
   }, [currentDay, checkIns.length]);
+
+  // Load guest message count from sessionStorage
+  useEffect(() => {
+    try {
+      const count = parseInt(sessionStorage.getItem("fh_guest_msg_count") || "0", 10);
+      setGuestMessageCount(isNaN(count) ? 0 : count);
+    } catch { /* noop */ }
+  }, []);
+
+  // Load saved chat history from Firestore / sessionStorage
+  useEffect(() => {
+    if (!user) return;
+    fetchCoachMessages(user.uid, adoptionId).then((saved) => {
+      if (saved && saved.length > 0) setMessages(saved);
+    }).catch(() => {});
+  }, [user?.uid, adoptionId]);
 
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -126,6 +145,12 @@ export default function CoachPage() {
     if (!inputValue.trim() && !imageFile) return;
     if (sending) return;
 
+    // Guest users: only 1 free message, then must log in
+    if (!user && guestMessageCount >= 1) {
+      setShowLoginGate(true);
+      return;
+    }
+
     // Check for medical emergency
     if (isMedicalEmergency(inputValue)) {
       setShowEmergency(true);
@@ -151,6 +176,18 @@ export default function CoachPage() {
     setMessages((prev) => [...prev, userMsg]);
     setInputValue("");
     setSending(true);
+
+    // Save user message to Firestore
+    if (user) {
+      saveCoachMessage(user.uid, adoptionId, userMsg).catch(() => {});
+    }
+
+    // Track guest message count
+    if (!user) {
+      const newCount = guestMessageCount + 1;
+      setGuestMessageCount(newCount);
+      try { sessionStorage.setItem("fh_guest_msg_count", String(newCount)); } catch { /* noop */ }
+    }
 
     try {
       let imagePayload: { data: string; mimeType: string } | undefined;
@@ -191,6 +228,10 @@ export default function CoachPage() {
         timestamp: new Date().toISOString(),
       };
       setMessages((prev) => [...prev, assistantMsg]);
+      // Save assistant response to Firestore
+      if (user) {
+        saveCoachMessage(user.uid, adoptionId, assistantMsg).catch(() => {});
+      }
     } catch (error) {
       console.error("Coach API error:", error);
       // Fallback to local response
@@ -202,6 +243,10 @@ export default function CoachPage() {
         timestamp: new Date().toISOString(),
       };
       setMessages((prev) => [...prev, assistantMsg]);
+      // Save fallback response to Firestore
+      if (user) {
+        saveCoachMessage(user.uid, adoptionId, assistantMsg).catch(() => {});
+      }
     } finally {
       setSending(false);
     }
@@ -233,7 +278,7 @@ export default function CoachPage() {
         </p>
         
         {/* 9 Lives Explanation Card */}
-        <Card className="bg-cream-dark border-2 border-cocoa mb-4">
+        <Card className="bg-white/70 backdrop-blur-md border border-white/40 shadow-xl shadow-cocoa/5 mb-4">
           <CardContent className="p-4">
             <h3 className="font-semibold text-cocoa mb-2 flex items-center gap-2">
               <span className="text-xl">🎯</span>
@@ -250,7 +295,7 @@ export default function CoachPage() {
       </div>
 
       {/* Progress Bar */}
-      <Card className="border-2 border-cocoa bg-white mb-6">
+      <Card className="bg-white/80 backdrop-blur-md border border-white/50 shadow-xl shadow-cocoa/5 mb-6">
         <CardContent className="p-4">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
@@ -275,10 +320,10 @@ export default function CoachPage() {
                 <div
                   className={`w-10 h-10 rounded-full flex items-center justify-center text-lg mb-1 ${
                     index < progress.livesCompleted
-                      ? "bg-sunny text-white shadow-md"
+                      ? "bg-sunny text-white shadow-md shadow-sunny/20"
                       : index === progress.livesCompleted
-                      ? "bg-sunny/20 border-2 border-sunny"
-                      : "bg-cream-dark border-2 border-cocoa/30"
+                      ? "bg-sunny/20 ring-2 ring-sunny/50 shadow-lg shadow-sunny/20"
+                      : "bg-cream-dark/50 ring-1 ring-cocoa/10"
                   }`}
                   title={life.title}
                 >
@@ -295,7 +340,7 @@ export default function CoachPage() {
           
           {/* Current Life Legend */}
           {currentLife && (
-            <div className="mt-4 p-3 bg-sunny-light border-2 border-sunny/30 rounded-lg">
+            <div className="mt-4 p-3 bg-sunny-light/50 border border-sunny/20 rounded-xl shadow-sm shadow-sunny/5">
               <p className="text-sm text-cat-dark font-bold">
                 <strong>Current Challenge:</strong> Life {currentLife.life} — {currentLife.title} {currentLife.emoji}
               </p>
@@ -344,15 +389,38 @@ export default function CoachPage() {
         </p>
       </div>
 
-      {/* Guest sign-in nudge — chat still works, but progress won't be saved */}
-      {!user && (
+      {/* Guest sign-in nudge — 1 free message, then login required */}
+      {!user && guestMessageCount < 1 && (
         <div className="flex items-center gap-2 bg-honey/10 border border-honey/25 rounded-xl px-4 py-2.5 mb-6 text-sm text-cocoa/70">
           <LogIn className="w-4 h-4 text-honey shrink-0" />
           <span>
-            You&apos;re trying this out as a guest.{" "}
+            You have <strong>1 free message</strong> as a guest.{" "}
             <Link href="/login" className="font-bold underline hover:text-cocoa">Sign in</Link>{" "}
-            to save {cat.name}&apos;s check-ins and chat history.
+            to unlock unlimited chats with Mr. Cat and save {cat.name}&apos;s progress.
           </span>
+        </div>
+      )}
+
+      {/* Login gate — shown after 1 guest message */}
+      {showLoginGate && !user && (
+        <div className="mb-6 bg-coral/10 border-2 border-coral/30 rounded-xl p-5 text-center">
+          <ShieldAlert className="h-8 w-8 text-coral mx-auto mb-2" />
+          <h3 className="font-bold text-cocoa mb-1">Free trial complete!</h3>
+          <p className="text-sm text-cocoa/70 mb-4">
+            Sign in to continue chatting with Mr. Cat and save {cat.name}&apos;s 9 Lives progress.
+          </p>
+          <div className="flex gap-2 justify-center">
+            <Link href={`/login?redirect=/coach/${adoptionId}`}>
+              <Button className="bg-coral text-white hover:bg-coral-deep rounded-full font-bold shadow-[3px_3px_0px_0px_rgba(42,29,20,0.15)]">
+                <LogIn className="w-4 h-4 mr-1.5" /> Sign In
+              </Button>
+            </Link>
+            <Link href="/register">
+              <Button variant="outline" className="rounded-full border-2 border-cocoa/30 font-bold">
+                Create Account
+              </Button>
+            </Link>
+          </div>
         </div>
       )}
 
@@ -373,7 +441,7 @@ export default function CoachPage() {
         <div className="space-y-6">
           
           {/* Daily Check-In */}
-          <Card className="border-2 border-cocoa bg-white shadow-[4px_4px_0px_0px_rgba(42,29,20,1)] hover:-translate-y-1 transition-all rounded-3xl">
+          <Card className="border border-white/60 bg-white/90 backdrop-blur-md shadow-xl shadow-cocoa/5 hover:shadow-2xl hover:shadow-cocoa/10 hover:-translate-y-1 transition-all duration-300 rounded-3xl">
             <CardHeader className="pb-3">
               <CardTitle className="text-lg text-cocoa flex items-center gap-2 font-display font-black">
                 <Heart className="h-5 w-5 text-coral" />
@@ -487,7 +555,7 @@ export default function CoachPage() {
 
           {/* Current Life Card */}
           {currentLife && (
-            <Card className="border-2 border-cocoa bg-white shadow-[4px_4px_0px_0px_rgba(42,29,20,1)] hover:-translate-y-1 transition-all rounded-3xl">
+            <Card className="border border-white/60 bg-white/90 backdrop-blur-md shadow-xl shadow-cocoa/5 hover:shadow-2xl hover:shadow-cocoa/10 hover:-translate-y-1 transition-all duration-300 rounded-3xl">
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
                   <div>
@@ -557,16 +625,16 @@ export default function CoachPage() {
             shelterId="paws-haven"
             adopterName="Adopter"
           />
-          <Card className="border-2 border-cocoa bg-white flex flex-col h-[600px] shadow-[6px_6px_0px_0px_rgba(42,29,20,1)] rounded-3xl overflow-hidden">
-            <CardHeader className="pb-2 shrink-0 bg-gradient-to-r from-amber-50 to-orange-50 border-b border-amber-200/60">
+          <Card className="border border-white/60 bg-white/90 backdrop-blur-md shadow-2xl shadow-cocoa/10 flex flex-col h-[600px] rounded-3xl overflow-hidden">
+            <CardHeader className="pb-2 shrink-0 bg-white/50 backdrop-blur-xl border-b border-white/50">
               <div className="flex items-center gap-3">
                 <CatAvatar size={36} />
                 <div>
                   <CardTitle className="text-base text-cocoa font-display font-black">
-                    {cat.name}&apos;s Coach
+                    Mr. Cat 🐱
                   </CardTitle>
                   <p className="text-xs text-cocoa/50 font-medium">
-                    AI knows {cat.name}&apos;s profile — ask anything
+                    I know {cat.name}&apos;s profile — ask anything
                   </p>
                 </div>
               </div>
@@ -626,7 +694,7 @@ export default function CoachPage() {
               {sending && (
                 <div className="flex gap-3">
                   <CatAvatar size={36} />
-                  <div className="bg-white border-2 border-amber-100/80 rounded-2xl rounded-tl-md shadow-[3px_3px_0px_0px_rgba(251,191,36,0.15)] px-4 py-3">
+                  <div className="bg-white/90 backdrop-blur-md border border-white/60 rounded-2xl rounded-tl-sm shadow-md shadow-cocoa/5 px-4 py-3">
                     <div className="flex items-center gap-1">
                       <span className="w-2 h-2 rounded-full bg-amber-300 animate-bounce" style={{ animationDelay: "0ms" }} />
                       <span className="w-2 h-2 rounded-full bg-amber-400 animate-bounce" style={{ animationDelay: "150ms" }} />
@@ -679,13 +747,13 @@ export default function CoachPage() {
                   onChange={(e) => setInputValue(e.target.value)}
                   onKeyDown={handleKeyDown}
                   disabled={sending}
-                  className="flex-1 border-2 border-amber-200/60 rounded-2xl focus:border-coral/40 focus:ring-0"
+                  className="flex-1 bg-white/60 border border-white/60 rounded-2xl focus:bg-white focus:ring-2 focus:ring-coral/20 focus:border-coral/40 shadow-inner"
                 />
                 <Button
                   onClick={handleSendMessage}
                   disabled={sending || (!inputValue.trim() && !imageFile)}
                   size="icon"
-                  className="shrink-0 w-10 h-10 bg-gradient-to-br from-sunny to-amber-500 hover:from-amber-500 hover:to-amber-600 text-white rounded-full shadow-[2px_2px_0px_0px_rgba(42,29,20,0.15)] hover:shadow-none hover:translate-y-0.5 active:translate-y-1 transition-all disabled:opacity-40 disabled:shadow-none disabled:translate-y-0"
+                  className="shrink-0 w-10 h-10 bg-gradient-to-br from-sunny to-amber-500 hover:from-amber-500 hover:to-amber-600 text-white rounded-full shadow-lg shadow-sunny/30 hover:shadow-xl hover:shadow-sunny/40 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300 disabled:opacity-40 disabled:shadow-none"
                 >
                   <Send className="h-4 w-4" />
                 </Button>
