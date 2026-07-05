@@ -216,7 +216,11 @@ export async function fetchAdopterProfile(uid: string): Promise<AdopterProfile |
     return null;
   }
 
-  if (!USE_FIRESTORE) {
+  // sessionStorage only exists in the browser. This function is also called
+  // from server-side API routes (e.g. /api/coach), where it's undefined —
+  // guard against that instead of throwing.
+  if (!USE_FIRESTORE || typeof sessionStorage === "undefined") {
+    if (typeof sessionStorage === "undefined") return null;
     const stored = JSON.parse(sessionStorage.getItem("adopterProfiles") || "{}");
     const profile = stored[uid];
     if (!profile) return null;
@@ -228,12 +232,21 @@ export async function fetchAdopterProfile(uid: string): Promise<AdopterProfile |
     } as AdopterProfile;
   }
 
-  const profileRef = doc(db, "users", uid, "adopterProfile", uid);
-  const snap = await getDoc(profileRef);
+  try {
+    const profileRef = doc(db, "users", uid, "adopterProfile", uid);
+    const snap = await getDoc(profileRef);
 
-  if (!snap.exists()) return null;
+    if (!snap.exists()) return null;
 
-  return { id: snap.id, ...snap.data() } as AdopterProfile;
+    return { id: snap.id, ...snap.data() } as AdopterProfile;
+  } catch (err) {
+    // Server-side Firestore reads have no authenticated session, so
+    // security rules will reject them. Don't let that crash the caller —
+    // treat it the same as "profile not found" so API routes can fall
+    // back gracefully instead of 500ing.
+    console.error("fetchAdopterProfile failed (likely no server auth session):", err);
+    return null;
+  }
 }
 
 /**

@@ -42,14 +42,13 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Fetch the adopter profile from Firestore
+    // Attempt to fetch the adopter profile from Firestore for extra
+    // personalization context. This is best-effort: server-side Firestore
+    // reads have no authenticated user session (this app doesn't use the
+    // Admin SDK), so security rules will typically deny this read and it
+    // resolves to null. That's fine — the coach still works with a
+    // generic context rather than failing the whole request.
     const profile = await fetchAdopterProfile(adopterProfileId);
-    if (!profile) {
-      return NextResponse.json(
-        { error: "Invalid profile reference", message: "Profile not found" },
-        { status: 400 }
-      );
-    }
 
     // Check for medical emergency first — always deterministic
     if (isMedicalEmergency(message)) {
@@ -61,8 +60,10 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // Build profile context for AI
-    const profileContext = `
+    // Build profile context for AI — fall back to a generic context when
+    // no profile is available so the coach still responds.
+    const profileContext = profile
+      ? `
 Adopter Profile:
 - Name: ${profile.name}
 - Home: ${profile.homeType}${profile.hasGarden ? " with garden" : ""}
@@ -70,7 +71,8 @@ Adopter Profile:
 - Lifestyle: ${profile.workHours} schedule, ${profile.householdNoise} household
 - Preferences: ${profile.personalityPreference.join(", ") || "none specified"} personality, ${profile.agePreference.join(", ") || "any"} age
 ${profile.specialNeedsOpenness ? "- Open to special needs cats" : ""}
-    `.trim();
+      `.trim()
+      : "Adopter Profile: Not available — respond with general best-practice guidance.";
 
     // Build check-in context for Gemini
     const checkInContext = checkIns
