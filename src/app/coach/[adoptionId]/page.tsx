@@ -22,7 +22,6 @@ import EmergencyContacts from "@/components/coach/EmergencyContacts";
 import SmartEscalationModal from "@/components/coach/SmartEscalationModal";
 import ProgressTimeline from "@/components/coach/ProgressTimeline";
 import { CatAvatar } from "@/components/chat/CatAvatar";
-import { CatMouseGame } from "@/components/CatMouseGame";
 import Link from "next/link";
 import { Send, AlertCircle, Heart, Trophy, PawPrint, ChevronRight, Sparkles, LogIn, ImagePlus, X, ShieldAlert } from "lucide-react";
 
@@ -49,7 +48,6 @@ export default function CoachPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [showEmergency, setShowEmergency] = useState(false);
   const [showCelebration, setShowCelebration] = useState(false);
-  const [showGame, setShowGame] = useState(false);
   const [guestMessageCount, setGuestMessageCount] = useState(0);
   const [showLoginGate, setShowLoginGate] = useState(false);
   
@@ -363,21 +361,8 @@ export default function CoachPage() {
             <p className="text-sm text-charcoal font-bold mb-4">
               {protocolCompletionMessage.message}
             </p>
-            <Button
-              className="bg-sunny hover:bg-sunny/90 text-white"
-              onClick={() => setShowGame(true)}
-            >
-              Play: Catch the Vibe 🎮
-            </Button>
           </CardContent>
         </Card>
-      )}
-
-      {/* Celebration mini-game — a little world-domination victory lap */}
-      {showGame && (
-        <div className="mb-6">
-          <CatMouseGame onClose={() => setShowGame(false)} />
-        </div>
       )}
 
       {/* Medical Disclaimer */}

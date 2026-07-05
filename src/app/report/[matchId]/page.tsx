@@ -77,6 +77,7 @@ export default function ReportPage() {
   const matchId = params.matchId as string;
   const [match, setMatch] = useState<Match | null>(null);
   const [matchLoading, setMatchLoading] = useState(true);
+  const [adopterProfile, setAdopterProfile] = useState<AdopterProfile | null>(null);
   const [explanation, setExplanation] = useState<string>("");
   const [loadingExplanation, setLoadingExplanation] = useState(false);
 
@@ -146,6 +147,23 @@ export default function ReportPage() {
     loadMatch();
   }, [matchId]);
 
+  // Fetch adopter profile for richer AI context
+  useEffect(() => {
+    async function loadProfile() {
+      if (!match || !match.adopterProfileId) {
+        setAdopterProfile(null);
+        return;
+      }
+      try {
+        const profile = await fetchAdopterProfile(match.adopterProfileId);
+        if (profile) setAdopterProfile(profile);
+      } catch {
+        // Non-critical — AI explanation works without it
+      }
+    }
+    loadProfile();
+  }, [match]);
+
   // Fetch AI explanation when match data is loaded
   useEffect(() => {
     async function fetchExplanation() {
@@ -163,9 +181,46 @@ export default function ReportPage() {
             compatibilityResult: match.result,
             cat: {
               name: cat.name,
+              breed: cat.breed,
+              age: cat.age,
+              lifeStage: cat.lifeStage,
+              color: cat.color,
+              sex: cat.sex,
               behavior: cat.behavior,
+              care: cat.care,
+              personality: cat.personality,
+              backstory: cat.backstory,
+              idealHome: cat.idealHome,
             },
-            adopter: match.adopterProfileId ? { id: match.adopterProfileId } : null,
+            adopter: adopterProfile
+              ? {
+                  name: adopterProfile.name,
+                  homeType: adopterProfile.homeType,
+                  hasChildren: adopterProfile.hasChildren,
+                  childrenAges: adopterProfile.childrenAges,
+                  hasExistingPets: adopterProfile.hasExistingPets,
+                  existingPets: adopterProfile.existingPets,
+                  hasGarden: adopterProfile.hasGarden,
+                  workHours: adopterProfile.workHours,
+                  travelFrequency: adopterProfile.travelFrequency,
+                  householdNoise: adopterProfile.householdNoise,
+                  catExperience: adopterProfile.catExperience,
+                  personalityPreference: adopterProfile.personalityPreference,
+                  agePreference: adopterProfile.agePreference,
+                  specialNeedsOpenness: adopterProfile.specialNeedsOpenness,
+                  indoorOnlyPreference: adopterProfile.indoorOnlyPreference,
+                }
+              : match.adopterAnswers
+                ? {
+                    homeType: match.adopterAnswers.homeType,
+                    householdNoise: match.adopterAnswers.householdNoise,
+                    hoursAway: match.adopterAnswers.hoursAway,
+                    travelFrequency: match.adopterAnswers.travelFrequency,
+                    previousCatExperience: match.adopterAnswers.previousCatExperience,
+                    hasChildren: match.adopterAnswers.children.length > 0,
+                    existingPets: match.adopterAnswers.existingPets,
+                  }
+                : null,
           }),
         });
 
@@ -180,7 +235,7 @@ export default function ReportPage() {
     }
 
     fetchExplanation();
-  }, [match]);
+  }, [match, adopterProfile]);
 
   const handleSubmitAdoptionRequest = async () => {
     if (!match) return;

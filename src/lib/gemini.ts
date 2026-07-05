@@ -110,46 +110,81 @@ export async function generateCounselorExplanation(
   adopterProfile: string,
   riskLevel: string,
   concerns: string[],
-  strengths: string[]
+  strengths: string[],
+  catBackstory?: string,
+  catIdealHome?: string,
+  catSpecialNotes?: string,
+  catPersonality?: { trait: string; description: string }[],
+  catMedicalNeeds?: string,
+  adopterName?: string,
+  adopterCatExperience?: string
 ): Promise<string> {
-  const prompt = `You are the ForeverHome AI Adoption Counselor. Explain this cat adoption match to the potential adopter in warm, empathetic, non-judgmental language.
+  const adopterGreeting = adopterName ? `Hi ${adopterName}! ` : "";
+  const personalityText = catPersonality?.length
+    ? catPersonality.map(p => `• ${p.trait}: ${p.description}`).join("\n")
+    : "";
 
-Cat: ${catName}
-Cat Profile: ${catProfile}
-Adopter Profile: ${adopterProfile}
-Risk Level: ${riskLevel}
+  const prompt = `You are the ForeverHome AI Adoption Counselor. Generate a warm, empathetic, and thorough compatibility report for a potential adopter. Write 4-5 substantial paragraphs.
+
+${adopterGreeting}Here's the full picture:
+
+─── THE CAT ───
+Name: ${catName}
+${catProfile}
+${personalityText ? `\nPersonality traits:\n${personalityText}` : ""}
+${catBackstory ? `\nBackstory:\n${catBackstory}` : ""}
+${catIdealHome ? `\nIdeal home:\n${catIdealHome}` : ""}
+${catSpecialNotes ? `\nShelter notes:\n${catSpecialNotes}` : ""}
+${catMedicalNeeds && catMedicalNeeds !== "None" ? `\nMedical needs:\n${catMedicalNeeds}` : ""}
+
+─── THE ADOPTER ───
+${adopterProfile}
+
+─── COMPATIBILITY ASSESSMENT ───
+Overall risk level: ${riskLevel}
 
 Concerns identified:
-${concerns.map((c) => `- ${c}`).join("\n")}
+${concerns.map((c) => `- ${c}`).join("\n") || "None"}
 
 Strengths identified:
-${strengths.map((s) => `- ${s}`).join("\n")}
+${strengths.map((s) => `- ${s}`).join("\n") || "None"}
 
-IMPORTANT: Provide a COMPLETE, thorough response. NEVER cut off mid-sentence. Write 3-4 full paragraphs covering ALL of the following:
-1. Why this match has ${riskLevel} risk — explain in detail
-2. What the main concerns are and why they matter for the cat's wellbeing
-3. Practical, specific steps to mitigate each concern if they choose to proceed
-4. Why alternative cats might be a better fit (if applicable) — be specific about which traits matter most
+IMPORTANT: Write a COMPLETE, thorough compatibility report that covers ALL of the following sections. NEVER cut off mid-sentence. NEVER use markdown formatting, just plain paragraphs separated by blank lines.
 
-Use simple, warm language. Be supportive, not discouraging. End with a friendly closing.`;
+1. WHY YOU TWO MATCH: Explain in detail why this specific cat and the adopter might be a good match (or why they aren't). Reference the cat's actual personality, backstory, and traits. Reference the adopter's living situation, experience level, and preferences. Be specific — don't be generic.
+
+2. HOW TO CARE FOR ${catName.toUpperCase()}: Give practical, concrete advice on daily care. Include feeding routines, litter box setup, play/exercise needs, grooming requirements, and any special medical care. Reference the cat's specific needs (energy level, play needs, medical conditions, etc.). If the cat needs vertical space, mention cat trees. If it's a senior, talk about joint care. Be specific to THIS cat, not generic cat care advice.
+
+3. CONCERNS & SOLUTIONS: Address each concern one by one. For each concern, explain why it matters for the cat's wellbeing and give practical, specific steps the adopter can take to address it. If risk is low, emphasize what to watch for during the transition period.
+
+4. FINAL THOUGHTS: End with an encouraging, supportive closing. If risk is high, gently suggest alternative cats might be a better fit. If moderate, express confidence that with preparation this can work. If low, celebrate the potential match.
+
+Use warm, conversational language. Write as if you're sitting across from the adopter having a friendly chat. Be supportive and never judgmental.`;
 
   const result = await callAI(prompt);
-  return result ?? fallbackCounselorExplanation(catName, riskLevel, concerns, strengths);
+  return result ?? fallbackCounselorExplanation(catName, riskLevel, concerns, strengths, catBackstory, catIdealHome, catSpecialNotes, catMedicalNeeds, adopterName);
 }
 
 function fallbackCounselorExplanation(
   catName: string,
   riskLevel: string,
   concerns: string[],
-  strengths: string[]
+  strengths: string[],
+  catBackstory?: string,
+  catIdealHome?: string,
+  catSpecialNotes?: string,
+  catMedicalNeeds?: string,
+  adopterName?: string
 ): string {
+  const greeting = adopterName ? `Hi ${adopterName}! ` : "";
+
   if (riskLevel === "high") {
-    return `${catName} may face challenges in this home environment. The concerns identified — ${concerns.slice(0, 2).join(" and ")} — could lead to stress and behavioral issues. We recommend considering alternative cats that may be a better fit for your lifestyle. Our shelter team is happy to help you find the perfect match.`;
+    return `${greeting}${catName} may face significant challenges in this home environment. ${concerns.length > 0 ? `The main concerns are: ${concerns.slice(0, 2).join(" and ")}. ` : ""}These could lead to stress and behavioral issues for ${catName}. ${catIdealHome ? `${catName}'s ideal home would be: ${catIdealHome}. ` : ""}We recommend considering alternative cats that may be a better lifestyle fit — our shelter team is happy to help you find the purr-fect match!`;
   }
   if (riskLevel === "moderate") {
-    return `This match with ${catName} has some areas that need attention. ${concerns[0] || "Some concerns"} should be addressed before adoption. With proper preparation and support from our team, this match could work. We recommend discussing mitigation steps with shelter staff.`;
+    return `${greeting}This match with ${catName} has promising aspects but also some areas that need attention. ${concerns[0] ? `${concerns[0]}. ` : ""}${catSpecialNotes ? `${catSpecialNotes} ` : ""}With proper preparation and support, this match could work well. ${catIdealHome ? `To give ${catName} the best start, consider: ${catIdealHome}. ` : ""}We recommend discussing the specific concerns with shelter staff who know ${catName} best.`;
   }
-  return `Great news! This match with ${catName} looks promising. ${strengths[0] || "Your lifestyle"} aligns well with ${catName}'s needs. We recommend proceeding with the adoption and scheduling a meet-and-greet at the shelter.`;
+  return `${greeting}Great news — this match with ${catName} looks very promising! ${strengths[0] || "Your lifestyle"} aligns well with ${catName}'s needs. ${catBackstory ? `${catBackstory} ` : ""}${catIdealHome ? `To help ${catName} settle in, aim for: ${catIdealHome}. ` : ""}${catMedicalNeeds && catMedicalNeeds !== "None" ? `Note: ${catName} has medical needs (${catMedicalNeeds}) to be aware of. ` : ""}We recommend proceeding with the adoption and scheduling a meet-and-greet at the shelter. Exciting times ahead!`;
 }
 
 // ─── 14-Day Coach ──────────────────────────────────────
