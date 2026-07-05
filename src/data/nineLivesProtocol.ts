@@ -221,9 +221,11 @@ export function getLivesProgress(completedDays: number): {
 /**
  * Completion message for Day 9
  */
-export const protocolCompletionMessage = {
-  title: "World Domination Complete",
-  subtitle: "Barnaby has used all 9 Lives to secure his permanent base.",
-  message: "The critical decompression phase is over. Your cat now has a secure territory, a trusted human, and a routine. The foundation for a lifetime of companionship has been built.",
-  nextStep: "While your cat naps in their sunbeam, why not play a quick game?",
-};
+export function getProtocolCompletionMessage(catName: string) {
+  return {
+    title: "World Domination Complete",
+    subtitle: `${catName} has used all 9 Lives to secure their permanent base.`,
+    message: "The critical decompression phase is over. Your cat now has a secure territory, a trusted human, and a routine. The foundation for a lifetime of companionship has been built.",
+    nextStep: "While your cat naps in their sunbeam, why not play a quick game?",
+  };
+}

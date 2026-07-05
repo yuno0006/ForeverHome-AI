@@ -136,7 +136,7 @@ export default function SmartEscalationModal({
             <ShieldAlert className="w-4 h-4 text-white" />
           </div>
           <span className="font-bold text-sm text-cocoa flex-1 text-left">
-            Need Human Help?
+            Need Shelter Help?
           </span>
           <ChevronRight className="w-4 h-4 text-cocoa/40 group-hover:text-risk-high transition-colors" />
         </div>

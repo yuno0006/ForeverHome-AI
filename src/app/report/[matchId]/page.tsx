@@ -7,6 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { WhiskerRunnerDialog } from "@/components/game/WhiskerRunnerDialog";
 import { getCatById, demoCats } from "@/data/demoCats";
 import { getShelterById } from "@/data/demoShelters";
 import { getFallbackExplanation } from "@/lib/fallbackExplanations";
@@ -31,6 +32,10 @@ import {
   Mail,
   MapPin,
   Clock,
+  Volume2,
+  VolumeX,
+  Cat,
+  Gamepad2,
 } from "lucide-react";
 
 // Mirrors buildAdopterAnswers() in the assessment flow so a report can be
@@ -90,6 +95,13 @@ export default function ReportPage() {
   const [requestSent, setRequestSent] = useState(false);
   const [requestError, setRequestError] = useState<string | null>(null);
 
+  // Whisker Runner mini-game
+  const [gameOpen, setGameOpen] = useState(false);
+
+  // TTS state
+  const [speaking, setSpeaking] = useState(false);
+  const [ttsSupported, setTtsSupported] = useState(false);
+
   // Prefill contact info once the user profile loads
   useEffect(() => {
     if (userDoc) {
@@ -97,6 +109,34 @@ export default function ReportPage() {
       setAdopterEmail(userDoc.email || "");
     }
   }, [userDoc]);
+  
+  // Check TTS support
+  useEffect(() => {
+    setTtsSupported(typeof window !== "undefined" && "speechSynthesis" in window);
+  }, []);
+  
+  // Auto-speak explanation when it loads
+  useEffect(() => {
+    if (!explanation || loadingExplanation || !ttsSupported) return;
+    speakExplanation(explanation);
+  }, [explanation, loadingExplanation]);
+  
+  const speakExplanation = (text: string) => {
+    if (!ttsSupported) return;
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.rate = 1.1;
+    utterance.pitch = 1.0;
+    utterance.onstart = () => setSpeaking(true);
+    utterance.onend = () => setSpeaking(false);
+    utterance.onerror = () => setSpeaking(false);
+    window.speechSynthesis.speak(utterance);
+  };
+  
+  const stopSpeaking = () => {
+    window.speechSynthesis.cancel();
+    setSpeaking(false);
+  };
 
   useEffect(() => {
     async function loadMatch() {
@@ -292,7 +332,7 @@ export default function ReportPage() {
     return (
       <div className="max-w-2xl mx-auto px-4 py-12 text-center">
         <h1 className="text-2xl font-bold text-cat-dark">Report not found</h1>
-        <p className="text-charcoal/50 mt-2">
+        <p className="text-charcoal/70 mt-2 font-medium">
           The assessment data may have expired. Please try again.
         </p>
         <Button className="mt-4" onClick={() => router.push("/cats")}>
@@ -328,7 +368,7 @@ export default function ReportPage() {
         <h1 className="text-3xl font-bold text-cat-dark">
           Compatibility Report
         </h1>
-        <p className="text-charcoal/50 mt-1">
+        <p className="text-charcoal/70 mt-1 font-medium">
           Assessment for {cat.name}
         </p>
       </div>
@@ -338,9 +378,9 @@ export default function ReportPage() {
         <CompatibilityBadge level={match.result.level} />
 
         {/* Disclaimer */}
-        <div className="bg-warm-cream rounded-lg p-4 border border-border text-sm text-charcoal/50">
+        <div className="bg-warm-cream rounded-lg p-4 border border-border text-sm text-charcoal/70">
           <p>
-            <strong className="text-foreground">Disclaimer:</strong> This is not
+            <strong className="text-cocoa">Disclaimer:</strong> This is not
             a prediction of adoption outcome. It is an assessment based on
             shelter-defined compatibility rules. The final adoption decision is
             always made by shelter staff.
@@ -350,16 +390,31 @@ export default function ReportPage() {
         {/* AI Counselor Explanation */}
         <Card className="border-border bg-white">
           <CardContent className="pt-6">
-            <h3 className="font-semibold text-cat-dark text-lg mb-3">
-              Explanation
-            </h3>
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="font-semibold text-cat-dark text-lg">
+                Explanation
+              </h3>
+              {!loadingExplanation && explanation && ttsSupported && (
+                <button
+                  onClick={() => speaking ? stopSpeaking() : speakExplanation(explanation)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-bold transition-colors bg-cocoa/5 hover:bg-cocoa/10 text-cocoa border border-cocoa/15"
+                  title={speaking ? "Stop reading" : "Read explanation aloud"}
+                >
+                  {speaking ? (
+                    <><VolumeX className="h-4 w-4" /> Stop</>
+                  ) : (
+                    <><Volume2 className="h-4 w-4" /> Listen</>
+                  )}
+                </button>
+              )}
+            </div>
             {loadingExplanation ? (
-              <div className="flex items-center gap-2 text-sm text-charcoal/50">
+              <div className="flex items-center gap-2 text-sm text-charcoal/70">
                 <Loader2 className="h-4 w-4 animate-spin" />
                 Generating AI explanation...
               </div>
             ) : (
-              <p className="text-sm text-charcoal/50 leading-relaxed">
+              <p className="text-sm text-charcoal/80 leading-relaxed">
                 {explanation}
               </p>
             )}
@@ -373,16 +428,16 @@ export default function ReportPage() {
         {match.result.strengths.length > 0 && (
           <div className="space-y-3">
             <h3 className="font-semibold text-cat-dark text-lg">
-              Protective factors
+              Protective Factors (by AI)
             </h3>
             <div className="space-y-2">
               {match.result.strengths.map((strength, i) => (
                 <div
                   key={i}
-                  className="flex items-start gap-3 p-3 rounded-lg bg-risk-low/5 border border-risk-low/20"
+                  className="flex items-start gap-3 p-3 rounded-lg bg-[#22c55e]/5 border border-[#22c55e]/20"
                 >
-                  <CheckCircle2 className="h-5 w-5 shrink-0 mt-0.5 text-risk-low" />
-                  <p className="text-sm text-foreground">
+                  <CheckCircle2 className="h-5 w-5 shrink-0 mt-0.5 text-[#22c55e]" />
+                  <p className="text-sm text-charcoal/80 font-medium">
                     {strength.description}
                   </p>
                 </div>
@@ -447,14 +502,27 @@ export default function ReportPage() {
                 </div>
               )}
 
-              <div className="mt-5">
-                <Button
-                  onClick={() => router.push(`/coach/${match.catId}-adoption-1`)}
-                  className="bg-heart hover:bg-heart/90 text-white gap-2"
-                >
-                  Continue to 14-Day Coach
-                  <ArrowRight className="h-4 w-4" />
-                </Button>
+              <div className="mt-5 flex flex-col items-center gap-3">
+                <p className="text-sm text-charcoal/60 text-center">
+                  While you wait to hear back from the shelter, take a quick breather —
+                </p>
+                <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto justify-center">
+                  <Button
+                    variant="outline"
+                    onClick={() => setGameOpen(true)}
+                    className="gap-2 border-2 border-sage/40 text-sage-deep hover:bg-sage/10"
+                  >
+                    <Gamepad2 className="h-4 w-4" />
+                    Play: Whisker Runner 🐾
+                  </Button>
+                  <Button
+                    onClick={() => router.push(`/coach/${match.catId}-adoption-1`)}
+                    className="bg-heart hover:bg-heart/90 text-white gap-2"
+                  >
+                    Continue to 14-Day Coach
+                    <ArrowRight className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -535,24 +603,29 @@ export default function ReportPage() {
             </CardContent>
           </Card>
         ) : (
-          <div className="flex flex-col sm:flex-row gap-3">
+          <div className="flex flex-col sm:flex-row gap-3 pt-2">
             <Button
               variant="outline"
               onClick={() => router.push("/cats")}
-              className="flex-1"
+              className="flex-1 rounded-full border-2 border-cocoa/20 bg-white text-cocoa hover:bg-cocoa/5 font-bold py-5 shadow-[3px_3px_0px_0px_rgba(42,29,20,0.1)] hover:shadow-[4px_4px_0px_0px_rgba(42,29,20,0.15)] hover:-translate-y-0.5 transition-all"
             >
-              Try Another Cat
+              <Cat className="h-4 w-4 mr-2" /> Try Another Cat
             </Button>
             <Button
               onClick={() => setShowAdoptForm(true)}
-              className="bg-coral hover:bg-coral-deep text-white flex-1 gap-2"
+              className="flex-1 bg-heart hover:bg-heart/90 text-white font-bold py-5 rounded-full shadow-[3px_3px_0px_0px_rgba(239,68,68,0.3)] hover:shadow-[4px_4px_0px_0px_rgba(239,68,68,0.4)] hover:-translate-y-0.5 transition-all gap-2"
             >
-              <Heart className="h-4 w-4" />
-              Start Adoption Process
+              <Heart className="h-4 w-4 fill-white" /> Start Adoption Process
             </Button>
           </div>
         )}
       </div>
+
+      <WhiskerRunnerDialog
+        open={gameOpen}
+        onOpenChange={setGameOpen}
+        catName={cat.name}
+      />
     </div>
   );
 }

@@ -11,7 +11,7 @@ import { demoCheckIns } from "@/data/demoCheckIns";
 import { useAuth } from "@/hooks/useAuth";
 import { getIdToken } from "@/lib/auth";
 import { saveCoachMessage, fetchCoachMessages } from "@/lib/firestoreService";
-import { nineLives, getCurrentLife, getLivesProgress, protocolCompletionMessage } from "@/data/nineLivesProtocol";
+import { nineLives, getCurrentLife, getLivesProgress, getProtocolCompletionMessage } from "@/data/nineLivesProtocol";
 import { isMedicalEmergency } from "@/lib/medicalEscalation";
 import { getCoachFallbackResponse } from "@/lib/fallbackExplanations";
 import { DailyCheckIn } from "@/types/checkIn";
@@ -23,7 +23,7 @@ import SmartEscalationModal from "@/components/coach/SmartEscalationModal";
 import ProgressTimeline from "@/components/coach/ProgressTimeline";
 import { CatAvatar } from "@/components/chat/CatAvatar";
 import Link from "next/link";
-import { Send, AlertCircle, Heart, Trophy, PawPrint, ChevronRight, Sparkles, LogIn, ImagePlus, X, ShieldAlert } from "lucide-react";
+import { Send, AlertCircle, Heart, Trophy, PawPrint, ChevronRight, Sparkles, LogIn, ImagePlus, X, ShieldAlert, ChevronDown, ChevronUp } from "lucide-react";
 
 export default function CoachPage() {
   const params = useParams();
@@ -51,6 +51,14 @@ export default function CoachPage() {
   const [guestMessageCount, setGuestMessageCount] = useState(0);
   const [showLoginGate, setShowLoginGate] = useState(false);
   
+  // Check-in tracking: which days have been completed today
+  const [checkedInToday, setCheckedInToday] = useState(false);
+  const [lastCheckInDate, setLastCheckInDate] = useState<string | null>(null);
+  
+  // Progress dropdown state
+  const [progressExpanded, setProgressExpanded] = useState(true);
+  const [timelineExpanded, setTimelineExpanded] = useState(true);
+  
   // New 9 Lives check-in state
   const [todayAte, setTodayAte] = useState<boolean | null>(null);
   const [todayLitter, setTodayLitter] = useState<"yes" | "no" | "diarrhea" | null>(null);
@@ -72,12 +80,24 @@ export default function CoachPage() {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+  // Check if today's check-in was already completed
   useEffect(() => {
-    // Show celebration on Day 9 completion
-    if (currentDay === 10 && checkIns.length >= 9) {
+    try {
+      const today = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
+      const storedDate = sessionStorage.getItem(`fh_checkin_date_${adoptionId}`);
+      if (storedDate === today) {
+        setCheckedInToday(true);
+        setLastCheckInDate(today);
+      }
+    } catch { /* noop */ }
+  }, [adoptionId]);
+
+  useEffect(() => {
+    // Show celebration on Day 9 completion (9 check-ins done)
+    if (checkIns.length >= 9 && !showCelebration) {
       setShowCelebration(true);
     }
-  }, [currentDay, checkIns.length]);
+  }, [checkIns.length, showCelebration]);
 
   // Load guest message count from sessionStorage
   useEffect(() => {
@@ -131,6 +151,12 @@ export default function CoachPage() {
     };
     
     setCheckIns((prev) => [...prev, newCheckIn]);
+    
+    // Mark today as checked in — card will hide until next day
+    const today = new Date().toISOString().split("T")[0];
+    setCheckedInToday(true);
+    setLastCheckInDate(today);
+    try { sessionStorage.setItem(`fh_checkin_date_${adoptionId}`, today); } catch { /* noop */ }
     
     // Reset check-in state
     setTodayAte(null);
@@ -208,7 +234,7 @@ export default function CoachPage() {
         body: JSON.stringify({
           message: userMsg.content,
           catName: cat?.name || "your cat",
-          catProfile: `${cat?.behavior?.energy} energy, ${cat?.behavior?.stressSensitivity} stress sensitivity`,
+          catProfile: `Name: ${cat?.name}, Breed: ${cat?.breed}, Age: ${cat?.age}yr, Energy: ${cat?.behavior?.energy}, Stress: ${cat?.behavior?.stressSensitivity}, Sociability: ${cat?.behavior?.sociability}, Children: ${cat?.behavior?.comfortableWithChildren}, Cats: ${cat?.behavior?.comfortableWithCats}, Dogs: ${cat?.behavior?.comfortableWithDogs}, Play: ${cat?.behavior?.playNeeds}, Noise: ${cat?.behavior?.noiseTolerance}, Medical: ${cat?.care?.knownMedicalNeeds || "none"}, Backstory: ${cat?.backstory || ""}, IdealHome: ${cat?.idealHome || ""}`,
           currentDay,
           checkIns: checkIns.slice(-3),
           adopterProfileId: user?.uid || "guest",
@@ -292,75 +318,103 @@ export default function CoachPage() {
         </Card>
       </div>
 
-      {/* Progress Bar */}
-      <Card className="bg-white/80 backdrop-blur-md border border-white/50 shadow-xl shadow-cocoa/5 mb-6">
-        <CardContent className="p-4">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2">
-              <PawPrint className="h-5 w-5 text-sunny" />
-              <span className="font-semibold text-cat-dark">
-                {progress.livesCompleted} of 9 Challenges Survived
-              </span>
-            </div>
-            <span className="text-sm text-charcoal font-bold">
-              Day {currentDay} of 14
-            </span>
-          </div>
-          <Progress value={progress.progressPercent} className="h-3 mb-4" />
-          
-          {/* Lives Progress Grid */}
-          <div className="grid grid-cols-9 gap-2">
-            {nineLives.map((life, index) => (
-              <div
-                key={life.life}
-                className="flex flex-col items-center opacity-100"
-              >
-                <div
-                  className={`w-10 h-10 rounded-full flex items-center justify-center text-lg mb-1 ${
-                    index < progress.livesCompleted
-                      ? "bg-sunny text-white shadow-md shadow-sunny/20"
-                      : index === progress.livesCompleted
-                      ? "bg-sunny/20 ring-2 ring-sunny/50 shadow-lg shadow-sunny/20"
-                      : "bg-cream-dark/50 ring-1 ring-cocoa/10"
-                  }`}
-                  title={life.title}
-                >
-                  {index < progress.livesCompleted ? "✓" : life.emoji}
-                </div>
-                <span className={`text-xs font-medium text-center ${
-                  index <= progress.livesCompleted ? "text-sunny" : "text-charcoal font-bold"
-                }`}>
-                  {life.life}
+      {/* Progress Bar — collapsible dropdown */}
+      {checkIns.length < 9 ? (
+        <Card className="bg-white/80 backdrop-blur-md border border-white/50 shadow-xl shadow-cocoa/5 mb-6">
+          <CardContent className="p-4">
+            <div 
+              className="flex items-center justify-between mb-3 cursor-pointer select-none"
+              onClick={() => setProgressExpanded(!progressExpanded)}
+            >
+              <div className="flex items-center gap-2">
+                <PawPrint className="h-5 w-5 text-sunny" />
+                <span className="font-semibold text-cat-dark">
+                  {progress.livesCompleted} of 9 Challenges Survived
                 </span>
               </div>
-            ))}
-          </div>
-          
-          {/* Current Life Legend */}
-          {currentLife && (
-            <div className="mt-4 p-3 bg-sunny-light/50 border border-sunny/20 rounded-xl shadow-sm shadow-sunny/5">
-              <p className="text-sm text-cat-dark font-bold">
-                <strong>Current Challenge:</strong> Life {currentLife.life} — {currentLife.title} {currentLife.emoji}
-              </p>
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-charcoal/70 font-bold">
+                  Day {currentDay}
+                </span>
+                {progressExpanded ? (
+                  <ChevronUp className="h-4 w-4 text-cocoa/50" />
+                ) : (
+                  <ChevronDown className="h-4 w-4 text-cocoa/50" />
+                )}
+              </div>
             </div>
-          )}
-        </CardContent>
-      </Card>
+            {progressExpanded && (
+              <>
+                <Progress value={progress.progressPercent} className="h-3 mb-4" />
+                
+                {/* Lives Progress Grid */}
+                <div className="grid grid-cols-9 gap-2">
+                  {nineLives.map((life, index) => (
+                    <div
+                      key={life.life}
+                      className="flex flex-col items-center opacity-100"
+                    >
+                      <div
+                        className={`w-10 h-10 rounded-full flex items-center justify-center text-lg mb-1 ${
+                          index < progress.livesCompleted
+                            ? "bg-sunny text-white shadow-md shadow-sunny/20"
+                            : index === progress.livesCompleted
+                            ? "bg-sunny/20 ring-2 ring-sunny/50 shadow-lg shadow-sunny/20"
+                            : "bg-cream-dark/50 ring-1 ring-cocoa/10"
+                        }`}
+                        title={life.title}
+                      >
+                        {index < progress.livesCompleted ? "✓" : life.emoji}
+                      </div>
+                      <span className={`text-xs font-medium text-center ${
+                        index <= progress.livesCompleted ? "text-sunny" : "text-charcoal font-bold"
+                      }`}>
+                        {life.life}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+                
+                {/* Current Life Legend */}
+                {currentLife && (
+                  <div className="mt-4 p-3 bg-sunny-light/50 border border-sunny/20 rounded-xl shadow-sm shadow-sunny/5">
+                    <p className="text-sm text-cat-dark font-bold">
+                      <strong>Current Challenge:</strong> Life {currentLife.life} — {currentLife.title} {currentLife.emoji}
+                    </p>
+                  </div>
+                )}
+              </>
+            )}
+          </CardContent>
+        </Card>
+      ) : (
+        /* When all 9 lives are complete, show only a compact congrats bar */
+        <div className="mb-6 p-3 bg-[#22c55e]/5 border border-[#22c55e]/20 rounded-xl text-center">
+          <div className="flex items-center justify-center gap-2">
+            <Trophy className="h-5 w-5 text-[#22c55e]" />
+            <span className="font-bold text-[#22c55e]">All 9 Challenges Survived — {cat.name} is home!</span>
+          </div>
+        </div>
+      )}
 
       {/* Celebration Modal */}
       {showCelebration && (
-        <Card className="border-sunny bg-gradient-to-r from-sunny/10 to-risk-low/10 mb-6">
+        <Card className="border-2 border-sunny bg-gradient-to-r from-sunny/10 to-[#22c55e]/10 mb-6 rounded-2xl shadow-xl shadow-sunny/20">
           <CardContent className="p-6 text-center">
             <Sparkles className="h-12 w-12 text-sunny mx-auto mb-4" />
             <h2 className="text-2xl font-bold text-cat-dark mb-2">
-              {protocolCompletionMessage.title}
+              🎉 {getProtocolCompletionMessage(cat.name).title}
             </h2>
-            <p className="text-charcoal font-bold mb-4">
-              {protocolCompletionMessage.subtitle}
+            <p className="text-charcoal/80 font-bold mb-1">
+              {getProtocolCompletionMessage(cat.name).subtitle}
             </p>
-            <p className="text-sm text-charcoal font-bold mb-4">
-              {protocolCompletionMessage.message}
+            <p className="text-sm text-charcoal/70 font-medium mb-4">
+              {getProtocolCompletionMessage(cat.name).message}
             </p>
+            <div className="inline-flex items-center gap-2 bg-[#22c55e]/10 border border-[#22c55e]/30 rounded-full px-4 py-2">
+              <Trophy className="h-5 w-5 text-[#22c55e]" />
+              <span className="text-sm font-bold text-[#22c55e]">All 9 Challenges Survived!</span>
+            </div>
           </CardContent>
         </Card>
       )}
@@ -425,7 +479,8 @@ export default function CoachPage() {
         {/* Left Column: Proactive Tracker + Current Life */}
         <div className="space-y-6">
           
-          {/* Daily Check-In */}
+          {/* Daily Check-In — only show when not yet done today */}
+          {!checkedInToday ? (
           <Card className="border border-white/60 bg-white/90 backdrop-blur-md shadow-xl shadow-cocoa/5 hover:shadow-2xl hover:shadow-cocoa/10 hover:-translate-y-1 transition-all duration-300 rounded-3xl">
             <CardHeader className="pb-3">
               <CardTitle className="text-lg text-cocoa flex items-center gap-2 font-display font-black">
@@ -532,10 +587,47 @@ export default function CoachPage() {
               </Button>
             </CardContent>
           </Card>
+          ) : (
+            /* Show compact "done for today" card */
+            <Card className="border border-[#22c55e]/30 bg-[#22c55e]/5 backdrop-blur-md rounded-3xl">
+              <CardContent className="p-4 flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-[#22c55e]/15 flex items-center justify-center">
+                  <Heart className="h-5 w-5 text-[#22c55e]" />
+                </div>
+                <div>
+                  <p className="font-bold text-[#22c55e] text-sm">Day {currentDay - 1} check-in complete!</p>
+                  <p className="text-xs text-charcoal/70 font-medium">
+                    Come back tomorrow for Day {currentDay}
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
-          {/* Visual Progress Timeline — hiding → on the bed → on the couch */}
+          {/* Visual Progress Timeline — collapsible dropdown */}
           {checkIns.length > 0 && (
-            <ProgressTimeline checkIns={checkIns} catName={cat.name} />
+            <Card className="border border-white/60 bg-white/90 backdrop-blur-md shadow-xl shadow-cocoa/5 rounded-3xl">
+              <CardHeader className="pb-1">
+                <div 
+                  className="flex items-center justify-between cursor-pointer select-none"
+                  onClick={() => setTimelineExpanded(!timelineExpanded)}
+                >
+                  <CardTitle className="text-lg text-cat-dark">
+                    {cat.name}&apos;s Progress
+                  </CardTitle>
+                  {timelineExpanded ? (
+                    <ChevronUp className="h-5 w-5 text-cocoa/50" />
+                  ) : (
+                    <ChevronDown className="h-5 w-5 text-cocoa/50" />
+                  )}
+                </div>
+              </CardHeader>
+              {timelineExpanded && (
+                <CardContent className="pt-2">
+                  <ProgressTimeline checkIns={checkIns} catName={cat.name} />
+                </CardContent>
+              )}
+            </Card>
           )}
 
           {/* Current Life Card */}

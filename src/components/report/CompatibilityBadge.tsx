@@ -7,22 +7,22 @@ interface CompatibilityBadgeProps {
 
 const levelConfig = {
   low: {
-    label: "Low Compatibility Concern",
-    color: "bg-risk-low text-white",
+    label: "Compatible",
+    color: "bg-[#22c55e] text-white",
     icon: ShieldCheck,
-    description: "No major compatibility concerns identified.",
+    description: "You and this cat are a strong match. No major concerns identified.",
   },
   moderate: {
-    label: "Moderate Compatibility Concern",
-    color: "bg-risk-moderate text-charcoal",
+    label: "Possible Match",
+    color: "bg-[#eab308] text-white",
     icon: ShieldAlert,
-    description: "One consideration worth discussing with shelter staff.",
+    description: "This could work with preparation. Some areas need attention.",
   },
   high: {
-    label: "High Compatibility Concern",
-    color: "bg-risk-high text-white",
+    label: "Not Recommended",
+    color: "bg-[#ef4444] text-white",
     icon: AlertTriangle,
-    description: "Significant concerns that require shelter review.",
+    description: "Significant concerns — shelter review is required before proceeding.",
   },
 };
 

@@ -54,7 +54,7 @@ interface ScenarioQuestionData {
   traits: string[];
 }
 
-// Only 5 scenario-based questions - no lifestyle/home profile questions
+// 10 scenario-based questions covering key adoption readiness dimensions
 const scenarioQuestions: ScenarioQuestionData[] = [
   {
     id: "scenario1",
@@ -110,6 +110,61 @@ const scenarioQuestions: ScenarioQuestionData[] = [
       { value: "c", label: "Board the cat at a kennel for the duration", score: 1 },
     ],
     traits: ["planning", "responsibility"],
+  },
+  {
+    id: "scenario6",
+    scenario:
+      "The vet says your cat needs daily medication for a chronic condition. This will cost $60/month and requires you to give a pill every morning. You:",
+    options: [
+      { value: "a", label: "That's too much — I'll look for a healthier cat", score: 0 },
+      { value: "b", label: "I'll learn how to do it and budget for the medicine", score: 3 },
+      { value: "c", label: "I'll try, but if it's too hard I may need to return the cat", score: 1 },
+    ],
+    traits: ["financial-readiness", "medical-commitment"],
+  },
+  {
+    id: "scenario7",
+    scenario:
+      "You have guests staying for a weekend and the house gets loud. The cat disappears for 2 days. You:",
+    options: [
+      { value: "a", label: "Worry the cat is broken and consider rehoming", score: 0 },
+      { value: "b", label: "Set up a quiet room for the cat and explain to guests", score: 3 },
+      { value: "c", label: "Let the cat figure it out — they'll come back when hungry", score: 1 },
+    ],
+    traits: ["advocacy", "environment-management"],
+  },
+  {
+    id: "scenario8",
+    scenario:
+      "It's 4 AM and the cat is meowing loudly outside your bedroom door every single night this week. You:",
+    options: [
+      { value: "a", label: "Open the door and feed them to make them stop", score: 1 },
+      { value: "b", label: "Ignore it consistently and increase evening playtime", score: 3 },
+      { value: "c", label: "Yell at the cat or spray water — they need to learn", score: 0 },
+    ],
+    traits: ["consistency", "behavior-knowledge"],
+  },
+  {
+    id: "scenario9",
+    scenario:
+      "An unexpected vet bill comes to $800. You have some savings but it's tight. You:",
+    options: [
+      { value: "a", label: "Use savings or payment plan — the cat's health comes first", score: 3 },
+      { value: "b", label: "Ask the shelter if they can cover it — I can't afford this", score: 1 },
+      { value: "c", label: "Surrender the cat — I didn't sign up for this expense", score: 0 },
+    ],
+    traits: ["financial-readiness", "commitment"],
+  },
+  {
+    id: "scenario10",
+    scenario:
+      "Your existing cat hisses at the new cat every time they meet. It's been 2 weeks. You:",
+    options: [
+      { value: "a", label: "Give up — clearly they'll never get along", score: 0 },
+      { value: "b", label: "Separate them and start a slow reintroduction over several weeks", score: 3 },
+      { value: "c", label: "Let them fight it out — they'll sort out the hierarchy", score: 1 },
+    ],
+    traits: ["patience", "multi-pet-knowledge"],
   },
 ];
 
