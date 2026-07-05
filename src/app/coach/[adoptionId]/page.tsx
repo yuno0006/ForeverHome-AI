@@ -641,7 +641,7 @@ export default function CoachPage() {
             </CardHeader>
 
             {/* Messages */}
-            <div className="flex-1 overflow-y-auto px-4 py-3 space-y-4">
+            <div className="flex-1 overflow-y-auto px-4 py-3 space-y-4 pb-4">
               {messages.length === 0 && (
                 <div className="text-center py-8">
                   <p className="text-sm text-charcoal font-bold mb-4">
@@ -706,8 +706,8 @@ export default function CoachPage() {
               <div ref={chatEndRef} />
             </div>
 
-            {/* Input */}
-            <div className="p-3 border-t border-amber-200/60 bg-white/50 shrink-0">
+            {/* Input (floating inside card) */}
+            <div className="p-3 border-t-2 border-amber-200/60 bg-gradient-to-t from-amber-50/80 to-white shrink-0 rounded-b-3xl">
               {/* Image preview strip */}
               {imagePreview && (
                 <div className="pb-2 relative inline-block">
@@ -725,7 +725,7 @@ export default function CoachPage() {
                   </button>
                 </div>
               )}
-              <div className="flex gap-2">
+              <div className="flex gap-2 items-center bg-white border-2 border-amber-200/50 rounded-2xl px-2 py-1.5 shadow-[0_-2px_12px_rgba(251,191,36,0.08)]">
                 <input
                   ref={fileInputRef}
                   type="file"
@@ -747,7 +747,7 @@ export default function CoachPage() {
                   onChange={(e) => setInputValue(e.target.value)}
                   onKeyDown={handleKeyDown}
                   disabled={sending}
-                  className="flex-1 bg-white/60 border border-white/60 rounded-2xl focus:bg-white focus:ring-2 focus:ring-coral/20 focus:border-coral/40 shadow-inner"
+                  className="flex-1 bg-transparent border-0 rounded-2xl focus:bg-white/80 focus:ring-0 shadow-none"
                 />
                 <Button
                   onClick={handleSendMessage}

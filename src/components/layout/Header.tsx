@@ -32,8 +32,10 @@ export default function Header() {
       fetchSavedCatIds(user.uid)
         .then((ids) => setSavedCount(ids.length))
         .catch(() => {});
+    } else {
+      setSavedCount(0);
     }
-  }, [user]);
+  }, [user, pathname]);
 
   const getNavLinks = () => {
     const alwaysLinks = [

@@ -241,7 +241,7 @@ export default function GeneralAssistantPage() {
       )}
 
       {/* --- Messages area --- */}
-      <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-4 space-y-4">
+      <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-4 space-y-4 pb-24">
         {isChatEmpty && (
           <div className="flex flex-col items-center justify-center py-12 text-center">
             {/* Welcome card */}
@@ -354,48 +354,50 @@ export default function GeneralAssistantPage() {
         </div>
       )}
 
-      {/* --- Input bar --- */}
-      <div className="shrink-0 border-t border-amber-200/60 bg-white/50 backdrop-blur-sm px-4 sm:px-6 py-3">
-        <div className="max-w-3xl mx-auto flex items-center gap-2">
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            className="hidden"
-            onChange={handleImageSelect}
-          />
-          <button
-            onClick={() => fileInputRef.current?.click()}
-            disabled={!!imageFile || sending}
-            className="shrink-0 w-9 h-9 rounded-full flex items-center justify-center text-cocoa/40 hover:text-coral hover:bg-coral/5 transition-colors disabled:opacity-30"
-            title="Attach a photo of your cat"
-          >
-            <ImagePlus className="w-5 h-5" />
-          </button>
-          <div className="flex-1 relative">
-            <Input
-              ref={inputRef}
-              placeholder="Ask about adopting, the quiz, or anything else..."
-              value={inputValue}
-              onChange={(e) => setInputValue(e.target.value)}
-              onKeyDown={handleKeyDown}
-              disabled={sending}
-              className="w-full text-sm pl-4 pr-4 py-2.5 border-2 border-amber-200/60 rounded-2xl focus:border-coral/40 focus:ring-0 bg-white"
+      {/* --- Input bar (floating) --- */}
+      <div className="sticky bottom-0 z-20 px-4 sm:px-6 pb-4 pt-2 bg-gradient-to-t from-cream via-cream/95 to-transparent">
+        <div className="max-w-3xl mx-auto">
+          <div className="flex items-center gap-2 bg-white border-2 border-amber-200/80 rounded-2xl px-3 py-2.5 shadow-[0_-4px_24px_rgba(42,29,20,0.08)]">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handleImageSelect}
             />
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              disabled={!!imageFile || sending}
+              className="shrink-0 w-9 h-9 rounded-full flex items-center justify-center text-cocoa/40 hover:text-coral hover:bg-coral/5 transition-colors disabled:opacity-30"
+              title="Attach a photo of your cat"
+            >
+              <ImagePlus className="w-5 h-5" />
+            </button>
+            <div className="flex-1 relative">
+              <Input
+                ref={inputRef}
+                placeholder="Ask about adopting, the quiz, or anything else..."
+                value={inputValue}
+                onChange={(e) => setInputValue(e.target.value)}
+                onKeyDown={handleKeyDown}
+                disabled={sending}
+                className="w-full text-sm pl-4 pr-4 py-2.5 border-0 rounded-2xl focus:ring-0 bg-transparent"
+              />
+            </div>
+            <Button
+              onClick={() => handleSend()}
+              disabled={sending || (!inputValue.trim() && !imageFile)}
+              size="icon"
+              className="shrink-0 w-10 h-10 bg-gradient-to-br from-coral to-coral-deep hover:from-coral-deep hover:to-coral-deep text-white rounded-full shadow-[2px_2px_0px_0px_rgba(42,29,20,0.2)] hover:shadow-none hover:translate-y-0.5 active:translate-y-1 transition-all disabled:opacity-40 disabled:shadow-none disabled:translate-y-0"
+            >
+              <Send className="w-4 h-4" />
+            </Button>
           </div>
-          <Button
-            onClick={() => handleSend()}
-            disabled={sending || (!inputValue.trim() && !imageFile)}
-            size="icon"
-            className="shrink-0 w-10 h-10 bg-gradient-to-br from-coral to-coral-deep hover:from-coral-deep hover:to-coral-deep text-white rounded-full shadow-[2px_2px_0px_0px_rgba(42,29,20,0.2)] hover:shadow-none hover:translate-y-0.5 active:translate-y-1 transition-all disabled:opacity-40 disabled:shadow-none disabled:translate-y-0"
-          >
-            <Send className="w-4 h-4" />
-          </Button>
+          <p className="text-[10px] text-cocoa/30 text-center mt-2 font-medium">
+            <PawPrint className="w-3 h-3 inline-block mr-1" />
+            ForeverHome AI provides general guidance, not veterinary advice.
+          </p>
         </div>
-        <p className="text-[10px] text-cocoa/30 text-center mt-2 font-medium">
-          <PawPrint className="w-3 h-3 inline-block mr-1" />
-          ForeverHome AI provides general guidance, not veterinary advice.
-        </p>
       </div>
     </div>
   );

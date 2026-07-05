@@ -5,6 +5,7 @@ import Footer from "@/components/layout/Footer";
 import PWAInstallButton from "@/components/ui/PWAInstallButton";
 import { Providers } from "@/components/Providers";
 import { OnboardingGuard } from "@/components/auth/OnboardingGuard";
+import { ConditionalFooter } from "@/components/layout/ConditionalFooter";
 import { CatBackground } from "@/components/CatBackground";
 import "./globals.css";
 
@@ -68,12 +69,12 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col bg-cream text-cocoa relative" suppressHydrationWarning>
         <CatBackground />
         <Providers>
+          <Header />
           <OnboardingGuard>
-            <Header />
             <main className="relative z-10 flex-1">{children}</main>
-            <Footer />
-            <PWAInstallButton />
+            <ConditionalFooter />
           </OnboardingGuard>
+          <PWAInstallButton />
         </Providers>
       </body>
     </html>
