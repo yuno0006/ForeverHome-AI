@@ -10,6 +10,7 @@ import {
   Check,
   ArrowRight,
   Loader2,
+  PawPrint,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import {
@@ -35,7 +36,7 @@ import { Switch } from "@/components/ui/switch";
 type PetExperience = "none" | "beginner" | "intermediate" | "experienced";
 
 const selectClasses =
-  "h-11 w-full rounded-xl border border-sunny/20 bg-white px-3 text-sm text-cat-dark outline-none transition-colors duration-200 focus-visible:border-sunny focus-visible:ring-3 focus-visible:ring-sunny/20 disabled:cursor-not-allowed disabled:opacity-50";
+  "h-11 w-full rounded-xl border-2 border-cocoa bg-cream/50 px-3 text-sm text-cocoa font-medium outline-none shadow-[2px_2px_0px_0px_rgba(42,29,20,0.5)] transition-colors duration-200 focus-visible:border-coral focus-visible:ring-3 focus-visible:ring-coral/20 disabled:cursor-not-allowed disabled:opacity-50";
 
 export default function OnboardingPage() {
   const router = useRouter();
@@ -235,9 +236,9 @@ export default function OnboardingPage() {
   // While auth resolves or we are about to redirect, show a friendly loader.
   if (loading || !user || userDoc?.onboardingComplete) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-cream">
+      <div className="flex min-h-screen items-center justify-center">
         <div className="flex flex-col items-center gap-3">
-          <div className="w-16 h-16 rounded-3xl bg-coral flex items-center justify-center border-2 border-cocoa shadow-[4px_4px_0px_0px_rgba(42,29,20,1)] animate-wiggle">
+          <div className="w-16 h-16 rounded-2xl bg-coral flex items-center justify-center shadow-[4px_4px_0px_0px_rgba(42,29,20,1)] animate-wiggle">
             <PawPrint className="w-8 h-8 text-white" />
           </div>
           <p className="font-display text-cocoa font-bold">Loading your journey…</p>
@@ -247,11 +248,11 @@ export default function OnboardingPage() {
   }
 
   return (
-    <div className="min-h-screen bg-cream px-4 py-10">
+    <div className="min-h-screen px-4 py-10">
       <div className="mx-auto w-full max-w-2xl">
         {/* Header + progress */}
         <div className="mb-8 text-center">
-          <div className="mx-auto mb-4 w-16 h-16 rounded-3xl bg-coral flex items-center justify-center border-2 border-cocoa shadow-[4px_4px_0px_0px_rgba(42,29,20,1)]">
+          <div className="mx-auto mb-4 w-16 h-16 rounded-2xl bg-coral flex items-center justify-center shadow-[4px_4px_0px_0px_rgba(42,29,20,1)]">
             <Cat className="w-8 h-8 text-white" />
           </div>
           <h1 className="font-display text-4xl sm:text-5xl font-black text-cocoa tracking-tight">
@@ -289,33 +290,33 @@ export default function OnboardingPage() {
         {/* STEP 1 — Role selection */}
         {step === 0 && (
           <div>
-            <h2 className="mb-6 text-center text-xl font-semibold text-cat-dark">
+            <h2 className="mb-6 text-center font-display text-2xl font-black text-cocoa">
               Who are you?
             </h2>
             <div className="grid gap-4 sm:grid-cols-2">
               <button
                 type="button"
                 onClick={() => setSelectedRole("adopter")}
-                className={`group flex flex-col items-center gap-4 rounded-2xl border-2 p-8 text-center shadow-sm cursor-pointer transition-all duration-200 ${
+                className={`group flex flex-col items-center gap-4 rounded-3xl border-2 p-8 text-center cursor-pointer transition-all duration-200 ${
                   selectedRole === "adopter"
-                    ? "border-heart bg-heart/5 shadow-md ring-2 ring-heart/20"
-                    : "border-sunny/20 bg-white hover:border-heart/50 hover:shadow-md"
+                    ? "border-coral bg-coral/5 shadow-[6px_6px_0px_0px_rgba(42,29,20,1)] -translate-y-0.5"
+                    : "border-cocoa bg-white shadow-[4px_4px_0px_0px_rgba(42,29,20,1)] hover:shadow-[6px_6px_0px_0px_rgba(42,29,20,1)] hover:-translate-y-0.5"
                 }`}
               >
-                <div className="flex size-16 items-center justify-center rounded-2xl bg-heart/10">
-                  <Heart className="size-8 text-heart" />
+                <div className="flex w-14 h-14 items-center justify-center rounded-2xl bg-coral border-2 border-cocoa shadow-[3px_3px_0px_0px_rgba(42,29,20,1)]">
+                  <Heart className="w-7 h-7 text-white" />
                 </div>
                 <div>
-                  <p className="text-lg font-semibold text-cat-dark">
+                  <p className="font-display text-xl font-black text-cocoa">
                     I&apos;m an Adopter
                   </p>
-                  <p className="mt-1 text-sm text-muted-foreground">
+                  <p className="mt-1 text-sm font-medium text-cocoa/60">
                     Find your purrfect companion
                   </p>
                 </div>
                 {selectedRole === "adopter" && (
-                  <span className="flex items-center gap-1 text-sm font-medium text-heart">
-                    <Check className="size-4" /> Selected
+                  <span className="flex items-center gap-1 rounded-full bg-coral px-3 py-1 text-xs font-bold text-white">
+                    <Check className="size-3" /> Selected
                   </span>
                 )}
               </button>
@@ -323,26 +324,26 @@ export default function OnboardingPage() {
               <button
                 type="button"
                 onClick={() => setSelectedRole("shelter_staff")}
-                className={`group flex flex-col items-center gap-4 rounded-2xl border-2 p-8 text-center shadow-sm cursor-pointer transition-all duration-200 ${
+                className={`group flex flex-col items-center gap-4 rounded-3xl border-2 p-8 text-center cursor-pointer transition-all duration-200 ${
                   selectedRole === "shelter_staff"
-                    ? "border-sunny bg-sunny/5 shadow-md ring-2 ring-sunny/20"
-                    : "border-sunny/20 bg-white hover:border-sunny/50 hover:shadow-md"
+                    ? "border-sage bg-sage/5 shadow-[6px_6px_0px_0px_rgba(42,29,20,1)] -translate-y-0.5"
+                    : "border-cocoa bg-white shadow-[4px_4px_0px_0px_rgba(42,29,20,1)] hover:shadow-[6px_6px_0px_0px_rgba(42,29,20,1)] hover:-translate-y-0.5"
                 }`}
               >
-                <div className="flex size-16 items-center justify-center rounded-2xl bg-sunny-light">
-                  <Building2 className="size-8 text-sunny" />
+                <div className="flex w-14 h-14 items-center justify-center rounded-2xl bg-sage border-2 border-cocoa shadow-[3px_3px_0px_0px_rgba(42,29,20,1)]">
+                  <Building2 className="w-7 h-7 text-white" />
                 </div>
                 <div>
-                  <p className="text-lg font-semibold text-cat-dark">
-                    Shelter / Rescue (Beta)
+                  <p className="font-display text-xl font-black text-cocoa">
+                    Shelter / Rescue
                   </p>
-                  <p className="mt-1 text-sm text-muted-foreground">
+                  <p className="mt-1 text-sm font-medium text-cocoa/60">
                     Manage cats &amp; adoptions
                   </p>
                 </div>
                 {selectedRole === "shelter_staff" && (
-                  <span className="flex items-center gap-1 text-sm font-medium text-sunny">
-                    <Check className="size-4" /> Selected
+                  <span className="flex items-center gap-1 rounded-full bg-sage px-3 py-1 text-xs font-bold text-white">
+                    <Check className="size-3" /> Selected
                   </span>
                 )}
               </button>
@@ -353,7 +354,7 @@ export default function OnboardingPage() {
                 type="button"
                 onClick={goRoleNext}
                 disabled={!selectedRole}
-                className="h-11 cursor-pointer bg-sunny text-cat-dark hover:bg-sunny/90 transition-colors duration-200"
+                className="h-12 bg-coral text-white hover:bg-coral-deep px-6 py-3 rounded-full font-bold shadow-[4px_4px_0px_0px_rgba(42,29,20,1)] hover:shadow-[6px_6px_0px_0px_rgba(42,29,20,1)] hover:-translate-y-0.5 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:shadow-[4px_4px_0px_0px_rgba(42,29,20,1)] disabled:hover:translate-y-0"
               >
                 Continue <ArrowRight className="ml-1 size-4" />
               </Button>
@@ -363,24 +364,25 @@ export default function OnboardingPage() {
 
         {/* STEP 2A — Adopter profile */}
         {step === 1 && selectedRole === "adopter" && (
-          <div className="rounded-2xl border border-sunny/20 bg-white p-6 shadow-sm sm:p-8">
-            <h2 className="mb-6 text-xl font-semibold text-cat-dark">
+          <div className="rounded-3xl border-2 border-cocoa bg-white p-6 sm:p-8 shadow-[6px_6px_0px_0px_rgba(42,29,20,1)]">
+            <h2 className="mb-6 font-display text-2xl font-black text-cocoa">
               Tell us about your home
             </h2>
             <div className="flex flex-col gap-5">
               <div className="flex flex-col gap-1.5">
-                <Label htmlFor="displayName">Display name</Label>
+                <Label htmlFor="displayName" className="font-bold text-cocoa text-sm uppercase tracking-wide">Display name</Label>
                 <Input
                   id="displayName"
                   value={displayName}
                   onChange={(e) => setDisplayName(e.target.value)}
                   placeholder="Your name"
                   disabled={submitting}
+                  className="rounded-xl border-2 border-cocoa bg-cream/50 shadow-[2px_2px_0px_0px_rgba(42,29,20,0.5)]"
                 />
               </div>
 
               <div className="flex flex-col gap-1.5">
-                <Label htmlFor="homeType">Home type</Label>
+                <Label htmlFor="homeType" className="font-bold text-cocoa text-sm uppercase tracking-wide">Home type</Label>
                 <select
                   id="homeType"
                   className={selectClasses}
@@ -395,12 +397,12 @@ export default function OnboardingPage() {
                 </select>
               </div>
 
-              <div className="flex items-center justify-between rounded-xl border border-sunny/20 bg-warm-cream/50 px-4 py-3">
+              <div className="flex items-center justify-between rounded-2xl border-2 border-cocoa bg-cream/50 px-4 py-3 shadow-[2px_2px_0px_0px_rgba(42,29,20,0.5)]">
                 <div>
-                  <p className="text-sm font-medium text-cat-dark">
+                  <p className="text-sm font-bold text-cocoa">
                     Garden or outdoor space
                   </p>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-xs font-medium text-cocoa/50">
                     Do you have a garden or yard?
                   </p>
                 </div>
@@ -411,12 +413,12 @@ export default function OnboardingPage() {
                 />
               </div>
 
-              <div className="flex items-center justify-between rounded-xl border border-sunny/20 bg-warm-cream/50 px-4 py-3">
+              <div className="flex items-center justify-between rounded-2xl border-2 border-cocoa bg-cream/50 px-4 py-3 shadow-[2px_2px_0px_0px_rgba(42,29,20,0.5)]">
                 <div>
-                  <p className="text-sm font-medium text-cat-dark">
+                  <p className="text-sm font-bold text-cocoa">
                     Indoor-only preference
                   </p>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-xs font-medium text-cocoa/50">
                     Prefer an indoor-only cat?
                   </p>
                 </div>
@@ -427,12 +429,12 @@ export default function OnboardingPage() {
                 />
               </div>
 
-              <div className="flex items-center justify-between rounded-xl border border-sunny/20 bg-warm-cream/50 px-4 py-3">
+              <div className="flex items-center justify-between rounded-2xl border-2 border-cocoa bg-cream/50 px-4 py-3 shadow-[2px_2px_0px_0px_rgba(42,29,20,0.5)]">
                 <div>
-                  <p className="text-sm font-medium text-cat-dark">
+                  <p className="text-sm font-bold text-cocoa">
                     Children at home
                   </p>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-xs font-medium text-cocoa/50">
                     Helps us match cats that love kids
                   </p>
                 </div>
@@ -445,7 +447,7 @@ export default function OnboardingPage() {
 
               {hasChildren && (
                 <div className="flex flex-col gap-1.5">
-                  <Label>Children ages</Label>
+                  <Label className="font-bold text-cocoa text-sm uppercase tracking-wide">Children ages</Label>
                   <div className="flex flex-wrap gap-2">
                     {["0-4", "5-9", "10-14", "15+"].map((age) => (
                       <button
@@ -458,10 +460,10 @@ export default function OnboardingPage() {
                             setChildrenAges([...childrenAges, age]);
                           }
                         }}
-                        className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
+                        className={`rounded-full px-4 py-1.5 text-sm font-bold border-2 transition-all ${
                           childrenAges.includes(age)
-                            ? "bg-sunny text-cat-dark"
-                            : "bg-sunny/10 text-cat-dark hover:bg-sunny/20"
+                            ? "bg-coral text-white border-coral shadow-[2px_2px_0px_0px_rgba(42,29,20,1)]"
+                            : "bg-white text-cocoa border-cocoa/20 hover:border-cocoa"
                         }`}
                         disabled={submitting}
                       >
@@ -472,12 +474,12 @@ export default function OnboardingPage() {
                 </div>
               )}
 
-              <div className="flex items-center justify-between rounded-xl border border-sunny/20 bg-warm-cream/50 px-4 py-3">
+              <div className="flex items-center justify-between rounded-2xl border-2 border-cocoa bg-cream/50 px-4 py-3 shadow-[2px_2px_0px_0px_rgba(42,29,20,0.5)]">
                 <div>
-                  <p className="text-sm font-medium text-cat-dark">
+                  <p className="text-sm font-bold text-cocoa">
                     Other pets at home
                   </p>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-xs font-medium text-cocoa/50">
                     So we can check for good roommates
                   </p>
                 </div>
@@ -491,7 +493,7 @@ export default function OnboardingPage() {
               {hasOtherPets && (
                 <div className="grid grid-cols-2 gap-3">
                   <div className="flex flex-col gap-1.5">
-                    <Label htmlFor="existingCats">Cats</Label>
+                    <Label htmlFor="existingCats" className="font-bold text-cocoa text-sm uppercase tracking-wide">Cats</Label>
                     <Input
                       id="existingCats"
                       type="number"
@@ -499,10 +501,11 @@ export default function OnboardingPage() {
                       value={existingCats}
                       onChange={(e) => setExistingCats(Number(e.target.value))}
                       disabled={submitting}
+                      className="rounded-xl border-2 border-cocoa bg-cream/50 shadow-[2px_2px_0px_0px_rgba(42,29,20,0.5)]"
                     />
                   </div>
                   <div className="flex flex-col gap-1.5">
-                    <Label htmlFor="existingDogs">Dogs</Label>
+                    <Label htmlFor="existingDogs" className="font-bold text-cocoa text-sm uppercase tracking-wide">Dogs</Label>
                     <Input
                       id="existingDogs"
                       type="number"
@@ -510,13 +513,14 @@ export default function OnboardingPage() {
                       value={existingDogs}
                       onChange={(e) => setExistingDogs(Number(e.target.value))}
                       disabled={submitting}
+                      className="rounded-xl border-2 border-cocoa bg-cream/50 shadow-[2px_2px_0px_0px_rgba(42,29,20,0.5)]"
                     />
                   </div>
                 </div>
               )}
 
               <div className="flex flex-col gap-1.5">
-                <Label htmlFor="petExperience">Cat experience</Label>
+                <Label htmlFor="petExperience" className="font-bold text-cocoa text-sm uppercase tracking-wide">Cat experience</Label>
                 <select
                   id="petExperience"
                   className={selectClasses}
@@ -534,7 +538,7 @@ export default function OnboardingPage() {
               </div>
 
               <div className="flex flex-col gap-1.5">
-                <Label htmlFor="workHours">Work schedule</Label>
+                <Label htmlFor="workHours" className="font-bold text-cocoa text-sm uppercase tracking-wide">Work schedule</Label>
                 <select
                   id="workHours"
                   className={selectClasses}
@@ -550,7 +554,7 @@ export default function OnboardingPage() {
               </div>
 
               <div className="flex flex-col gap-1.5">
-                <Label htmlFor="householdNoise">Household activity level</Label>
+                <Label htmlFor="householdNoise" className="font-bold text-cocoa text-sm uppercase tracking-wide">Household activity level</Label>
                 <select
                   id="householdNoise"
                   className={selectClasses}
@@ -565,7 +569,7 @@ export default function OnboardingPage() {
               </div>
 
               <div className="flex flex-col gap-1.5">
-                <Label>Personality preference</Label>
+                <Label className="font-bold text-cocoa text-sm uppercase tracking-wide">Personality preference</Label>
                 <div className="flex flex-wrap gap-2">
                   {[
                     { value: "calm", label: "Calm" },
@@ -586,10 +590,10 @@ export default function OnboardingPage() {
                           setPersonalityPreference([...personalityPreference, pref]);
                         }
                       }}
-                      className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
+                      className={`rounded-full px-4 py-1.5 text-sm font-bold border-2 transition-all ${
                         personalityPreference.includes(value as PersonalityPreference)
-                          ? "bg-sunny text-cat-dark"
-                          : "bg-sunny/10 text-cat-dark hover:bg-sunny/20"
+                          ? "bg-lavender text-white border-lavender shadow-[2px_2px_0px_0px_rgba(42,29,20,1)]"
+                          : "bg-white text-cocoa border-cocoa/20 hover:border-cocoa"
                       }`}
                       disabled={submitting}
                     >
@@ -600,7 +604,7 @@ export default function OnboardingPage() {
               </div>
 
               <div className="flex flex-col gap-1.5">
-                <Label>Age preference</Label>
+                <Label className="font-bold text-cocoa text-sm uppercase tracking-wide">Age preference</Label>
                 <div className="flex flex-wrap gap-2">
                   {[
                     { value: "kitten", label: "Kitten" },
@@ -618,10 +622,10 @@ export default function OnboardingPage() {
                           setAgePreference([...agePreference, pref]);
                         }
                       }}
-                      className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
+                      className={`rounded-full px-4 py-1.5 text-sm font-bold border-2 transition-all ${
                         agePreference.includes(value as AgePreference)
-                          ? "bg-sunny text-cat-dark"
-                          : "bg-sunny/10 text-cat-dark hover:bg-sunny/20"
+                          ? "bg-sage text-white border-sage shadow-[2px_2px_0px_0px_rgba(42,29,20,1)]"
+                          : "bg-white text-cocoa border-cocoa/20 hover:border-cocoa"
                       }`}
                       disabled={submitting}
                     >
@@ -631,12 +635,12 @@ export default function OnboardingPage() {
                 </div>
               </div>
 
-              <div className="flex items-center justify-between rounded-xl border border-sunny/20 bg-warm-cream/50 px-4 py-3">
+              <div className="flex items-center justify-between rounded-2xl border-2 border-cocoa bg-cream/50 px-4 py-3 shadow-[2px_2px_0px_0px_rgba(42,29,20,0.5)]">
                 <div>
-                  <p className="text-sm font-medium text-cat-dark">
+                  <p className="text-sm font-bold text-cocoa">
                     Open to special needs cats
                   </p>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-xs font-medium text-cocoa/50">
                     Cats that need extra care and attention
                   </p>
                 </div>
@@ -654,7 +658,7 @@ export default function OnboardingPage() {
                 variant="outline"
                 onClick={() => setStep(0)}
                 disabled={submitting}
-                className="h-11 cursor-pointer transition-colors duration-200"
+                className="h-11 border-2 border-cocoa bg-white text-cocoa hover:bg-cocoa/5 rounded-full font-bold shadow-[3px_3px_0px_0px_rgba(42,29,20,1)] hover:shadow-[5px_5px_0px_0px_rgba(42,29,20,1)] hover:-translate-y-0.5 transition-all cursor-pointer"
               >
                 Back
               </Button>
@@ -662,7 +666,7 @@ export default function OnboardingPage() {
                 type="button"
                 onClick={finishAdopter}
                 disabled={submitting}
-                className="h-11 cursor-pointer bg-sunny text-cat-dark hover:bg-sunny/90 transition-colors duration-200"
+                className="h-11 bg-coral text-white hover:bg-coral-deep px-5 rounded-full font-bold shadow-[4px_4px_0px_0px_rgba(42,29,20,1)] hover:shadow-[6px_6px_0px_0px_rgba(42,29,20,1)] hover:-translate-y-0.5 transition-all cursor-pointer"
               >
                 {submitting ? (
                   <Loader2 className="size-4 animate-spin" />
@@ -678,46 +682,49 @@ export default function OnboardingPage() {
 
         {/* STEP 2B-i — Shelter info */}
         {step === 1 && selectedRole === "shelter_staff" && (
-          <div className="rounded-2xl border border-sunny/20 bg-white p-6 shadow-sm sm:p-8">
-            <h2 className="mb-6 text-xl font-semibold text-cat-dark">
+          <div className="rounded-3xl border-2 border-cocoa bg-white p-6 sm:p-8 shadow-[6px_6px_0px_0px_rgba(42,29,20,1)]">
+            <h2 className="mb-6 font-display text-2xl font-black text-cocoa">
               Set up your shelter
             </h2>
             <div className="flex flex-col gap-5">
               <div className="flex flex-col gap-1.5">
-                <Label htmlFor="displayName">Your name</Label>
+                <Label htmlFor="displayName" className="font-bold text-cocoa text-sm uppercase tracking-wide">Your name</Label>
                 <Input
                   id="displayName"
                   value={displayName}
                   onChange={(e) => setDisplayName(e.target.value)}
                   placeholder="Your name"
                   disabled={submitting}
+                  className="rounded-xl border-2 border-cocoa bg-cream/50 shadow-[2px_2px_0px_0px_rgba(42,29,20,0.5)]"
                 />
               </div>
 
               <div className="flex flex-col gap-1.5">
-                <Label htmlFor="shelterName">Shelter name</Label>
+                <Label htmlFor="shelterName" className="font-bold text-cocoa text-sm uppercase tracking-wide">Shelter name</Label>
                 <Input
                   id="shelterName"
                   value={shelterName}
                   onChange={(e) => setShelterName(e.target.value)}
                   placeholder="Happy Tails Rescue"
                   disabled={submitting}
+                  className="rounded-xl border-2 border-cocoa bg-cream/50 shadow-[2px_2px_0px_0px_rgba(42,29,20,0.5)]"
                 />
               </div>
 
               <div className="flex flex-col gap-1.5">
-                <Label htmlFor="shelterAddress">Address</Label>
+                <Label htmlFor="shelterAddress" className="font-bold text-cocoa text-sm uppercase tracking-wide">Address</Label>
                 <Input
                   id="shelterAddress"
                   value={shelterAddress}
                   onChange={(e) => setShelterAddress(e.target.value)}
                   placeholder="123 Meow Street, Catsville"
                   disabled={submitting}
+                  className="rounded-xl border-2 border-cocoa bg-cream/50 shadow-[2px_2px_0px_0px_rgba(42,29,20,0.5)]"
                 />
               </div>
 
               <div className="flex flex-col gap-1.5">
-                <Label htmlFor="shelterPhone">Phone</Label>
+                <Label htmlFor="shelterPhone" className="font-bold text-cocoa text-sm uppercase tracking-wide">Phone</Label>
                 <Input
                   id="shelterPhone"
                   type="tel"
@@ -725,11 +732,12 @@ export default function OnboardingPage() {
                   onChange={(e) => setShelterPhone(e.target.value)}
                   placeholder="(555) 123-4567"
                   disabled={submitting}
+                  className="rounded-xl border-2 border-cocoa bg-cream/50 shadow-[2px_2px_0px_0px_rgba(42,29,20,0.5)]"
                 />
               </div>
 
               <div className="flex flex-col gap-1.5">
-                <Label htmlFor="shelterEmail">Email</Label>
+                <Label htmlFor="shelterEmail" className="font-bold text-cocoa text-sm uppercase tracking-wide">Email</Label>
                 <Input
                   id="shelterEmail"
                   type="email"
@@ -737,6 +745,7 @@ export default function OnboardingPage() {
                   onChange={(e) => setShelterEmail(e.target.value)}
                   placeholder="hello@shelter.org"
                   disabled={submitting}
+                  className="rounded-xl border-2 border-cocoa bg-cream/50 shadow-[2px_2px_0px_0px_rgba(42,29,20,0.5)]"
                 />
               </div>
             </div>
@@ -747,7 +756,7 @@ export default function OnboardingPage() {
                 variant="outline"
                 onClick={() => setStep(0)}
                 disabled={submitting}
-                className="h-11 cursor-pointer transition-colors duration-200"
+                className="h-11 border-2 border-cocoa bg-white text-cocoa hover:bg-cocoa/5 rounded-full font-bold shadow-[3px_3px_0px_0px_rgba(42,29,20,1)] hover:shadow-[5px_5px_0px_0px_rgba(42,29,20,1)] hover:-translate-y-0.5 transition-all cursor-pointer"
               >
                 Back
               </Button>
@@ -755,7 +764,7 @@ export default function OnboardingPage() {
                 type="button"
                 onClick={finishShelterInfo}
                 disabled={submitting}
-                className="h-11 cursor-pointer bg-sunny text-cat-dark hover:bg-sunny/90 transition-colors duration-200"
+                className="h-11 bg-sage text-white hover:bg-sage/80 px-5 rounded-full font-bold shadow-[4px_4px_0px_0px_rgba(42,29,20,1)] hover:shadow-[6px_6px_0px_0px_rgba(42,29,20,1)] hover:-translate-y-0.5 transition-all cursor-pointer"
               >
                 {submitting ? (
                   <Loader2 className="size-4 animate-spin" />
@@ -771,14 +780,14 @@ export default function OnboardingPage() {
 
         {/* STEP 2B-ii — Add cats (optional) */}
         {step === 2 && selectedRole === "shelter_staff" && (
-          <div className="rounded-2xl border border-sunny/20 bg-white p-8 text-center shadow-sm">
-            <div className="mx-auto mb-5 flex size-16 items-center justify-center rounded-2xl bg-sunny-light">
-              <Cat className="size-8 text-sunny" />
+          <div className="rounded-3xl border-2 border-cocoa bg-white p-8 text-center shadow-[6px_6px_0px_0px_rgba(42,29,20,1)]">
+            <div className="mx-auto mb-5 w-16 h-16 rounded-2xl bg-sage flex items-center justify-center shadow-[4px_4px_0px_0px_rgba(42,29,20,1)]">
+              <Cat className="w-8 h-8 text-white" />
             </div>
-            <h2 className="text-xl font-semibold text-cat-dark">
+            <h2 className="font-display text-2xl font-black text-cocoa">
               How many cats do you have?
             </h2>
-            <p className="mx-auto mt-2 max-w-sm text-sm text-muted-foreground">
+            <p className="mx-auto mt-2 max-w-sm text-sm font-medium text-cocoa/60">
               You can add cats now or later from your dashboard. There&apos;s no
               rush, your shelter is all set up.
             </p>
@@ -787,7 +796,7 @@ export default function OnboardingPage() {
               <Button
                 type="button"
                 onClick={() => router.replace("/shelter/cats/new")}
-                className="h-11 cursor-pointer bg-sunny text-cat-dark hover:bg-sunny/90 transition-colors duration-200"
+                className="h-11 bg-sage text-white hover:bg-sage/80 px-6 rounded-full font-bold shadow-[4px_4px_0px_0px_rgba(42,29,20,1)] hover:shadow-[6px_6px_0px_0px_rgba(42,29,20,1)] hover:-translate-y-0.5 transition-all cursor-pointer"
               >
                 <Cat className="mr-1 size-4" /> Add cats now
               </Button>
@@ -795,7 +804,7 @@ export default function OnboardingPage() {
                 type="button"
                 variant="outline"
                 onClick={() => router.replace("/shelter/dashboard")}
-                className="h-11 cursor-pointer transition-colors duration-200"
+                className="h-11 border-2 border-cocoa bg-white text-cocoa hover:bg-cocoa/5 px-6 rounded-full font-bold shadow-[3px_3px_0px_0px_rgba(42,29,20,1)] hover:shadow-[5px_5px_0px_0px_rgba(42,29,20,1)] hover:-translate-y-0.5 transition-all cursor-pointer"
               >
                 Skip for now <Home className="ml-1 size-4" />
               </Button>

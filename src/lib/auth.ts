@@ -66,6 +66,11 @@ export async function loginWithGoogle() {
   const credential = await signInWithPopup(auth, provider);
   const { user } = credential;
 
+  // Ensure the Firestore client picks up the fresh auth token before
+  // attempting any reads/writes that depend on security rules.
+  await user.getIdToken(true);
+  await new Promise((resolve) => setTimeout(resolve, 300));
+
   // Check if user doc already exists
   try {
     const existingDoc = await fetchUserDocument(user.uid);
@@ -130,13 +135,15 @@ export async function createUserDocument(
 
 /**
  * Update an existing user document in Firestore.
+ * Uses set with merge so it works even if the document doesn't exist yet
+ * (e.g. race between Google sign-in and onboarding completion).
  */
 export async function updateUserDocument(
   uid: string,
   data: Partial<Omit<UserDocument, "uid" | "createdAt">>
 ) {
   const docRef = doc(db, "users", uid);
-  await updateDoc(docRef, data);
+  await setDoc(docRef, data, { merge: true });
 }
 
 /**

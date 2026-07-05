@@ -5,7 +5,7 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { Bookmark, Cat as CatIcon, ArrowRight } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
-import { getIdToken } from "@/lib/auth";
+import { fetchSavedCatIds } from "@/lib/firestoreService";
 import { AuthGuard } from "@/components/auth/AuthGuard";
 import { demoCats } from "@/data/demoCats";
 import CatCard from "@/components/cats/CatCard";
@@ -27,15 +27,10 @@ function SavedContent() {
 
   useEffect(() => {
     if (!user) return;
-    getIdToken().then((token) => {
-      fetch(`/api/saved?uid=${encodeURIComponent(user.uid)}`, {
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
-      })
-        .then((r) => r.json())
-        .then((d) => setSavedIds(d.saved || []))
-        .catch(() => setSavedIds([]))
-        .finally(() => setLoading(false));
-    });
+    fetchSavedCatIds(user.uid)
+      .then((ids) => setSavedIds(ids))
+      .catch(() => setSavedIds([]))
+      .finally(() => setLoading(false));
   }, [user]);
 
   const savedCats = demoCats.filter((cat) => savedIds.includes(cat.id));

@@ -135,6 +135,32 @@ service cloud.firestore {
     }
     
     // ============================================
+    // ADOPTION REQUESTS
+    // ============================================
+    // Created server-side by /api/adoption-request using the plain
+    // (unauthenticated) client SDK, same pattern as escalationReports.
+    // Adopters submit a request to adopt a specific cat; shelter staff
+    // review requests for their own shelter.
+    match /adoptionRequests/{requestId} {
+      allow create: if request.resource.data.shelterId is string &&
+        request.resource.data.catId is string &&
+        request.resource.data.adopterName is string &&
+        request.resource.data.adopterEmail is string;
+
+      // Shelter staff can read requests for their OWN shelter only.
+      allow read: if request.auth != null &&
+        resource.data.shelterId == request.auth.uid &&
+        get(/databases/$(database)/documents/shelters/$(request.auth.uid)).data.adminUid == request.auth.uid;
+
+      // Shelter staff can update status (approve/decline) for their own shelter.
+      allow update: if request.auth != null &&
+        resource.data.shelterId == request.auth.uid &&
+        get(/databases/$(database)/documents/shelters/$(request.auth.uid)).data.adminUid == request.auth.uid;
+
+      allow delete: if false;
+    }
+
+    // ============================================
     // SHELTER REVIEWS
     // ============================================
     // Reviews are publicly readable, writable by authenticated adopters.

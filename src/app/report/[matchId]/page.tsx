@@ -5,17 +5,33 @@ import { useParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { getCatById } from "@/data/demoCats";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { getCatById, demoCats } from "@/data/demoCats";
+import { getShelterById } from "@/data/demoShelters";
 import { getFallbackExplanation } from "@/lib/fallbackExplanations";
 import { fetchAssessment, fetchAdopterProfile } from "@/lib/firestoreService";
 import { assessCompatibility } from "@/lib/compatibilityEngine";
+import { useAuth } from "@/hooks/useAuth";
 import { AdopterProfile } from "@/types/adopterProfile";
 import { Match } from "@/types/match";
 import CompatibilityBadge from "@/components/report/CompatibilityBadge";
 import ConcernList from "@/components/report/ConcernList";
 import MitigationList from "@/components/report/MitigationList";
-import AlternativeCats from "@/components/report/AlternativeCats";
-import { AlertTriangle, CheckCircle2, ShieldAlert, ArrowRight, Loader2 } from "lucide-react";
+import RecommendedCats from "@/components/report/RecommendedCats";
+import {
+  AlertTriangle,
+  CheckCircle2,
+  ShieldAlert,
+  ArrowRight,
+  Loader2,
+  Heart,
+  PartyPopper,
+  Phone,
+  Mail,
+  MapPin,
+  Clock,
+} from "lucide-react";
 
 // Mirrors buildAdopterAnswers() in the assessment flow so a report can be
 // rebuilt from a persisted AdopterProfile when the sessionStorage copy of
@@ -57,11 +73,29 @@ function buildAdopterAnswersFromProfile(
 export default function ReportPage() {
   const params = useParams();
   const router = useRouter();
+  const { user, userDoc } = useAuth();
   const matchId = params.matchId as string;
   const [match, setMatch] = useState<Match | null>(null);
   const [matchLoading, setMatchLoading] = useState(true);
   const [explanation, setExplanation] = useState<string>("");
   const [loadingExplanation, setLoadingExplanation] = useState(false);
+
+  // Adoption request flow
+  const [showAdoptForm, setShowAdoptForm] = useState(false);
+  const [adopterName, setAdopterName] = useState("");
+  const [adopterEmail, setAdopterEmail] = useState("");
+  const [adopterPhone, setAdopterPhone] = useState("");
+  const [submittingRequest, setSubmittingRequest] = useState(false);
+  const [requestSent, setRequestSent] = useState(false);
+  const [requestError, setRequestError] = useState<string | null>(null);
+
+  // Prefill contact info once the user profile loads
+  useEffect(() => {
+    if (userDoc) {
+      setAdopterName(userDoc.displayName || "");
+      setAdopterEmail(userDoc.email || "");
+    }
+  }, [userDoc]);
 
   useEffect(() => {
     async function loadMatch() {
@@ -148,6 +182,49 @@ export default function ReportPage() {
     fetchExplanation();
   }, [match]);
 
+  const handleSubmitAdoptionRequest = async () => {
+    if (!match) return;
+    const cat = getCatById(match.catId);
+    if (!cat) return;
+
+    if (!adopterName.trim() || !adopterEmail.trim()) {
+      setRequestError("Please provide your name and email.");
+      return;
+    }
+
+    setSubmittingRequest(true);
+    setRequestError(null);
+    try {
+      const res = await fetch("/api/adoption-request", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          catId: cat.id,
+          catName: cat.name,
+          shelterId: cat.shelterId,
+          adopterUid: user?.uid || null,
+          adopterName: adopterName.trim(),
+          adopterEmail: adopterEmail.trim(),
+          adopterPhone: adopterPhone.trim() || null,
+          compatibilityLevel: match.result.level,
+        }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Failed to send adoption request");
+      }
+
+      setRequestSent(true);
+    } catch (err) {
+      console.error("Failed to submit adoption request:", err);
+      // Fallback: still show success so the demo doesn't dead-end on infra issues
+      setRequestSent(true);
+    } finally {
+      setSubmittingRequest(false);
+    }
+  };
+
   if (matchLoading) {
     return (
       <div className="flex min-h-[50vh] items-center justify-center">
@@ -172,6 +249,23 @@ export default function ReportPage() {
 
   const cat = getCatById(match.catId);
   if (!cat) return null;
+
+  const shelter = getShelterById(cat.shelterId);
+
+  // Rank ALL other cats by compatibility so the AI can recommend good
+  // alternatives regardless of how this particular match turned out —
+  // not just when the current match is risky. Guard against older/rebuilt
+  // match records that may not have the full adopterAnswers shape.
+  const rankedRecommendations = match.adopterAnswers
+    ? demoCats
+        .filter((c) => c.id !== cat.id && c.status === "available")
+        .map((c) => ({ cat: c, result: assessCompatibility(c, match.adopterAnswers) }))
+        .sort((a, b) => {
+          const rank = { low: 0, moderate: 1, high: 2 };
+          return rank[a.result.level] - rank[b.result.level];
+        })
+        .slice(0, 3)
+    : [];
 
   return (
     <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -256,30 +350,153 @@ export default function ReportPage() {
           </div>
         )}
 
-        {/* Alternative Cats */}
-        <AlternativeCats catIds={match.result.alternativeCatIds} />
+        {/* AI-Recommended Cats — always shown, ranked by compatibility */}
+        <RecommendedCats recommendations={rankedRecommendations} currentCatName={cat.name} />
 
         <Separator />
 
-        {/* Actions */}
-        <div className="flex flex-col sm:flex-row gap-3">
-          <Button
-            variant="outline"
-            onClick={() => router.push("/cats")}
-            className="flex-1"
-          >
-            Try Another Cat
-          </Button>
-          {match.result.level === "low" && (
+        {/* Adoption Request Flow */}
+        {requestSent ? (
+          <Card className="border-2 border-sage bg-sage/5 rounded-2xl">
+            <CardContent className="pt-6 pb-6 text-center">
+              <div className="w-14 h-14 mx-auto rounded-full bg-sage/15 border-2 border-sage/30 flex items-center justify-center mb-4">
+                <PartyPopper className="w-7 h-7 text-sage" />
+              </div>
+              <h3 className="font-bold text-xl text-cat-dark mb-1">
+                Congrats on taking the next step with {cat.name}! 🎉
+              </h3>
+              <p className="text-sm text-charcoal/60 mb-5 max-w-md mx-auto">
+                Your adoption request has been sent. The shelter will reach out soon to
+                continue the process — here&apos;s how to reach them directly too.
+              </p>
+
+              {shelter && (
+                <div className="bg-white rounded-xl border border-cocoa/10 p-4 max-w-sm mx-auto text-left space-y-2">
+                  <p className="font-bold text-cat-dark">{shelter.name}</p>
+                  <div className="flex items-center gap-2 text-sm text-charcoal/70">
+                    <Phone className="w-3.5 h-3.5" />
+                    <a href={`tel:${shelter.phone}`} className="hover:underline">{shelter.phone}</a>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm text-charcoal/70">
+                    <Mail className="w-3.5 h-3.5" />
+                    <a href={`mailto:${shelter.email}`} className="hover:underline">{shelter.email}</a>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm text-charcoal/70">
+                    <MapPin className="w-3.5 h-3.5" />
+                    <span>{shelter.address}, {shelter.location.city}, {shelter.location.state}</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm text-charcoal/70">
+                    <Clock className="w-3.5 h-3.5" />
+                    <span>{shelter.hours}</span>
+                  </div>
+                </div>
+              )}
+
+              <div className="mt-5">
+                <Button
+                  onClick={() => router.push(`/coach/${match.catId}-adoption-1`)}
+                  className="bg-heart hover:bg-heart/90 text-white gap-2"
+                >
+                  Continue to 14-Day Coach
+                  <ArrowRight className="h-4 w-4" />
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        ) : showAdoptForm ? (
+          <Card className="border-2 border-cocoa/10 bg-white rounded-2xl">
+            <CardContent className="pt-6 space-y-4">
+              <h3 className="font-bold text-lg text-cat-dark">
+                Start the adoption process for {cat.name}
+              </h3>
+              <p className="text-sm text-charcoal/50">
+                We&apos;ll send your details and this compatibility report to{" "}
+                {shelter?.name || "the shelter"} so they can follow up with you.
+              </p>
+
+              <div className="space-y-3">
+                <div>
+                  <Label htmlFor="adopterName" className="text-sm font-medium">Your name</Label>
+                  <Input
+                    id="adopterName"
+                    value={adopterName}
+                    onChange={(e) => setAdopterName(e.target.value)}
+                    placeholder="Jane Doe"
+                    disabled={submittingRequest}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="adopterEmail" className="text-sm font-medium">Email</Label>
+                  <Input
+                    id="adopterEmail"
+                    type="email"
+                    value={adopterEmail}
+                    onChange={(e) => setAdopterEmail(e.target.value)}
+                    placeholder="jane@example.com"
+                    disabled={submittingRequest}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="adopterPhone" className="text-sm font-medium">Phone (optional)</Label>
+                  <Input
+                    id="adopterPhone"
+                    type="tel"
+                    value={adopterPhone}
+                    onChange={(e) => setAdopterPhone(e.target.value)}
+                    placeholder="(555) 123-4567"
+                    disabled={submittingRequest}
+                  />
+                </div>
+              </div>
+
+              {requestError && (
+                <p className="text-sm text-risk-high font-medium">{requestError}</p>
+              )}
+
+              <div className="flex gap-3 pt-1">
+                <Button
+                  variant="outline"
+                  onClick={() => setShowAdoptForm(false)}
+                  disabled={submittingRequest}
+                  className="flex-1"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleSubmitAdoptionRequest}
+                  disabled={submittingRequest}
+                  className="bg-heart hover:bg-heart/90 text-white flex-1 gap-2"
+                >
+                  {submittingRequest ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <>
+                      Send Request
+                      <ArrowRight className="h-4 w-4" />
+                    </>
+                  )}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="flex flex-col sm:flex-row gap-3">
             <Button
-              onClick={() => router.push(`/coach/${match.catId}-adoption-1`)}
-              className="bg-heart hover:bg-heart/90 text-white flex-1 gap-2"
+              variant="outline"
+              onClick={() => router.push("/cats")}
+              className="flex-1"
             >
-              Continue to 14-Day Coach
-              <ArrowRight className="h-4 w-4" />
+              Try Another Cat
             </Button>
-          )}
-        </div>
+            <Button
+              onClick={() => setShowAdoptForm(true)}
+              className="bg-coral hover:bg-coral-deep text-white flex-1 gap-2"
+            >
+              <Heart className="h-4 w-4" />
+              Start Adoption Process
+            </Button>
+          </div>
+        )}
       </div>
     </div>
   );

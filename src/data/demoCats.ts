@@ -215,9 +215,9 @@ export const demoCats: Cat[] = [
     breed: "Domestic Shorthair",
     color: "Tuxedo (Black and White)",
     weight: "8 lbs",
-    photo: "https://images.unsplash.com/photo-1561948955-570b270e7c36?w=600&h=400&fit=crop",
+    photo: "https://images.unsplash.com/photo-1526336024174-e58f5cdd8e13?w=600&h=400&fit=crop",
     photos: [
-      { url: "https://images.unsplash.com/photo-1561948955-570b270e7c36?w=600&h=400&fit=crop", caption: "Pepper showing her tuxedo pattern", isPrimary: true },
+      { url: "https://images.unsplash.com/photo-1526336024174-e58f5cdd8e13?w=600&h=400&fit=crop", caption: "Pepper showing her tuxedo pattern", isPrimary: true },
       { url: "https://images.unsplash.com/photo-1543852786-1cf6624b9987?w=600&h=400&fit=crop", caption: "Pepper in playful mode" },
       { url: "https://images.unsplash.com/photo-1495360010541-f48722b34f7d?w=600&h=400&fit=crop", caption: "Pepper on her cat tree" }
     ],

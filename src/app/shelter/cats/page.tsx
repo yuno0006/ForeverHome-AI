@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Plus, Pencil, Archive, Sparkles, Loader2 } from "lucide-react";
+import { Plus, Pencil, Archive, Sparkles, Loader2, Heart } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import { fetchCatsByShelter, archiveCat, seedDemoCatsForShelter, CatDocument } from "@/lib/catService";
@@ -145,6 +145,25 @@ export default function ShelterCatsPage() {
     }
   };
 
+  const handleMarkAdopted = async (cat: DisplayCat) => {
+    try {
+      const { updateCat } = await import("@/lib/catService");
+      await updateCat(cat.id, { status: "adopted" });
+      setCats((prev) =>
+        prev.map((c) => (c.id === cat.id ? { ...c, status: "adopted" as const } : c))
+      );
+      toast.success(`${cat.name} marked as adopted! You can now access the 9 Lives Coach.`, {
+        action: {
+          label: "Open Coach",
+          onClick: () => window.location.href = `/coach/${cat.id}-adoption-1`,
+        },
+      });
+    } catch (error) {
+      console.error("Failed to mark cat as adopted:", error);
+      toast.error("Failed to update cat status");
+    }
+  };
+
   return (
     <div className="max-w-5xl mx-auto space-y-6">
       <div className="flex items-center justify-between">
@@ -181,6 +200,29 @@ export default function ShelterCatsPage() {
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
+                  {cat.status === "available" && (
+                    <Button
+                      variant="ghost"
+                      size="icon-sm"
+                      className="cursor-pointer text-green-600 hover:text-green-700 hover:bg-green-50"
+                      onClick={() => handleMarkAdopted(cat)}
+                      title="Mark as Adopted"
+                    >
+                      <Heart className="size-4" />
+                    </Button>
+                  )}
+                  {cat.status === "adopted" && (
+                    <Link href={`/coach/${cat.id}-adoption-1`}>
+                      <Button
+                        variant="ghost"
+                        size="icon-sm"
+                        className="cursor-pointer text-sunny hover:text-sunny/80"
+                        title="Open Coach"
+                      >
+                        <Sparkles className="size-4" />
+                      </Button>
+                    </Link>
+                  )}
                   <Button
                     variant="ghost"
                     size="icon-sm"

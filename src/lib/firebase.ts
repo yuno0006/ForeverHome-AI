@@ -1,5 +1,9 @@
 import { initializeApp, getApps, FirebaseApp } from "firebase/app";
-import { getFirestore, Firestore } from "firebase/firestore";
+import {
+  initializeFirestore,
+  getFirestore,
+  Firestore,
+} from "firebase/firestore";
 import { getAuth, Auth } from "firebase/auth";
 import { getStorage, FirebaseStorage } from "firebase/storage";
 
@@ -19,9 +23,22 @@ if (getApps().length === 0) {
   app = getApps()[0];
 }
 
-// Use default Firestore database
-const db: Firestore = getFirestore(app);
+// Initialize Auth first so Firestore can pick up the auth state
 const auth: Auth = getAuth(app);
+
+// Use getFirestore which is safe to call multiple times (HMR-friendly).
+// If you need custom settings (e.g. cache), switch to initializeFirestore
+// but guard with a try/catch for HMR re-initialization.
+let db: Firestore;
+try {
+  db = initializeFirestore(app, {
+    experimentalForceLongPolling: false,
+  });
+} catch {
+  // Already initialized (HMR in dev) — just get the existing instance
+  db = getFirestore(app);
+}
+
 const storage: FirebaseStorage = getStorage(app);
 
 export { app, db, auth, storage };

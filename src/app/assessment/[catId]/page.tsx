@@ -136,9 +136,19 @@ export default function AssessmentPage() {
   const [profileError, setProfileError] = useState<string | null>(null);
 
   // Assessment state
-  const [currentStep, setCurrentStep] = useState(0);
+  const [currentStep, setCurrentStep] = useState(-1); // -1 = lifestyle questions
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
+
+  // Lifestyle pre-questions state
+  const [lifestyleAnswers, setLifestyleAnswers] = useState({
+    livingSpace: "",
+    workSchedule: "",
+    activityLevel: "",
+    catPreference: "",
+    dealbreakers: "",
+    reason: "",
+  });
 
   // General mode results
   const [generalResults, setGeneralResults] = useState<CatMatch[] | null>(null);
@@ -280,6 +290,7 @@ export default function AssessmentPage() {
             id: isGuest ? `guest-${catId}` : "",
             catId,
             adopterProfileId: isGuest ? "guest" : (profile.id),
+            adopterAnswers,
             scenarioAnswers,
             result,
             timestamp: new Date().toISOString(),
@@ -319,6 +330,8 @@ export default function AssessmentPage() {
   const handleBack = () => {
     if (currentStep > 0) {
       setCurrentStep(currentStep - 1);
+    } else if (currentStep === 0) {
+      setCurrentStep(-1); // Go back to lifestyle questions
     }
   };
 
@@ -552,8 +565,9 @@ export default function AssessmentPage() {
   }
 
   // === QUIZ VIEW (shared by both modes) ===
-  const currentQuestion = scenarioQuestions[currentStep];
-  const currentAnswer = answers[currentQuestion.id] || "";
+  const currentQuestion = currentStep >= 0 ? scenarioQuestions[currentStep] : null;
+  const currentAnswer = currentQuestion ? (answers[currentQuestion.id] || "") : "";
+  const totalQuizSteps = scenarioQuestions.length + 1; // +1 for lifestyle step
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -588,10 +602,10 @@ export default function AssessmentPage() {
                   </div>
                   <h3 className="font-display font-black text-lg text-cocoa">General Assessment</h3>
                   <p className="text-xs text-cocoa/60 font-medium">
-                    We&apos;ll match you with the best cat based on your answers to 5 quick scenarios.
+                    We&apos;ll match you with the best cat based on your lifestyle and scenario answers.
                   </p>
                   <div className="text-xs font-bold text-cocoa/40">
-                    {scenarioQuestions.length} questions
+                    {totalQuizSteps} steps total
                   </div>
                 </CardContent>
               </Card>
@@ -604,43 +618,164 @@ export default function AssessmentPage() {
         {/* Main Content */}
         <div className="lg:col-span-2">
           <div className="mb-6">
-            <ProgressBarComponent current={currentStep + 1} total={scenarioQuestions.length} />
+            <ProgressBarComponent current={currentStep + 2} total={totalQuizSteps} />
           </div>
 
-          <Card className="border-2 border-cocoa/10 bg-white shadow-sm">
-            <CardContent className="pt-6">
-              <ScenarioQuestion
-                scenario={currentQuestion.scenario}
-                options={currentQuestion.options.map((o) => ({ value: o.value, label: o.label }))}
-                value={currentAnswer}
-                onChange={handleAnswer}
-                name={currentQuestion.id}
-              />
+          {/* Lifestyle Pre-Questions */}
+          {currentStep === -1 && (
+            <Card className="border-2 border-cocoa/10 bg-white shadow-sm">
+              <CardContent className="pt-6 space-y-5">
+                <div className="text-center mb-2">
+                  <h2 className="font-display text-xl font-black text-cocoa">Tell us about your lifestyle</h2>
+                  <p className="text-sm text-cocoa/60 mt-1">This helps our AI match you better</p>
+                </div>
 
-              <div className="flex justify-between mt-8">
-                <Button
-                  variant="outline"
-                  onClick={handleBack}
-                  disabled={currentStep === 0 || submitting}
-                >
-                  Back
-                </Button>
-                <Button
-                  onClick={handleNext}
-                  disabled={!currentAnswer || submitting}
-                  className="bg-sunny hover:bg-sunny/90 text-white"
-                >
-                  {submitting ? (
-                    <Loader2 className="size-4 animate-spin" />
-                  ) : currentStep === scenarioQuestions.length - 1 ? (
-                    "See Results"
-                  ) : (
-                    "Next"
-                  )}
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+                <div className="space-y-4">
+                  <div>
+                    <label className="text-sm font-bold text-cocoa block mb-1.5">What best describes your living space?</label>
+                    <select
+                      value={lifestyleAnswers.livingSpace}
+                      onChange={(e) => setLifestyleAnswers(prev => ({ ...prev, livingSpace: e.target.value }))}
+                      className="h-11 w-full rounded-xl border-2 border-cocoa/20 bg-cream/50 px-3 text-sm text-cocoa font-medium outline-none focus:border-coral"
+                    >
+                      <option value="">Select...</option>
+                      <option value="small-apartment">Small apartment (studio/1BR)</option>
+                      <option value="large-apartment">Large apartment (2BR+)</option>
+                      <option value="house-no-yard">House without yard</option>
+                      <option value="house-with-yard">House with enclosed yard</option>
+                      <option value="rural">Rural property with land</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="text-sm font-bold text-cocoa block mb-1.5">Your typical daily schedule?</label>
+                    <select
+                      value={lifestyleAnswers.workSchedule}
+                      onChange={(e) => setLifestyleAnswers(prev => ({ ...prev, workSchedule: e.target.value }))}
+                      className="h-11 w-full rounded-xl border-2 border-cocoa/20 bg-cream/50 px-3 text-sm text-cocoa font-medium outline-none focus:border-coral"
+                    >
+                      <option value="">Select...</option>
+                      <option value="home-all-day">Home all day (remote work/retired)</option>
+                      <option value="home-half-day">Home half the day</option>
+                      <option value="out-8-hours">Out 8+ hours (office job)</option>
+                      <option value="irregular">Irregular schedule (shift work)</option>
+                      <option value="travel-frequent">Frequently travel for work</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="text-sm font-bold text-cocoa block mb-1.5">Your household activity level?</label>
+                    <select
+                      value={lifestyleAnswers.activityLevel}
+                      onChange={(e) => setLifestyleAnswers(prev => ({ ...prev, activityLevel: e.target.value }))}
+                      className="h-11 w-full rounded-xl border-2 border-cocoa/20 bg-cream/50 px-3 text-sm text-cocoa font-medium outline-none focus:border-coral"
+                    >
+                      <option value="">Select...</option>
+                      <option value="very-quiet">Very quiet — I live alone, minimal noise</option>
+                      <option value="moderate">Moderate — couple or calm roommate</option>
+                      <option value="active">Active — kids, guests, music often on</option>
+                      <option value="chaotic">Chaotic — large family, constant movement</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="text-sm font-bold text-cocoa block mb-1.5">What type of cat personality appeals to you?</label>
+                    <select
+                      value={lifestyleAnswers.catPreference}
+                      onChange={(e) => setLifestyleAnswers(prev => ({ ...prev, catPreference: e.target.value }))}
+                      className="h-11 w-full rounded-xl border-2 border-cocoa/20 bg-cream/50 px-3 text-sm text-cocoa font-medium outline-none focus:border-coral"
+                    >
+                      <option value="">Select...</option>
+                      <option value="lap-cat">Lap cat — always wants to cuddle</option>
+                      <option value="playful">Playful — energetic and interactive</option>
+                      <option value="independent">Independent — does their own thing</option>
+                      <option value="balanced">Balanced — social but not clingy</option>
+                      <option value="no-preference">No preference — open to any personality</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="text-sm font-bold text-cocoa block mb-1.5">Any dealbreakers? (select if applicable)</label>
+                    <select
+                      value={lifestyleAnswers.dealbreakers}
+                      onChange={(e) => setLifestyleAnswers(prev => ({ ...prev, dealbreakers: e.target.value }))}
+                      className="h-11 w-full rounded-xl border-2 border-cocoa/20 bg-cream/50 px-3 text-sm text-cocoa font-medium outline-none focus:border-coral"
+                    >
+                      <option value="">No dealbreakers</option>
+                      <option value="no-special-needs">Can&apos;t handle special medical needs</option>
+                      <option value="no-high-energy">Can&apos;t handle a high-energy cat</option>
+                      <option value="no-shy">Don&apos;t want a very shy/hiding cat</option>
+                      <option value="no-vocal">Can&apos;t deal with a very vocal cat</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="text-sm font-bold text-cocoa block mb-1.5">Why are you looking to adopt?</label>
+                    <select
+                      value={lifestyleAnswers.reason}
+                      onChange={(e) => setLifestyleAnswers(prev => ({ ...prev, reason: e.target.value }))}
+                      className="h-11 w-full rounded-xl border-2 border-cocoa/20 bg-cream/50 px-3 text-sm text-cocoa font-medium outline-none focus:border-coral"
+                    >
+                      <option value="">Select...</option>
+                      <option value="companionship">Companionship — I want a buddy</option>
+                      <option value="family-pet">Family pet for the kids</option>
+                      <option value="emotional-support">Emotional support / mental health</option>
+                      <option value="rescue-mission">I want to give a rescue a better life</option>
+                      <option value="companion-for-existing">Companion for my existing cat</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="flex justify-end pt-2">
+                  <Button
+                    onClick={() => setCurrentStep(0)}
+                    disabled={!lifestyleAnswers.livingSpace || !lifestyleAnswers.workSchedule || !lifestyleAnswers.activityLevel || !lifestyleAnswers.catPreference || !lifestyleAnswers.reason}
+                    className="bg-sunny hover:bg-sunny/90 text-white"
+                  >
+                    Next: Scenarios <ArrowRight className="w-4 h-4 ml-1" />
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Scenario Questions */}
+          {currentStep >= 0 && currentQuestion && (
+            <Card className="border-2 border-cocoa/10 bg-white shadow-sm">
+              <CardContent className="pt-6">
+                <ScenarioQuestion
+                  scenario={currentQuestion.scenario}
+                  options={currentQuestion.options.map((o) => ({ value: o.value, label: o.label }))}
+                  value={currentAnswer}
+                  onChange={handleAnswer}
+                  name={currentQuestion.id}
+                />
+
+                <div className="flex justify-between mt-8">
+                  <Button
+                    variant="outline"
+                    onClick={handleBack}
+                    disabled={submitting}
+                  >
+                    Back
+                  </Button>
+                  <Button
+                    onClick={handleNext}
+                    disabled={!currentAnswer || submitting}
+                    className="bg-sunny hover:bg-sunny/90 text-white"
+                  >
+                    {submitting ? (
+                      <Loader2 className="size-4 animate-spin" />
+                    ) : currentStep === scenarioQuestions.length - 1 ? (
+                      "See Results"
+                    ) : (
+                      "Next"
+                    )}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </div>
       </div>
     </div>

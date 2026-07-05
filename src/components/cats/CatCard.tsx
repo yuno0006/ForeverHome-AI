@@ -7,7 +7,7 @@ import { Cat } from "@/types/cat";
 import { Zap, Heart, Sparkles, MapPin, Clock } from "lucide-react";
 import { getShelterById } from "@/data/demoShelters";
 import { useAuth } from "@/hooks/useAuth";
-import { getIdToken } from "@/lib/auth";
+import { fetchSavedCatIds, saveCatToWishlist, removeCatFromWishlist } from "@/lib/firestoreService";
 
 interface CatCardProps {
   cat: Cat;
@@ -36,14 +36,9 @@ export default function CatCard({ cat }: CatCardProps) {
       setSaved(false);
       return;
     }
-    getIdToken().then((token) => {
-      fetch(`/api/saved?uid=${encodeURIComponent(user.uid)}`, {
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
-      })
-        .then((r) => r.json())
-        .then((d) => setSaved((d.saved || []).includes(cat.id)))
-        .catch(() => {});
-    });
+    fetchSavedCatIds(user.uid)
+      .then((ids) => setSaved(ids.includes(cat.id)))
+      .catch(() => {});
   }, [user, cat.id]);
 
   const toggleSaved = async (e: React.MouseEvent) => {
@@ -52,28 +47,23 @@ export default function CatCard({ cat }: CatCardProps) {
     if (!user || busy) return;
     setBusy(true);
     try {
-      const token = await getIdToken();
-      const method = saved ? "DELETE" : "POST";
-      const res = await fetch("/api/saved", {
-        method,
-        headers: {
-          "Content-Type": "application/json",
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
-        body: JSON.stringify({ uid: user.uid, catId: cat.id }),
-      });
-      if (res.ok) setSaved(!saved);
-    } catch {
-      // silently ignore — non-critical UX feature
+      if (saved) {
+        await removeCatFromWishlist(user.uid, cat.id);
+      } else {
+        await saveCatToWishlist(user.uid, cat.id);
+      }
+      setSaved(!saved);
+    } catch (err) {
+      console.error("Failed to update wishlist:", err);
     } finally {
       setBusy(false);
     }
   };
 
   return (
-    <Link href={`/assessment/${cat.id}`}>
+    <Link href={`/cats/${cat.id}`}>
       <div className="overflow-hidden rounded-2xl bg-white shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer group">
-        <div className="relative h-52 overflow-hidden">
+        <div className="relative h-64 overflow-hidden">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={cat.photo}

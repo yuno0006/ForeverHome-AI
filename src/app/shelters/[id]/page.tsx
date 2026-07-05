@@ -406,7 +406,7 @@ export default function ShelterProfilePage() {
             {shelterCats.map((cat) => (
               <a
                 key={cat.id}
-                href={`/assessment/${cat.id}`}
+                href={`/cats/${cat.id}`}
                 className="flex items-center gap-2 bg-white border-2 border-cocoa/10 hover:border-coral/30 rounded-full pl-1.5 pr-4 py-1.5 transition-all hover:-translate-y-0.5 hover:shadow-[3px_3px_0px_0px_rgba(42,29,20,1)]"
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}

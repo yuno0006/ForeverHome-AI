@@ -124,39 +124,27 @@ export default function SmartEscalationModal({
 
   return (
     <>
-      {/* Trigger Button - Prominent Escalation CTA */}
+      {/* Trigger Button - Compact Escalation CTA */}
       <motion.button
         whileHover={{ scale: 1.01, y: -1 }}
         whileTap={{ scale: 0.98 }}
         onClick={() => setIsOpen(true)}
-        className="w-full mb-3 relative overflow-hidden group rounded-2xl"
+        className="w-full mb-3 relative overflow-hidden group rounded-xl"
       >
-        {/* Animated gradient border */}
-        <div className="absolute inset-0 bg-gradient-to-r from-risk-high via-honey to-risk-high bg-[length:200%_100%] animate-shimmer rounded-2xl" />
-        <div className="relative m-[2px] rounded-[14px] bg-gradient-to-br from-risk-high/5 via-white to-risk-high/5 p-3 flex items-center gap-3 transition-all group-hover:from-risk-high/10 group-hover:to-risk-high/10">
-          {/* Alert icon */}
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-risk-high to-coral flex items-center justify-center shadow-[2px_2px_0px_0px_rgba(217,97,76,0.5)] shrink-0 group-hover:shadow-[3px_3px_0px_0px_rgba(217,97,76,0.7)] group-hover:-translate-y-0.5 transition-all">
-            <ShieldAlert className="w-5 h-5 text-white" />
+        <div className="bg-gradient-to-r from-risk-high/10 to-coral/10 border-2 border-risk-high/20 rounded-xl p-2.5 flex items-center gap-3 transition-all hover:border-risk-high/40">
+          <div className="w-8 h-8 rounded-lg bg-risk-high flex items-center justify-center shrink-0">
+            <ShieldAlert className="w-4 h-4 text-white" />
           </div>
-
-          <div className="flex-1 text-left">
-            <h4 className="font-display font-black text-sm text-cocoa leading-tight">
-              Need Human Help?
-            </h4>
-            <p className="text-[11px] text-cocoa font-bold mt-0.5">
-              Request a shelter behaviorist to review {catName}&apos;s file
-            </p>
-          </div>
-
-          <div className="w-7 h-7 rounded-full bg-risk-high/10 flex items-center justify-center shrink-0 group-hover:bg-risk-high group-hover:text-white transition-all">
-            <ChevronRight className="w-3.5 h-3.5" />
-          </div>
+          <span className="font-bold text-sm text-cocoa flex-1 text-left">
+            Need Human Help?
+          </span>
+          <ChevronRight className="w-4 h-4 text-cocoa/40 group-hover:text-risk-high transition-colors" />
         </div>
       </motion.button>
 
       {/* Modal */}
       <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
-        <DialogContent className="sm:max-w-[540px] border-2 border-cocoa/20 rounded-[28px] p-0 overflow-hidden shadow-[8px_8px_0px_0px_rgba(42,29,20,1)]">
+        <DialogContent className="sm:max-w-[420px] border-2 border-cocoa/20 rounded-2xl p-0 overflow-hidden shadow-[6px_6px_0px_0px_rgba(42,29,20,1)]">
           <AnimatePresence mode="wait">
             {!isSuccess ? (
               <motion.div
@@ -166,92 +154,64 @@ export default function SmartEscalationModal({
                 exit={{ opacity: 0, x: -20 }}
               >
                 {/* Header */}
-                <div className="p-6 pb-0">
-                  <div className="flex items-start gap-4 mb-1">
-                    <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-risk-high/15 to-coral/15 border-2 border-risk-high/20 flex items-center justify-center shrink-0">
-                      <AlertTriangle className="w-7 h-7 text-risk-high" />
+                <div className="p-4 pb-0">
+                  <div className="flex items-center gap-3 mb-1">
+                    <div className="w-10 h-10 rounded-xl bg-risk-high/10 border border-risk-high/20 flex items-center justify-center shrink-0">
+                      <AlertTriangle className="w-5 h-5 text-risk-high" />
                     </div>
                     <div>
-                      <DialogTitle className="text-xl font-display font-black text-cocoa">
+                      <DialogTitle className="text-base font-bold text-cocoa">
                         Escalate to Shelter Behaviorist
                       </DialogTitle>
-                      <div className="flex items-center gap-2 mt-1.5">
-                        <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-risk-high/10 text-xs font-bold text-risk-high">
-                          <Clock className="w-3 h-3" />
-                          Response within 24h
-                        </div>
-                        <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-sage/10 text-xs font-bold text-sage">
-                          <Phone className="w-3 h-3" />
-                          Call-back included
-                        </div>
+                      <div className="flex items-center gap-1.5 mt-1">
+                        <span className="flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-risk-high/10 text-[10px] font-bold text-risk-high">
+                          <Clock className="w-2.5 h-2.5" />
+                          24h response
+                        </span>
+                        <span className="flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-sage/10 text-[10px] font-bold text-sage">
+                          <Phone className="w-2.5 h-2.5" />
+                          Call-back
+                        </span>
                       </div>
                     </div>
                   </div>
-                  <DialogDescription className="text-cocoa font-bold text-sm mt-4 leading-relaxed bg-cocoa/[0.03] rounded-2xl p-4 border border-cocoa/[0.06]">
-                    <span className="font-bold text-cocoa">Need human eyes on this?</span> We will
-                    package {catName}&apos;s daily logs and your AI chat history into a{" "}
-                    <span className="font-bold text-coral">Priority Status Report</span> and send it
-                    directly to the shelter team.
+                  <DialogDescription className="text-xs text-cocoa/70 mt-3 leading-relaxed">
+                    We&apos;ll package {catName}&apos;s daily logs and chat history into a Priority Status Report for the shelter team.
                   </DialogDescription>
                 </div>
 
                 {/* Report Preview */}
-                <div className="mx-6 my-5 bg-gradient-to-br from-cream-dark/50 to-white rounded-2xl border-2 border-cocoa/10 overflow-hidden">
-                  {/* Preview header */}
-                  <div className="bg-cocoa/[0.03] px-4 py-3 border-b border-cocoa/10 flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-lg bg-cocoa flex items-center justify-center">
-                      <FileText className="w-4 h-4 text-cream" />
-                    </div>
-                    <div>
-                      <p className="text-xs font-black text-cocoa uppercase tracking-wide">
-                        Priority Status Report
-                      </p>
-                      <p className="text-[10px] text-cocoa font-bold">
-                        {catName} · {new Date().toLocaleDateString()}
-                      </p>
-                    </div>
+                <div className="mx-4 my-3 bg-cream-dark/30 rounded-xl border border-cocoa/10 overflow-hidden">
+                  <div className="px-3 py-2 border-b border-cocoa/10 flex items-center gap-2">
+                    <FileText className="w-3.5 h-3.5 text-cocoa/60" />
+                    <span className="text-[10px] font-bold text-cocoa/70 uppercase tracking-wide">
+                      {catName} · {new Date().toLocaleDateString()}
+                    </span>
                   </div>
 
-                  <div className="p-4 space-y-4">
-                    {/* Daily Logs section */}
+                  <div className="p-3 space-y-3">
+                    {/* Daily Logs */}
                     <div>
-                      <div className="flex items-center gap-2 mb-2">
-                        <ClipboardList className="w-4 h-4 text-cocoa" />
-                        <span className="text-xs font-black text-cocoa uppercase tracking-wide">
-                          Last 3 Days of Logs
-                        </span>
+                      <div className="flex items-center gap-1.5 mb-1.5">
+                        <ClipboardList className="w-3 h-3 text-cocoa/60" />
+                        <span className="text-[10px] font-bold text-cocoa/60 uppercase tracking-wide">Last 3 Days</span>
                       </div>
                       {recentCheckIns.length > 0 ? (
-                        <div className="space-y-2">
+                        <div className="space-y-1">
                           {recentCheckIns.map((checkIn) => (
-                            <div
-                              key={checkIn.day}
-                              className="flex items-center justify-between bg-white rounded-xl p-3 border border-cocoa/5 hover:border-cocoa/10 transition-colors"
-                            >
-                              <div className="flex items-center gap-3">
+                            <div key={checkIn.day} className="flex items-center justify-between bg-white rounded-lg px-2.5 py-1.5 border border-cocoa/5 text-xs">
+                              <div className="flex items-center gap-2">
                                 <StatusIcon {...checkIn} />
-                                <div className="flex gap-3 text-sm">
-                                  <span className="flex items-center gap-1.5 font-medium">
-                                    <span className="text-base">
-                                      {checkIn.ate ? "🍗" : "⚠️"}
-                                    </span>
-                                    <span className={checkIn.ate ? "text-sage" : "text-risk-high font-semibold"}>
-                                      {checkIn.ate ? "Ate" : "No food"}
-                                    </span>
-                                  </span>
-                                  <span className="text-cocoa font-bold">|</span>
-                                  <span className="flex items-center gap-1.5 font-medium">
-                                    <span className="text-base">
-                                      {checkIn.litterUsed ? "🚽" : "⚠️"}
-                                    </span>
-                                    <span className={checkIn.litterUsed ? "text-sage" : "text-risk-high font-semibold"}>
-                                      {checkIn.litterUsed ? "Litter OK" : "No litter"}
-                                    </span>
-                                  </span>
-                                </div>
+                                <span className={checkIn.ate ? "text-sage font-medium" : "text-risk-high font-semibold"}>
+                                  {checkIn.ate ? "🍗 Ate" : "⚠️ No food"}
+                                </span>
+                                <span className="text-cocoa/20">|</span>
+                                <span className={checkIn.litterUsed ? "text-sage font-medium" : "text-risk-high font-semibold"}>
+                                  {checkIn.litterUsed ? "🚽 OK" : "⚠️ No litter"}
+                                </span>
                               </div>
                               {checkIn.notes && (
-                                <span className="text-[10px] text-cocoa font-bold max-w-[120px] truncate hidden sm:block">
+                                <span className="text-[9px] text-cocoa/40 max-w-[100px] truncate hidden sm:block">
                                   {checkIn.notes}
                                 </span>
                               )}
@@ -259,45 +219,28 @@ export default function SmartEscalationModal({
                           ))}
                         </div>
                       ) : (
-                        <div className="bg-white rounded-xl p-3 text-center border border-cocoa/5">
-                          <Cat className="w-5 h-5 text-cocoa mx-auto mb-1" />
-                          <p className="text-xs text-cocoa font-bold">No logs recorded yet</p>
-                        </div>
+                        <p className="text-[11px] text-cocoa/40">No logs yet</p>
                       )}
                     </div>
 
-                    {/* Chat History section */}
+                    {/* Chat History */}
                     <div>
-                      <div className="flex items-center gap-2 mb-2">
-                        <MessageSquare className="w-4 h-4 text-cocoa" />
-                        <span className="text-xs font-black text-cocoa uppercase tracking-wide">
-                          Recent Questions to AI Coach
-                        </span>
+                      <div className="flex items-center gap-1.5 mb-1.5">
+                        <MessageSquare className="w-3 h-3 text-cocoa/60" />
+                        <span className="text-[10px] font-bold text-cocoa/60 uppercase tracking-wide">Recent AI Questions</span>
                       </div>
                       {recentMessages.length > 0 ? (
-                        <div className="space-y-2">
+                        <div className="space-y-1">
                           {recentMessages.map((msg, i) => (
-                            <div
-                              key={i}
-                              className="bg-white rounded-xl p-3 border border-cocoa/5 border-l-[3px] border-l-honey"
-                            >
-                              <p className="text-xs text-cocoa font-bold leading-relaxed italic line-clamp-2">
+                            <div key={i} className="bg-white rounded-lg px-2.5 py-1.5 border border-cocoa/5 border-l-2 border-l-honey">
+                              <p className="text-[11px] text-cocoa/70 italic line-clamp-1">
                                 &ldquo;{msg.content}&rdquo;
-                              </p>
-                              <p className="text-[10px] text-cocoa font-bold mt-1">
-                                {new Date(msg.timestamp).toLocaleTimeString([], {
-                                  hour: "2-digit",
-                                  minute: "2-digit",
-                                })}
                               </p>
                             </div>
                           ))}
                         </div>
                       ) : (
-                        <div className="bg-white rounded-xl p-3 text-center border border-cocoa/5">
-                          <MessageSquare className="w-5 h-5 text-cocoa mx-auto mb-1" />
-                          <p className="text-xs text-cocoa font-bold">No chat history yet</p>
-                        </div>
+                        <p className="text-[11px] text-cocoa/40">No chat yet</p>
                       )}
                     </div>
                   </div>
@@ -305,34 +248,36 @@ export default function SmartEscalationModal({
 
                 {/* Error state */}
                 {error && (
-                  <div className="mx-6 mb-5 p-3 bg-risk-high/10 border border-risk-high/20 rounded-xl text-sm text-risk-high font-medium text-center">
+                  <div className="mx-4 mb-3 p-2 bg-risk-high/10 border border-risk-high/20 rounded-lg text-xs text-risk-high font-medium text-center">
                     {error}
                   </div>
                 )}
 
                 {/* Footer */}
-                <div className="px-6 pb-6">
+                <div className="px-4 pb-4">
                   <DialogFooter className="flex sm:flex-row gap-2">
                     <Button
                       variant="outline"
+                      size="sm"
                       onClick={handleClose}
-                      className="rounded-xl border-cocoa/20 text-cocoa hover:bg-cocoa/5 font-bold"
+                      className="rounded-lg border-cocoa/20 text-cocoa hover:bg-cocoa/5 font-bold"
                     >
                       Cancel
                     </Button>
                     <Button
+                      size="sm"
                       onClick={handleSendReport}
                       disabled={isSending || !hasData}
-                      className="bg-gradient-to-r from-risk-high to-coral hover:from-risk-high/90 hover:to-coral/90 text-white rounded-xl gap-2 min-w-[160px] font-bold shadow-[3px_3px_0px_0px_rgba(217,97,76,0.4)] hover:shadow-[5px_5px_0px_0px_rgba(217,97,76,0.6)] hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="bg-risk-high hover:bg-risk-high/90 text-white rounded-lg gap-1.5 font-bold disabled:opacity-50"
                     >
                       {isSending ? (
                         <>
-                          <Loader2 className="w-4 h-4 animate-spin" />
-                          Packaging Report...
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                          Sending...
                         </>
                       ) : (
                         <>
-                          <Send className="w-4 h-4" />
+                          <Send className="w-3.5 h-3.5" />
                           Send Report
                         </>
                       )}
@@ -346,72 +291,28 @@ export default function SmartEscalationModal({
                 key="success"
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="py-10 px-6 text-center flex flex-col items-center"
+                className="py-8 px-6 text-center flex flex-col items-center"
               >
-                {/* Success animation */}
                 <motion.div
-                  initial={{ scale: 0, rotate: -20 }}
-                  animate={{ scale: 1, rotate: 0 }}
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
                   transition={{ type: "spring", stiffness: 200, damping: 15 }}
-                  className="w-24 h-24 rounded-full bg-gradient-to-br from-sage/15 to-sage/10 border-2 border-sage/30 flex items-center justify-center mb-6 relative"
+                  className="w-16 h-16 rounded-full bg-sage/10 border-2 border-sage/30 flex items-center justify-center mb-4"
                 >
-                  <motion.div
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    transition={{ delay: 0.2 }}
-                  >
-                    <CheckCircle className="w-12 h-12 text-sage" />
-                  </motion.div>
-                  {/* Decorative dots */}
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 0.4 }}
-                    className="absolute -top-1 -right-1"
-                  >
-                    <Sparkles className="w-5 h-5 text-honey" />
-                  </motion.div>
+                  <CheckCircle className="w-8 h-8 text-sage" />
                 </motion.div>
 
-                <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.3 }}
-                >
-                  <h3 className="text-2xl font-display font-black text-cocoa mb-3">
-                    Priority Report Sent
-                  </h3>
-                  <div className="flex items-center justify-center gap-2 mb-1">
-                    <Check className="w-4 h-4 text-sage" />
-                    <p className="text-sm text-cocoa font-bold">
-                      Daily logs packaged successfully
-                    </p>
-                  </div>
-                  <div className="flex items-center justify-center gap-2 mb-4">
-                    <Check className="w-4 h-4 text-sage" />
-                    <p className="text-sm text-cocoa font-bold">
-                      Chat history attached
-                    </p>
-                  </div>
-
-                  <div className="bg-gradient-to-r from-sage/5 via-sage/10 to-sage/5 rounded-2xl p-5 border border-sage/20 mb-6 max-w-sm mx-auto">
-                    <div className="flex items-center gap-2 text-sage font-bold text-sm mb-2 justify-center">
-                      <Phone className="w-4 h-4" />
-                      What happens next:
-                    </div>
-                    <p className="text-sm text-cocoa font-bold leading-relaxed">
-                      The shelter team will review {catName}&apos;s file and{" "}
-                      <strong className="text-cocoa">call you within 24 hours</strong>. Keep your
-                      phone nearby. In the meantime, continue tracking daily check-ins.
-                    </p>
-                  </div>
-                </motion.div>
+                <h3 className="text-xl font-bold text-cocoa mb-2">Report Sent</h3>
+                <p className="text-sm text-cocoa/60 mb-5">
+                  The shelter team will review {catName}&apos;s file and call you within 24 hours.
+                </p>
 
                 <Button
+                  size="sm"
                   onClick={handleClose}
-                  className="bg-cocoa hover:bg-cocoa/90 text-cream rounded-xl px-8 font-bold shadow-[3px_3px_0px_0px_rgba(42,29,20,0.5)]"
+                  className="bg-cocoa hover:bg-cocoa/90 text-cream rounded-lg px-6 font-bold"
                 >
-                  Back to Dashboard
+                  Done
                 </Button>
               </motion.div>
             )}

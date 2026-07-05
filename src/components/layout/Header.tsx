@@ -7,7 +7,7 @@ import { Heart, Home, LogOut, Menu, X, Bookmark, LayoutDashboard, Cat, MessageCi
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/hooks/useAuth";
-import { getIdToken } from "@/lib/auth";
+import { fetchSavedCatIds } from "@/lib/firestoreService";
 
 function getInitials(name: string | undefined | null): string {
   if (!name) return "U";
@@ -29,14 +29,9 @@ export default function Header() {
 
   useEffect(() => {
     if (user) {
-      getIdToken().then((token) => {
-        fetch(`/api/saved?uid=${encodeURIComponent(user.uid)}`, {
-          headers: token ? { Authorization: `Bearer ${token}` } : {},
-        })
-          .then((r) => r.json())
-          .then((d) => setSavedCount((d.saved || []).length))
-          .catch(() => {});
-      });
+      fetchSavedCatIds(user.uid)
+        .then((ids) => setSavedCount(ids.length))
+        .catch(() => {});
     }
   }, [user]);
 
@@ -46,23 +41,28 @@ export default function Header() {
       { href: "/cats", label: "Cats", icon: Cat },
       { href: "/coach/barnaby-adoption-1", label: "AI Coach", icon: MessageCircle },
       { href: "/assessment/new", label: "Quiz", icon: Sparkles },
+    ];
+    if (!user) return [
+      ...alwaysLinks,
       { href: "/about", label: "About", icon: Info },
     ];
-    if (!user) return alwaysLinks;
-    if (role === "adopter") {
-      return [
-        ...alwaysLinks,
-        { href: "/saved", label: `Wishlist (${savedCount})`, icon: Bookmark },
-        { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-      ];
-    }
+    // Wishlist and Dashboard are shown for any signed-in user who isn't
+    // specifically shelter staff, so a missing/legacy role value doesn't
+    // silently hide the Wishlist tab (previously required role === "adopter"
+    // exactly, which could fail if the Firestore doc was still synthesizing).
     if (role === "shelter_staff") {
       return [
         ...alwaysLinks,
         { href: "/shelter/dashboard", label: "Shelter Hub", icon: LayoutDashboard },
+        { href: "/about", label: "About", icon: Info },
       ];
     }
-    return alwaysLinks;
+    return [
+      ...alwaysLinks,
+      { href: "/saved", label: `Wishlist (${savedCount})`, icon: Bookmark },
+      { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+      { href: "/about", label: "About", icon: Info },
+    ];
   };
 
   const navLinks = getNavLinks();
@@ -77,8 +77,8 @@ export default function Header() {
       <div className="max-w-6xl mx-auto px-4 py-3.5 flex items-center justify-between">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2.5 group">
-          <div className="relative w-[45px] h-[45px] rounded-xl bg-cocoa flex items-center justify-center border-2 border-cocoa shadow-[3px_3px_0px_0px_rgba(255,107,107,1)] group-hover:shadow-[5px_5px_0px_0px_rgba(255,107,107,1)] group-hover:-translate-y-0.5 transition-all overflow-hidden">
-            <Image src="/cat.png" alt="Logo" width={56} height={56} className="w-full h-full object-cover" />
+          <div className="relative w-[49px] h-[49px] rounded-2xl bg-gradient-to-br from-coral/15 to-honey/15 flex items-center justify-center border-2 border-cocoa/10 shadow-[3px_3px_0px_0px_rgba(42,29,20,0.15)] group-hover:shadow-[5px_5px_0px_0px_rgba(255,107,107,0.4)] group-hover:-translate-y-0.5 group-hover:border-coral/30 transition-all">
+            <Image src="/cat.png" alt="Logo" width={60} height={60} className="w-[85%] h-[85%] object-contain" />
           </div>
           <div className="flex flex-col">
             <span className="font-display font-black text-xl tracking-tight text-cocoa leading-none">

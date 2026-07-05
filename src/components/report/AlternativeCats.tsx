@@ -26,7 +26,7 @@ export default function AlternativeCats({ catIds }: AlternativeCatsProps) {
         {cats.map(
           (cat) =>
             cat && (
-              <Link key={cat.id} href={`/assessment/${cat.id}`}>
+              <Link key={cat.id} href={`/cats/${cat.id}`}>
                 <Card className="border-border hover:shadow-md transition-shadow cursor-pointer bg-white">
                   <CardContent className="pt-4 pb-4 flex items-center gap-4">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
