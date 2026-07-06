@@ -23,7 +23,12 @@ function LoginPageContent() {
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
 
-  const redirectTo = searchParams.get("redirect");
+  const rawRedirect = searchParams.get("redirect");
+  // Only allow relative same-origin paths to prevent open redirect / XSS
+  const redirectTo =
+    rawRedirect && rawRedirect.startsWith("/") && !rawRedirect.startsWith("//")
+      ? rawRedirect
+      : null;
 
   function redirectFromDoc(doc: UserDocument | null) {
     // Incomplete or missing profile -> always onboard.

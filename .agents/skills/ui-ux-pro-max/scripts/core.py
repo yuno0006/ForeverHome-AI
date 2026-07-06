@@ -167,7 +167,12 @@ class BM25:
 # ============ SEARCH FUNCTIONS ============
 def _load_csv(filepath):
     """Load CSV and return list of dicts"""
-    with open(filepath, 'r', encoding='utf-8') as f:
+    # Prevent path traversal — resolve and verify the file is inside DATA_DIR
+    resolved = Path(filepath).resolve()
+    data_root = DATA_DIR.resolve()
+    if data_root not in resolved.parents and resolved != data_root:
+        raise ValueError(f"File path escapes data directory: {filepath}")
+    with open(resolved, 'r', encoding='utf-8') as f:
         return list(csv.DictReader(f))
 
 

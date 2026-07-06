@@ -34,11 +34,19 @@ service cloud.firestore {
     // Security: Prevents users from viewing other users' assessment results.
     // Validates: Requirements 10.2
     match /assessments/{assessmentId} {
-      // Allow read if the authenticated user is the adopter of this assessment
-      allow read: if request.auth.uid == resource.data.adopterUid;
+      // Allow read if the authenticated user is the adopter of this assessment.
+      // Guard: verify adopterUid exists and matches — prevents IDOR by ensuring
+      // the field is present before comparing (null != uid would bypass).
+      allow read: if request.auth != null &&
+        resource.data.adopterUid is string &&
+        request.auth.uid == resource.data.adopterUid;
       
-      // Allow create if the authenticated user is creating an assessment for themselves
-      allow create: if request.auth.uid == request.resource.data.adopterUid;
+      // Allow create if the authenticated user is creating an assessment for themselves.
+      // Guard: validate field types and sizes to prevent injection.
+      allow create: if request.auth != null &&
+        request.resource.data.adopterUid is string &&
+        request.resource.data.adopterUid.size() <= 128 &&
+        request.auth.uid == request.resource.data.adopterUid;
       
       // No update or delete - assessments are immutable once created
       allow update, delete: if false;
@@ -71,15 +79,27 @@ service cloud.firestore {
     // Only shelter admins can write (create, update, delete) cats.
     // 
     // Security: Ensures only authorized shelter staff can manage cat listings.
-    // Write access requires the user to be an admin of the shelter.
+    // Write access requires: (1) user is authenticated, (2) a shelter document
+    // exists with this user's uid as adminUid, and (3) the cat being modified
+    // belongs to that shelter. This prevents IDOR attacks where a shelter admin
+    // could modify cats belonging to other shelters.
     match /cats/{catId} {
       // Anyone can read cat listings (including unauthenticated users for browsing)
       allow read: if true;
       
-      // Write access (create, update, delete) only for shelter admins
-      // Verifies that the authenticated user is an admin of a shelter document
-      allow write: if request.auth != null && 
-        get(/databases/$(database)/documents/shelters/$(request.auth.uid)).data.adminUid == request.auth.uid;
+      // Create: Only shelter admins can create cats for their own shelter
+      // Validates: shelter exists with adminUid == request.auth.uid, and new cat's shelterId matches
+      allow create: if request.auth != null && 
+        exists(/databases/$(database)/documents/shelters/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/shelters/$(request.auth.uid)).data.adminUid == request.auth.uid &&
+        request.resource.data.shelterId == request.auth.uid;
+      
+      // Update/Delete: Only shelter admins can modify cats that belong to their shelter
+      // Validates: shelter exists with adminUid == request.auth.uid, AND cat's shelterId matches
+      allow update, delete: if request.auth != null && 
+        exists(/databases/$(database)/documents/shelters/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/shelters/$(request.auth.uid)).data.adminUid == request.auth.uid &&
+        resource.data.shelterId == request.auth.uid;
     }
     
     // ============================================
@@ -95,11 +115,14 @@ service cloud.firestore {
       allow read: if true;
       
       // Only the shelter admin can update their own shelter document
-      allow update: if request.auth != null && 
+      allow update: if request.auth != null &&
+        resource.data.adminUid is string &&
         resource.data.adminUid == request.auth.uid;
       
       // New shelters can be created by authenticated users (registration)
-      allow create: if request.auth != null && 
+      allow create: if request.auth != null &&
+        request.resource.data.adminUid is string &&
+        request.resource.data.adminUid.size() <= 128 &&
         request.resource.data.adminUid == request.auth.uid;
       
       // No delete without admin rights
@@ -110,15 +133,17 @@ service cloud.firestore {
     // ESCALATION REPORTS
     // ============================================
     // Reports are written by adopters, read by shelter staff.
+    // NOTE: Server-side /api/escalation writes via client SDK (no auth context).
+    // Until we migrate to Admin SDK, creates remain open with field validation.
+    // Risk: unauthenticated users could spam this collection — mitigated by
+    // field-type guards and the fact that reads still require shelter ownership.
     match /escalationReports/{reportId} {
-      // Reports are created server-side by /api/escalation using the plain
-      // (unauthenticated) client SDK — there is no signed-in Firestore
-      // session on the server. We validate document shape instead of
-      // requiring request.auth, since create-only access to this collection
-      // can't be used to read or tamper with anyone else's data.
       allow create: if request.resource.data.shelterId is string &&
+        request.resource.data.shelterId.size() <= 128 &&
         request.resource.data.catName is string &&
-        request.resource.data.adopterName is string;
+        request.resource.data.catName.size() <= 256 &&
+        request.resource.data.adopterName is string &&
+        request.resource.data.adopterName.size() <= 256;
       
       // Shelter staff can read reports for their OWN shelter only.
       // Shelters are keyed by their admin's uid (see onboarding flow),
@@ -137,15 +162,21 @@ service cloud.firestore {
     // ============================================
     // ADOPTION REQUESTS
     // ============================================
-    // Created server-side by /api/adoption-request using the plain
-    // (unauthenticated) client SDK, same pattern as escalationReports.
+    // NOTE: Server-side /api/adoption-request writes via client SDK (no auth context).
+    // Until we migrate to Admin SDK, creates remain open with field validation.
+    // Risk: unauthenticated users could spam this collection — mitigated by
+    // field-type guards and the fact that reads still require shelter ownership.
     // Adopters submit a request to adopt a specific cat; shelter staff
     // review requests for their own shelter.
     match /adoptionRequests/{requestId} {
       allow create: if request.resource.data.shelterId is string &&
+        request.resource.data.shelterId.size() <= 128 &&
         request.resource.data.catId is string &&
+        request.resource.data.catId.size() <= 128 &&
         request.resource.data.adopterName is string &&
-        request.resource.data.adopterEmail is string;
+        request.resource.data.adopterName.size() <= 256 &&
+        request.resource.data.adopterEmail is string &&
+        request.resource.data.adopterEmail.size() <= 256;
 
       // Shelter staff can read requests for their OWN shelter only.
       allow read: if request.auth != null &&
