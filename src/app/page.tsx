@@ -229,7 +229,7 @@ export default function HomePage() {
         <div className="grid md:grid-cols-3 gap-6 lg:gap-8">
           {[
             { step: "01", icon: Cat, title: "Browse & discover", desc: "Explore profiles with personality traits, photos, and real compatibility scores.", color: "coral" as const, rotate: -2 },
-            { step: "02", icon: Zap, title: "Take the quiz", desc: "Answer 5 scenario questions. Our rule engine identifies compatibility strengths and concerns for every cat.", color: "lavender" as const, rotate: 1 },
+            { step: "02", icon: Zap, title: "Take the quiz", desc: "Answer 11 scenario questions. Our rule engine identifies compatibility strengths and concerns for every cat.", color: "lavender" as const, rotate: 1 },
             { step: "03", icon: MessageCircle, title: "9 Lives + maintenance", desc: "Follow the 9 Lives core curriculum, then continue with Days 10–14 in Maintenance Mode for long-term settling support.", color: "sage" as const, rotate: -1 },
           ].map((item, idx) => (
             <motion.div
@@ -322,7 +322,7 @@ export default function HomePage() {
                 { value: "9", label: "Lives protocol", c: "text-coral" },
                 { value: "24/7", label: "AI coach", c: "text-lavender" },
                 { value: "3", label: "Partner shelters", c: "text-sage" },
-                { value: "5", label: "Quiz questions", c: "text-honey" },
+                { value: "11", label: "Quiz questions", c: "text-honey" },
               ].map((s) => (
                 <div key={s.label} className="bg-cream/10 backdrop-blur-sm p-5 rounded-2xl border-2 border-cream/20 text-center hover:bg-cream/15 transition-colors">
                   <p className={`font-display text-3xl font-black ${s.c}`}>{s.value}</p>
