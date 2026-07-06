@@ -231,7 +231,8 @@ src/
 │   ├── login/                        # Sign in (XSS fixed)
 │   ├── register/                     # Sign up
 │   ├── onboarding/                   # Role + profile setup
-│   └── profile/                      # User profile
+│   ├── profile/                      # User profile
+│   └── game/                         # WhiskerRunner game (Route protected: adopters only)
 ├── components/
 │   ├── Providers.tsx                 # Auth + Toaster + Theme wrapper
 │   ├── CatBackground.tsx             # Animated background pattern

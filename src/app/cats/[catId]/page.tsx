@@ -189,13 +189,49 @@ function BehaviorBar({ label, value, icon: Icon }: { label: string; value: strin
 }
 
 /* ─── AI Quiz Chat Widget ─── */
-function AIQuizWidget({ catName, catBreed, onStartAssessment }: { catName: string; catBreed: string; onStartAssessment: () => void }) {
+function AIQuizWidget({ catName, catBreed, catId, onStartAssessment }: { catName: string; catBreed: string; catId: string; onStartAssessment: () => void }) {
   const [step, setStep] = useState<"intro" | "quiz" | "result" | "done">("intro");
   const [currentQ, setCurrentQ] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [aiMessage, setAiMessage] = useState("");
   const [loadingAI, setLoadingAI] = useState(false);
   const [messages, setMessages] = useState<{ role: "bot" | "user"; content: string }[]>([]);
+  const [quizQuestions, setQuizQuestions] = useState(AI_QUIZ_QUESTIONS);
+  const [questionsLoading, setQuestionsLoading] = useState(true);
+
+  /* Fetch AI-generated quick-match questions on mount */
+  useEffect(() => {
+    let cancelled = false;
+    async function loadQuestions() {
+      try {
+        const res = await fetch("/api/generate-questions", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ catId, mode: "quick" }),
+        });
+        if (!res.ok) return;
+        const data = await res.json();
+        if (!cancelled && data.questions?.length === 4) {
+          setQuizQuestions(
+            data.questions.map((q: { scenario: string; options: { text: string; score: number }[] }, i: number) => ({
+              id: `ai_q${i}`,
+              question: () => q.scenario,
+              options: q.options.map((opt, j) => ({
+                value: `opt_${i}_${j}`,
+                label: opt.text,
+              })),
+            }))
+          );
+        }
+      } catch {
+        /* fall back to hardcoded questions */
+      } finally {
+        if (!cancelled) setQuestionsLoading(false);
+      }
+    }
+    loadQuestions();
+    return () => { cancelled = true; };
+  }, [catId]);
 
   const startQuiz = () => {
     setStep("quiz");
@@ -205,15 +241,15 @@ function AIQuizWidget({ catName, catBreed, onStartAssessment }: { catName: strin
   };
 
   const handleAnswer = (value: string, label: string) => {
-    const q = AI_QUIZ_QUESTIONS[currentQ];
+    const q = quizQuestions[currentQ];
     const newAnswers = { ...answers, [q.id]: value };
     setAnswers(newAnswers);
     setMessages((prev) => [...prev, { role: "user", content: label }]);
 
-    if (currentQ < AI_QUIZ_QUESTIONS.length - 1) {
+    if (currentQ < quizQuestions.length - 1) {
       setTimeout(() => {
         setCurrentQ((p) => p + 1);
-        const nextQ = AI_QUIZ_QUESTIONS[currentQ + 1];
+        const nextQ = quizQuestions[currentQ + 1];
         setMessages((prev) => [...prev, { role: "bot", content: nextQ.question(catName) }]);
       }, 500);
     } else {
@@ -347,7 +383,7 @@ function AIQuizWidget({ catName, catBreed, onStartAssessment }: { catName: strin
             {/* Question options */}
             <div className="pt-2 space-y-2 border-t border-cocoa/10">
               <p className="text-xs font-bold text-cocoa/40 uppercase tracking-wider">Choose your answer</p>
-              {AI_QUIZ_QUESTIONS[currentQ].options.map((opt) => (
+              {quizQuestions[currentQ].options.map((opt) => (
                 <button
                   key={opt.value}
                   onClick={() => handleAnswer(opt.value, opt.label)}
@@ -821,6 +857,16 @@ export default function CatDetailPage() {
                       </div>
                     </CardContent>
                   </Card>
+                </section>
+
+                {/* ─── AI Quick Match Quiz ─── */}
+                <section>
+                  <AIQuizWidget
+                    catName={cat.name}
+                    catBreed={cat.breed}
+                    catId={cat.id}
+                    onStartAssessment={() => router.push(`/assessment/${cat.id}`)}
+                  />
                 </section>
 
                 {/* ─── Adoption Process ─── */}

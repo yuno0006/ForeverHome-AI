@@ -2,9 +2,13 @@
 
 import { useMemo } from "react";
 import dynamic from "next/dynamic";
+import Link from "next/link";
+import { Cat } from "lucide-react";
 import { demoCats } from "@/data/demoCats";
 import { LeaderboardPanel } from "@/components/game/LeaderboardPanel";
 import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { useAuth } from "@/hooks/useAuth";
 
 const WhiskerRunnerGame = dynamic(
   () =>
@@ -15,9 +19,39 @@ const WhiskerRunnerGame = dynamic(
 );
 
 export default function GamePage() {
+  const { role, loading } = useAuth();
+  
   const randomCatName = useMemo(() => {
     return demoCats[Math.floor(Math.random() * demoCats.length)].name;
   }, []);
+
+  if (loading) return null;
+
+  // Currently, the prototype uses the 'adopter' role to simulate a user who has
+  // access to the adoption flow. In a fully wired backend, this would check an
+  // actual adoption record array.
+  const hasAccess = role === "adopter";
+
+  if (!hasAccess) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-cream p-4">
+        <div className="max-w-md w-full bg-white rounded-3xl p-8 text-center shadow-[4px_4px_0px_0px_rgba(42,29,20,1)] border-2 border-cocoa/15">
+          <div className="w-16 h-16 bg-coral/10 rounded-full flex items-center justify-center mx-auto mb-4 border-2 border-coral/20">
+            <Cat className="w-8 h-8 text-coral" />
+          </div>
+          <h2 className="text-2xl font-bold text-cocoa mb-3">Exclusive Adopter Reward!</h2>
+          <p className="text-cocoa/70 mb-6 leading-relaxed">
+            The Whisker Runner game is a special perk unlocked only for users who have completed the adoption process. Find your perfect feline friend to unlock this game!
+          </p>
+          <Link href="/cats">
+            <Button className="w-full bg-coral hover:bg-coral/90 text-white rounded-xl py-6 text-lg font-bold shadow-[2px_2px_0px_0px_rgba(42,29,20,1)] hover:-translate-y-0.5 hover:shadow-[4px_4px_0px_0px_rgba(42,29,20,1)] transition-all active:translate-y-0 active:shadow-none">
+              Find a Cat to Adopt
+            </Button>
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="relative flex min-h-screen flex-col lg:flex-row items-center justify-center p-4 gap-6 max-w-7xl mx-auto">

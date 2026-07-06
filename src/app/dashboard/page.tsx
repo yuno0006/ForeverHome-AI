@@ -7,7 +7,7 @@ import { AuthGuard } from "@/components/auth/AuthGuard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Heart, Cat, Calendar, Eye, AlertTriangle, Activity, AlertCircle, CheckCircle, User, Settings, Star, Loader2 } from "lucide-react";
+import { Heart, Cat, Calendar, Eye, AlertTriangle, Activity, AlertCircle, CheckCircle, User, Settings, Star, Loader2, Gamepad2 } from "lucide-react";
 import { UserRole } from "@/types/user";
 import { fetchUserAssessments } from "@/lib/firestoreService";
 import { getCatById } from "@/data/demoCats";
@@ -304,6 +304,12 @@ function DashboardContent() {
                       </div>
                     </div>
                     <div className="flex gap-2">
+                      <Link href={`/game`}>
+                        <Button variant="outline" className="border-sunny/20 text-cat-dark font-semibold rounded-xl hover:bg-sunny-light hidden sm:flex">
+                          <Gamepad2 className="w-4 h-4 mr-1 text-sunny" />
+                          Play Game
+                        </Button>
+                      </Link>
                       <Link href={`/shelters/paws-haven`}>
                         <Button variant="outline" className="border-sunny/20 text-cat-dark font-semibold rounded-xl hover:bg-sunny-light hidden sm:flex">
                           <Star className="w-4 h-4 mr-1 text-sunny" />

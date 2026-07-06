@@ -16,7 +16,7 @@ With **7–20% of shelter cats returned within 6 months** — usually due to pre
 - **Post-Adoption**: A gamified 14-day curriculum called the **9 Lives Protocol™** guides adopters through common challenges (hiding, not eating, zoomies), while an **AI Coach (Mr. Cat)** provides cat-specific contextual advice — injected with that specific cat's behavioral profile and the adopter's complete check-in history.
 - **Safety First**: A deterministic medical escalation layer with 26 emergency keywords intercepts urgent situations before any AI call, routing them to immediate human attention. We deliberately chose **not to build shelter-adopter chat** — shelters lack the staffing for real-time messaging, so AI handles 90% of questions instantly and Smart Escalation surfaces only the 10% needing human review.
 - **Shelter Side**: An insights dashboard, cat inventory management, adoption request tracking, and concern analytics help shelter staff operate efficiently.
-- **Engagement Layer**: Whisker Runner mini-game and a 19-card Fun Facts Slideshow keep users engaged while educating them about cat behavior — building realistic expectations before adoption.
+- **Engagement Layer**: A 19-card Fun Facts Slideshow keeps users engaged while educating them about cat behavior before adoption, while the Whisker Runner mini-game serves as an exclusive, fun reward for users who successfully adopt a cat.
 
 The system was built in **151 TypeScript files** using Next.js 16, Firebase, and Google Gemini AI — with a **deterministic-first philosophy**: AI explains results but never makes the matching decision itself. The application is deployed at **[forever-home-ai.vercel.app](https://forever-home-ai.vercel.app/)** and available as both a responsive website and an installable Progressive Web App (PWA) with offline support.
 
@@ -80,7 +80,7 @@ Every return costs shelters time, money, kennel capacity, and emotional resource
 | **Recent adopters** | Daily check-ins (eating, litter, hiding, activity), gamified 14-day curriculum, AI Coach (Mr. Cat) with cat-specific behavioral advice, photo sharing, Smart Escalation when needed |
 | **Shelter admins / directors** | Insights dashboard — active adoptions, cats needing attention, common compatibility concerns ranked by frequency, adoption request review, staff management |
 
-> **Note:** An account is required to use the platform. The landing page, cat profiles, and Whisker Runner game are viewable without login, but assessment, coaching, and dashboard features require authentication + completed onboarding.
+> **Note:** An account is required to use the platform. The landing page and cat profiles are viewable without login. Assessment, coaching, and dashboard features require authentication + completed onboarding. The Whisker Runner game is an exclusive perk available only to users who have completed an adoption.
 
 ---
 
@@ -163,7 +163,8 @@ Endless-runner platformer built in Canvas + TypeScript featuring:
 - **Custom Obstacles per Theme**: From falling sakura piles to city traffic cones, metal trash cans, and fire hydrants, each season renders distinct vector obstacles.
 - **Structured Difficulty Progression**: Dynamically scales speed and spawn density across four distinct tiers: *Easy*, *Moderate*, *Medium*, and *Hard* (achieved at 3000+ points).
 - **Symmetrical Dashboard Layout**: Flanked by a global leaderboard and an interactive Game Guide panel.
-- **Guest-Friendly Leaderboard**: Local high scores for non-logged-in players are dynamically injected into the leaderboard with earned medals (🥇🥈🥉) to encourage signup via a global save warning.
+- **Adopter Leaderboard**: Scores for all adopters are dynamically injected into the global leaderboard with earned medals (🥇🥈🥉) to foster friendly competition among new pet parents.
+- **Strict Route Protection**: The game route (`/game`) enforces role-based access. Non-adopters (guests, shelter staff) who attempt to visit are intercepted by a polite "Exclusive Adopter Reward!" blocker, driving them to browse cats instead.
 
 ### TTS Narration & Accessibility
 Compatibility reports feature text-to-speech via Web Speech API for accessibility. The entire app supports dark mode with a warm dark palette, ARIA labels, semantic HTML, and keyboard navigation.
@@ -221,7 +222,7 @@ Whisker Runner is strategic, not filler:
 1. **Retention & dwell time** — users spend more time on the platform when there's something fun between serious features.
 2. **Brand reinforcement** — dodging obstacles and collecting treats mirrors the adoption journey (overcoming challenges, finding rewards).
 3. **PWA showcase** — proves the app handles intensive Canvas rendering and keyboard input — it's a real app, not just a form.
-4. **Low-friction entry & Guest Engagement** — guests can play instantly without an account, see their scores ranked on the leaderboard with custom medals, and are nudged to log in to save their scores globally.
+4. **Exclusive Adopter Reward** — serves as a fun, gamified perk that users unlock only after completing their adoption, adding delight to their post-adoption journey.
 5. **Technical depth** — features 8 visual themes (including the night skyline of City Night Lights), custom SVG obstacles, an active 4-tier difficulty progression (Easy -> Moderate -> Medium -> Hard), and a clean symmetrical layout flanked by a guide card and leaderboard.
 
 ### Why Fun Facts Slideshow
