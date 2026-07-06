@@ -511,5 +511,6 @@ If we had another week:
 - [x] Video demo (HD or at least 720p)
 - [x] README.md (prerequisites, run instructions, configuration)
 - [x] Project report (this document, in `docs/`)
+- [x] Aikido security scan screenshot (`aikido.scan.jpeg` in repo root) — all 9 findings resolved
 - [x] Source code in `src/`
 - [x] No unrelated files, executables, auto-generated code, or package folders (`node_modules/`, `build/`, `dist/`, `vendor/`)
