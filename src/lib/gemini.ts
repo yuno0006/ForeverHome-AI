@@ -135,7 +135,8 @@ DO NOT include any text before or after the JSON array.`;
   if (!result) return null;
 
   try {
-    const cleaned = result.replace(/```json/gi, "").replace(/```/g, "").trim();
+    const jsonMatch = result.match(/\[\s*\{[\s\S]*\}\s*\]/);
+    const cleaned = jsonMatch ? jsonMatch[0] : result.replace(/```json/gi, "").replace(/```/g, "").trim();
     const parsed = JSON.parse(cleaned);
     if (Array.isArray(parsed) && parsed.length === 4) {
       return parsed;
@@ -148,88 +149,77 @@ DO NOT include any text before or after the JSON array.`;
 }
 
 // ─── Adoption Counselor ────────────────────────────────
+export interface CounselorAIResponse {
+  riskLevel: "low" | "moderate" | "high";
+  concerns: string[];
+  strengths: string[];
+  protectiveFactors: string[];
+  explanation: string;
+}
+
 export async function generateCounselorExplanation(
   catName: string,
   catProfile: string,
   adopterProfile: string,
-  riskLevel: string,
-  concerns: string[],
-  strengths: string[],
-  catBackstory?: string,
-  catIdealHome?: string,
-  catSpecialNotes?: string,
-  catPersonality?: { trait: string; description: string }[],
-  catMedicalNeeds?: string,
-  adopterName?: string,
-  adopterCatExperience?: string,
   scenarioQA?: string
-): Promise<string> {
-  const adopterGreeting = adopterName ? `Hi ${adopterName}! ` : "";
-  const personalityText = catPersonality?.length
-    ? catPersonality.map(p => `• ${p.trait}: ${p.description}`).join("\n")
-    : "";
-
-  const prompt = `You are the ForeverHome AI Adoption Counselor. Generate a warm, empathetic, and thorough compatibility report for a potential adopter. Write 4-5 substantial paragraphs.
-
-${adopterGreeting}Here's the full picture:
+): Promise<CounselorAIResponse> {
+  const prompt = `You are the ForeverHome AI Adoption Counselor and the ultimate judge of compatibility.
+Your job is to read the cat's profile and the adopter's lifestyle/answers, and decide if they are a good match.
 
 ─── THE CAT ───
 Name: ${catName}
 ${catProfile}
-${personalityText ? `\nPersonality traits:\n${personalityText}` : ""}
-${catBackstory ? `\nBackstory:\n${catBackstory}` : ""}
-${catIdealHome ? `\nIdeal home:\n${catIdealHome}` : ""}
-${catSpecialNotes ? `\nShelter notes:\n${catSpecialNotes}` : ""}
-${catMedicalNeeds && catMedicalNeeds !== "None" ? `\nMedical needs:\n${catMedicalNeeds}` : ""}
 
 ─── THE ADOPTER ───
 ${adopterProfile}
 ${scenarioQA ? `\nAdopter's answers to cat-specific scenarios:\n${scenarioQA}\n` : ""}
-─── COMPATIBILITY ASSESSMENT ───
-Overall risk level: ${riskLevel}
 
-Concerns identified:
-${concerns.map((c) => `- ${c}`).join("\n") || "None"}
-
-Strengths identified:
-${strengths.map((s) => `- ${s}`).join("\n") || "None"}
-
-IMPORTANT: Write a COMPLETE, thorough compatibility report that covers ALL of the following sections. NEVER cut off mid-sentence. NEVER use markdown formatting, just plain paragraphs separated by blank lines.
-
-1. WHY YOU TWO MATCH: Explain in detail why this specific cat and the adopter might be a good match (or why they aren't). Reference the cat's actual personality, backstory, and traits. Reference the adopter's living situation, experience level, and preferences. Be specific — don't be generic.
-
-2. HOW TO CARE FOR ${catName.toUpperCase()}: Give practical, concrete advice on daily care. Include feeding routines, litter box setup, play/exercise needs, grooming requirements, and any special medical care. Reference the cat's specific needs (energy level, play needs, medical conditions, etc.). If the cat needs vertical space, mention cat trees. If it's a senior, talk about joint care. Be specific to THIS cat, not generic cat care advice.
-
-3. CONCERNS & SOLUTIONS: Address each concern one by one. For each concern, explain why it matters for the cat's wellbeing and give practical, specific steps the adopter can take to address it. If risk is low, emphasize what to watch for during the transition period.
-
-4. FINAL THOUGHTS: End with an encouraging, supportive closing. If risk is high, gently suggest alternative cats might be a better fit. If moderate, express confidence that with preparation this can work. If low, celebrate the potential match.
-
-Use warm, conversational language. Write as if you're sitting across from the adopter having a friendly chat. Be supportive and never judgmental.`;
-
-  const result = await callAI(prompt);
-  return result ?? fallbackCounselorExplanation(catName, riskLevel, concerns, strengths, catBackstory, catIdealHome, catSpecialNotes, catMedicalNeeds, adopterName);
+You MUST return your decision EXACTLY as a JSON object with this structure:
+{
+  "riskLevel": "low" | "moderate" | "high",
+  "concerns": ["concern 1", "concern 2"],
+  "strengths": ["strength 1", "strength 2"],
+  "protectiveFactors": ["protective factor 1", "protective factor 2"],
+  "explanation": "A warm, 4-5 paragraph explanation covering: why they match (or don't), how to care for this specific cat, addressing concerns and solutions, and final thoughts."
 }
 
-function fallbackCounselorExplanation(
-  catName: string,
-  riskLevel: string,
-  concerns: string[],
-  strengths: string[],
-  catBackstory?: string,
-  catIdealHome?: string,
-  catSpecialNotes?: string,
-  catMedicalNeeds?: string,
-  adopterName?: string
-): string {
-  const greeting = adopterName ? `Hi ${adopterName}! ` : "";
+INSTRUCTIONS:
+1. "riskLevel": Be honest. If the adopter's lifestyle or scenario answers clash dangerously with the cat's needs, score it "high" (Red). If it's mostly good but has some challenges, score it "moderate" (Yellow). If it's a great fit, "low" (Green).
+2. "protectiveFactors": Identify positive things about the adopter that mitigate their risks (e.g., "willing to learn", "has financial readiness", "flexible schedule").
+3. "explanation": Must be plain text paragraphs separated by \n\n. Do not use markdown. Speak directly to the adopter warmly.
 
-  if (riskLevel === "high") {
-    return `${greeting}${catName} may face significant challenges in this home environment. ${concerns.length > 0 ? `The main concerns are: ${concerns.slice(0, 2).join(" and ")}. ` : ""}These could lead to stress and behavioral issues for ${catName}. ${catIdealHome ? `${catName}'s ideal home would be: ${catIdealHome}. ` : ""}We recommend considering alternative cats that may be a better lifestyle fit — our shelter team is happy to help you find the purr-fect match!`;
+DO NOT output any text before or after the JSON.`;
+
+  const result = await callAI(prompt);
+  if (!result) return fallbackCounselorResponse(catName);
+
+  try {
+    const jsonMatch = result.match(/\{[\s\S]*\}/);
+    const cleaned = jsonMatch ? jsonMatch[0] : result.replace(/```json/gi, "").replace(/```/g, "").trim();
+    const parsed = JSON.parse(cleaned) as CounselorAIResponse;
+    
+    // Ensure we always have valid arrays and a valid risk level
+    return {
+      riskLevel: ["low", "moderate", "high"].includes(parsed.riskLevel) ? parsed.riskLevel : "moderate",
+      concerns: Array.isArray(parsed.concerns) ? parsed.concerns : [],
+      strengths: Array.isArray(parsed.strengths) ? parsed.strengths : [],
+      protectiveFactors: Array.isArray(parsed.protectiveFactors) ? parsed.protectiveFactors : [],
+      explanation: parsed.explanation || fallbackCounselorResponse(catName).explanation
+    };
+  } catch (e) {
+    console.error("Failed to parse counselor JSON:", e);
+    return fallbackCounselorResponse(catName);
   }
-  if (riskLevel === "moderate") {
-    return `${greeting}This match with ${catName} has promising aspects but also some areas that need attention. ${concerns[0] ? `${concerns[0]}. ` : ""}${catSpecialNotes ? `${catSpecialNotes} ` : ""}With proper preparation and support, this match could work well. ${catIdealHome ? `To give ${catName} the best start, consider: ${catIdealHome}. ` : ""}We recommend discussing the specific concerns with shelter staff who know ${catName} best.`;
-  }
-  return `${greeting}Great news — this match with ${catName} looks very promising! ${strengths[0] || "Your lifestyle"} aligns well with ${catName}'s needs. ${catBackstory ? `${catBackstory} ` : ""}${catIdealHome ? `To help ${catName} settle in, aim for: ${catIdealHome}. ` : ""}${catMedicalNeeds && catMedicalNeeds !== "None" ? `Note: ${catName} has medical needs (${catMedicalNeeds}) to be aware of. ` : ""}We recommend proceeding with the adoption and scheduling a meet-and-greet at the shelter. Exciting times ahead!`;
+}
+
+function fallbackCounselorResponse(catName: string): CounselorAIResponse {
+  return {
+    riskLevel: "moderate",
+    concerns: ["System was unable to complete the detailed AI compatibility check."],
+    strengths: ["Adopter completed the assessment process."],
+    protectiveFactors: [],
+    explanation: `Hi there! We couldn't run our full AI compatibility engine for ${catName} right now. However, based on our standard evaluation, this match has some promising aspects but might need some discussion. We recommend proceeding with the adoption request so you can speak directly with shelter staff who know ${catName} best!`
+  };
 }
 
 // ─── 14-Day Coach ──────────────────────────────────────

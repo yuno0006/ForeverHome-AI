@@ -134,42 +134,42 @@ export default function Header() {
           ) : (
             <div className="flex items-center gap-1.5">
               <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <button className="flex items-center gap-2 px-3.5 py-2 rounded-full bg-white border-2 border-cocoa/15 hover:border-cocoa hover:shadow-[3px_3px_0px_0px_rgba(42,29,20,1)] transition-all outline-none">
-                    <div className="w-8 h-8 rounded-lg overflow-hidden flex-shrink-0 border-2 border-cocoa/10">
-                      {user.photoURL ? (
-                        <Image
-                          src={user.photoURL}
-                          alt={userDoc?.displayName || "User"}
-                          width={32}
-                          height={32}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <div className="w-full h-full bg-coral flex items-center justify-center text-white text-xs font-medium">
-                          {getInitials(userDoc?.displayName)}
-                        </div>
-                      )}
-                    </div>
-                    <span className="text-sm font-bold text-cocoa hidden sm:inline">
-                      {userDoc?.displayName?.split(' ')[0] || 'Profile'}
-                    </span>
-                  </button>
+                <DropdownMenuTrigger
+                  className="flex items-center gap-2 px-3.5 py-2 rounded-full bg-white border-2 border-cocoa/15 hover:border-cocoa hover:shadow-[3px_3px_0px_0px_rgba(42,29,20,1)] transition-all outline-none"
+                >
+                  <div className="w-8 h-8 rounded-lg overflow-hidden flex-shrink-0 border-2 border-cocoa/10">
+                    {user.photoURL ? (
+                      <Image
+                        src={user.photoURL}
+                        alt={userDoc?.displayName || "User"}
+                        width={32}
+                        height={32}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-coral flex items-center justify-center text-white text-xs font-medium">
+                        {getInitials(userDoc?.displayName)}
+                      </div>
+                    )}
+                  </div>
+                  <span className="text-sm font-bold text-cocoa hidden sm:inline">
+                    {userDoc?.displayName?.split(' ')[0] || 'Profile'}
+                  </span>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56 rounded-2xl border-2 border-cocoa/15 shadow-[4px_4px_0px_0px_rgba(42,29,20,1)] p-2 bg-cream">
-                  <DropdownMenuItem asChild className="rounded-xl cursor-pointer hover:bg-cocoa/5 font-semibold text-cocoa focus:bg-cocoa/5">
+                  <DropdownMenuItem className="rounded-xl cursor-pointer hover:bg-cocoa/5 font-semibold text-cocoa focus:bg-cocoa/5">
                     <Link href="/profile" className="flex items-center w-full">
                       <User className="mr-2 h-4 w-4" />
                       Profile
                     </Link>
                   </DropdownMenuItem>
-                  <DropdownMenuItem asChild className="rounded-xl cursor-pointer hover:bg-cocoa/5 font-semibold text-cocoa focus:bg-cocoa/5">
+                  <DropdownMenuItem className="rounded-xl cursor-pointer hover:bg-cocoa/5 font-semibold text-cocoa focus:bg-cocoa/5">
                     <Link href="/wishlist" className="flex items-center w-full">
                       <Bookmark className="mr-2 h-4 w-4" />
                       Wishlist
                     </Link>
                   </DropdownMenuItem>
-                  <DropdownMenuItem asChild className="rounded-xl cursor-pointer hover:bg-cocoa/5 font-semibold text-cocoa focus:bg-cocoa/5">
+                  <DropdownMenuItem className="rounded-xl cursor-pointer hover:bg-cocoa/5 font-semibold text-cocoa focus:bg-cocoa/5">
                     <Link href="/about" className="flex items-center w-full">
                       <Info className="mr-2 h-4 w-4" />
                       About

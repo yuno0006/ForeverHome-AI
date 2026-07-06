@@ -81,46 +81,36 @@ export async function POST(req: NextRequest) {
     const adopterProfileStr = adopterProfileParts.join("\n") || "No adopter profile available";
 
     // Try Gemini AI first, fall back to deterministic
-    const explanation = await generateCounselorExplanation(
+    const aiResponse = await generateCounselorExplanation(
       catName,
       catProfileStr,
       adopterProfileStr,
-      compatibilityResult?.level || "unknown",
-      compatibilityResult?.concerns?.map((c: { description: string }) => c.description) || [],
-      compatibilityResult?.strengths?.map((s: { description: string }) => s.description) || [],
-      cat?.backstory || "",
-      cat?.idealHome || "",
-      cat?.care?.specialNotes || "",
-      cat?.personality || [],
-      cat?.care?.knownMedicalNeeds || "None",
-      adopter?.name || "",
-      adopter?.catExperience || "unknown",
       scenarioQA
     );
 
-    const source = explanation ? "gemini" : "fallback";
-    const finalExplanation = explanation || getFallbackExplanation(compatibilityResult);
+    const source = aiResponse.explanation && !aiResponse.explanation.includes("couldn't run our full") ? "gemini" : "fallback";
 
     // Log AI interaction (fire-and-forget, never blocks response)
     logAIInteractionAsync({
       uid: adopter?.id || "guest",
       catId: cat?.id || "unknown",
-      question: JSON.stringify({ compatibilityLevel: compatibilityResult?.level, cat: cat?.name }),
-      response: finalExplanation,
+      question: JSON.stringify({ aiCompatibilityCheck: true, cat: cat?.name }),
+      response: JSON.stringify(aiResponse),
       source,
     });
 
     return NextResponse.json({
-      explanation: finalExplanation,
+      aiResult: aiResponse,
       source,
       disclaimer:
         source === "fallback"
-          ? "This explanation was generated without AI. Connect a Gemini API key for personalized explanations."
+          ? "This report was generated without AI. Connect a Gemini API key for personalized assessments."
           : undefined,
     });
   } catch (error) {
+    console.error("Counselor API error:", error);
     return NextResponse.json(
-      { error: "Failed to generate explanation" },
+      { error: "Failed to generate AI counselor report" },
       { status: 500 }
     );
   }

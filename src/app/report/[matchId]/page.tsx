@@ -85,6 +85,7 @@ export default function ReportPage() {
   const [adopterProfile, setAdopterProfile] = useState<AdopterProfile | null>(null);
   const [explanation, setExplanation] = useState<string>("");
   const [loadingExplanation, setLoadingExplanation] = useState(false);
+  const [aiProtectiveFactors, setAiProtectiveFactors] = useState<string[]>([]);
 
   // Adoption request flow
   const [showAdoptForm, setShowAdoptForm] = useState(false);
@@ -266,7 +267,21 @@ export default function ReportPage() {
         });
 
         const data = await res.json();
-        setExplanation(data.explanation || getFallbackExplanation(match.result));
+        
+        if (data.aiResult) {
+          // AI provided the full result, overwrite the deterministic one!
+          const newResult = {
+            ...match.result,
+            level: data.aiResult.riskLevel,
+            concerns: data.aiResult.concerns.map((c: string) => ({ description: c, severity: "significant" as const })),
+            strengths: data.aiResult.strengths.map((s: string) => ({ description: s })),
+          };
+          setMatch({ ...match, result: newResult });
+          setAiProtectiveFactors(data.aiResult.protectiveFactors || []);
+          setExplanation(data.aiResult.explanation || getFallbackExplanation(newResult));
+        } else {
+          setExplanation(data.explanation || getFallbackExplanation(match.result));
+        }
       } catch (error) {
         console.error("Failed to fetch AI explanation:", error);
         setExplanation(getFallbackExplanation(match.result));
@@ -376,7 +391,17 @@ export default function ReportPage() {
 
       <div className="space-y-6">
         {/* Compatibility Level */}
-        <CompatibilityBadge level={match.result.level} />
+        {loadingExplanation ? (
+          <div className="flex items-center gap-4 p-4 md:p-6 rounded-2xl bg-charcoal/5 animate-pulse border-2 border-charcoal/10">
+            <div className="w-12 h-12 rounded-full bg-charcoal/10 shrink-0" />
+            <div className="space-y-2.5 w-full max-w-sm">
+              <div className="h-5 bg-charcoal/10 rounded-md w-3/4" />
+              <div className="h-4 bg-charcoal/10 rounded-md w-full" />
+            </div>
+          </div>
+        ) : (
+          <CompatibilityBadge level={match.result.level} />
+        )}
 
         {/* Disclaimer */}
         <div className="bg-warm-cream rounded-lg p-4 border border-border text-sm text-charcoal/70">
@@ -422,43 +447,75 @@ export default function ReportPage() {
           </CardContent>
         </Card>
 
-        {/* Concerns */}
-        <ConcernList concerns={match.result.concerns} />
+        {/* AI Results Sections */}
+        {loadingExplanation ? (
+          <div className="space-y-6 animate-pulse">
+            <div className="h-32 bg-charcoal/5 rounded-xl border border-charcoal/10" />
+            <div className="h-24 bg-charcoal/5 rounded-xl border border-charcoal/10" />
+          </div>
+        ) : (
+          <>
+            {/* Concerns */}
+            <ConcernList concerns={match.result.concerns} />
 
-        {/* Strengths */}
-        {match.result.strengths.length > 0 && (
-          <div className="space-y-3">
-            <h3 className="font-semibold text-cat-dark text-lg">
-              Protective Factors (by AI)
-            </h3>
-            <div className="space-y-2">
-              {match.result.strengths.map((strength, i) => (
-                <div
-                  key={i}
-                  className="flex items-start gap-3 p-3 rounded-lg bg-[#22c55e]/5 border border-[#22c55e]/20"
-                >
-                  <CheckCircle2 className="h-5 w-5 shrink-0 mt-0.5 text-[#22c55e]" />
-                  <p className="text-sm text-charcoal/80 font-medium">
-                    {strength.description}
-                  </p>
+            {/* Strengths */}
+            {match.result.strengths.length > 0 && (
+              <div className="space-y-3">
+                <h3 className="font-semibold text-cat-dark text-lg">
+                  Strengths
+                </h3>
+                <div className="space-y-2">
+                  {match.result.strengths.map((strength, i) => (
+                    <div
+                      key={i}
+                      className="flex items-start gap-3 p-3 rounded-lg bg-[#22c55e]/5 border border-[#22c55e]/20"
+                    >
+                      <CheckCircle2 className="h-5 w-5 shrink-0 mt-0.5 text-[#22c55e]" />
+                      <p className="text-sm text-charcoal/80 font-medium">
+                        {strength.description}
+                      </p>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
-          </div>
-        )}
+              </div>
+            )}
 
-        {/* Mitigations */}
-        <MitigationList mitigations={match.result.mitigations} />
+            {/* Protective Factors (AI Generated) */}
+            {aiProtectiveFactors.length > 0 && (
+              <div className="space-y-3">
+                <h3 className="font-semibold text-cat-dark text-lg">
+                  Protective Factors (by AI)
+                </h3>
+                <div className="space-y-2">
+                  {aiProtectiveFactors.map((factor, i) => (
+                    <div
+                      key={i}
+                      className="flex items-start gap-3 p-3 rounded-lg bg-[#3b82f6]/5 border border-[#3b82f6]/20"
+                    >
+                      <CheckCircle2 className="h-5 w-5 shrink-0 mt-0.5 text-[#3b82f6]" />
+                      <p className="text-sm text-charcoal/80 font-medium">
+                        {factor}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
-        {/* Shelter Review Badge */}
-        {match.result.requiresShelterReview && (
-          <div className="flex items-center gap-3 p-4 rounded-lg bg-risk-moderate/10 border border-risk-moderate/30">
-            <ShieldAlert className="h-6 w-6 text-risk-moderate shrink-0" />
-            <p className="text-sm font-medium text-foreground">
-              Shelter review recommended — Please discuss this assessment with
-              shelter staff before proceeding.
-            </p>
-          </div>
+            {/* Mitigations */}
+            <MitigationList mitigations={match.result.mitigations} />
+
+            {/* Shelter Review Badge */}
+            {match.result.requiresShelterReview && (
+              <div className="flex items-center gap-3 p-4 rounded-lg bg-risk-moderate/10 border border-risk-moderate/30">
+                <ShieldAlert className="h-6 w-6 text-risk-moderate shrink-0" />
+                <p className="text-sm font-medium text-foreground">
+                  Shelter review recommended — Please discuss this assessment with
+                  shelter staff before proceeding.
+                </p>
+              </div>
+            )}
+          </>
         )}
 
         {/* AI-Recommended Cats — always shown, ranked by compatibility */}
