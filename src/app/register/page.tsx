@@ -80,10 +80,29 @@ export default function RegisterPage() {
       // New users always go through onboarding.
       router.replace("/onboarding");
     } catch (err: unknown) {
+      const code =
+        err && typeof err === "object" && "code" in err
+          ? (err as { code: string }).code
+          : "";
+
+      const friendlyMessages: Record<string, string> = {
+        "auth/email-already-in-use":
+          "An account with this email already exists. Please sign in instead.",
+        "auth/weak-password":
+          "Password is too weak. Please use at least 8 characters with a mix of letters and numbers.",
+        "auth/invalid-email":
+          "Please enter a valid email address.",
+        "auth/network-request-failed":
+          "Network error. Please check your internet connection.",
+        "auth/too-many-requests":
+          "Too many attempts. Please wait a moment and try again.",
+      };
+
       const message =
-        err instanceof Error
+        friendlyMessages[code] ||
+        (err instanceof Error
           ? err.message
-          : "Registration failed. Please try again.";
+          : "Registration failed. Please try again.");
       setFormError(message);
       setLoading(false);
     }
@@ -99,10 +118,32 @@ export default function RegisterPage() {
       // onboarding page redirect them onward if already complete.
       router.replace("/onboarding");
     } catch (err: unknown) {
+      // "REDIRECTING_TO_GOOGLE" means we fell back to redirect flow —
+      // the page is about to navigate away, so don't show an error.
+      if (err instanceof Error && err.message === "REDIRECTING_TO_GOOGLE") {
+        return; // redirect is in progress, keep loading state
+      }
+
+      const code =
+        err && typeof err === "object" && "code" in err
+          ? (err as { code: string }).code
+          : "";
+
+      const friendlyMessages: Record<string, string> = {
+        "auth/popup-closed-by-user":
+          "Sign-in popup was closed. Please try again and select your Google account.",
+        "auth/cancelled-popup-request":
+          "Another sign-in attempt is already in progress.",
+        "auth/network-request-failed":
+          "Network error. Please check your internet connection and try again.",
+      };
+
       const message =
-        err instanceof Error
+        friendlyMessages[code] ||
+        (err instanceof Error
           ? err.message
-          : "Google sign-in failed. Please try again.";
+          : "Google sign-in failed. Please try again.");
+
       setFormError(message);
       setGoogleLoading(false);
     }

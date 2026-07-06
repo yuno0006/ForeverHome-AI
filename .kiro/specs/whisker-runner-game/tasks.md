@@ -198,3 +198,52 @@ This plan builds Whisker Runner bottom-up: pure, framework-free data models and 
   ]
 }
 ```
+
+
+## Visual Enhancement: Nyan Cat Style (Requirement 5.5)
+
+This section adds tasks for updating the game's visual style to match Nyan Cat aesthetics while maintaining all existing gameplay mechanics.
+
+### Tasks
+
+- [ ] 19. Update background visual style to Nyan Cat theme
+  - [ ] 19.1 Replace the honey/cream gradient background with a blue sky gradient (light blue #87CEEB to deeper blue #4A90E2)
+    - _Requirements: 5.5.1_
+  - [ ] 19.2 Replace the brown ground baseline with a solid green land strip (e.g., #4CAF50 or brighter pixel-art green)
+    - _Requirements: 5.5.2_
+  - [ ] 19.3 Optionally add pixel-art grass texture (small green rectangles) along the top edge of the green land
+    - _Requirements: 5.5.2_
+  - [ ] 19.4 Ensure the green land's `backgroundPositionX` continues to scroll in lockstep with `distance`
+    - _Requirements: 5.5.2_
+
+- [ ] 20. Create Nyan Cat sprite
+  - [ ] 20.1 Design and implement a pixel-art Nyan Cat sprite with Pop-Tart body (pink/fuchsia #FF69B4 with colored sprinkles)
+    - _Requirements: 5.5.3_
+  - [ ] 20.2 Add pixel-art cat head and front paws emerging from the Pop-Tart body (gray/white with simple facial features)
+    - _Requirements: 5.5.3_
+  - [ ] 20.3 Ensure the Nyan Cat sprite uses `image-rendering: pixelated` for crisp scaling
+    - _Requirements: 5.5.3_
+  - [ ] 20.4 Verify the Nyan Cat sprite's hurtbox dimensions match the original cat sprite (same width, height, collision behavior)
+    - _Requirements: 5.5.8_
+  - [ ] 20.5 Create standing, jumping, and ducking poses for the Nyan Cat sprite
+    - _Requirements: 5.5.3_
+
+- [ ] 21. Update obstacle sprites for Nyan Cat theme
+  - [ ] 21.1 Optionally update obstacle sprite colors to complement the Nyan Cat theme (bright, playful colors)
+    - _Requirements: 5.5.7_
+  - [ ] 21.2 Ensure obstacles maintain clear visual contrast against the blue sky and green land
+    - _Requirements: 5.5.7_
+
+- [ ] 22. Verify gameplay mechanics unchanged
+  - [ ] 22.1 Run all existing game engine tests to confirm physics, collision, and scoring logic unchanged
+    - _Requirements: 5.5.5_
+  - [ ] 22.2 Verify Space/Up arrow still triggers jump and Down arrow triggers duck on desktop
+    - _Requirements: 5.5.6_
+  - [ ] 22.3 Verify on-screen Jump/Duck buttons still work on touch devices
+    - _Requirements: 5.5.6_
+  - [ ] 22.4 Test a full playthrough to confirm gameplay balance unaffected by visual changes
+    - _Requirements: 5.5.5, 5.5.8_
+
+- [ ] 23. Checkpoint - Ensure all tests pass and gameplay unchanged
+  - Run all automated tests and manually verify the game still plays correctly with the new visual style.
+

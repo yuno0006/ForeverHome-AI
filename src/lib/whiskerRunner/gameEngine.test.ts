@@ -363,36 +363,60 @@ describe("Property 9: Collision determinism", () => {
 // PROPERTY 10: Ducking reduces hurtbox height
 // =============================================================================
 
-const DUCK_TO_STAND_GAP = STAND_HEIGHT - DUCK_HEIGHT;
+// Cat hurtbox inset constants mirror gameEngine's collision zone tightening.
+// When these change the test geometry must also adapt or the
+// duck-clearing scenario will generate obstacles that fall outside the
+// standing cat's effective collision band.
+// Mirror gameEngine's hurtbox tightening constants.
+const CAT_HURTBOX_INSET_Y_TEST = 6;  // px, same as CAT_HURTBOX_INSET_Y
+const OBSTACLE_HURTBOX_INSET_Y_RATIO_TEST = 0.30; // same as OBSTACLE_HURTBOX_INSET_Y_RATIO
+const CAT_HURTBOX_INSET_X_TEST = 8; // px, same as CAT_HURTBOX_INSET_X
 
 /**
- * Generates a `catY` + air-obstacle geometry where the obstacle sits
- * strictly above the ducking ceiling (`catY + DUCK_HEIGHT`) and strictly
- * within the standing band (`catY + STAND_HEIGHT`), with margin so
- * floating-point rounding never flips the overlap at the boundary — i.e. a
- * standing cat's hurtbox always overlaps it vertically, and a ducking cat's
- * shorter hurtbox never does. The obstacle is horizontally centered on the
- * cat's hitbox (rather than placed at an arbitrary offset) so overlap is
- * guaranteed regardless of `checkCollision`'s horizontal forgiveness inset
- * (`OBSTACLE_HURTBOX_INSET_RATIO`): the obstacle's effective (inset)
- * center always coincides with the cat's center, which is always inside
- * the cat's own x-range.
+ * Generates `catY` + air-obstacle geometry where the obstacle's collision
+ * zone (after obstacle vertical insets) sits strictly above the ducking
+ * cat's collision ceiling and strictly overlaps the standing cat's band.
+ *
+ * With CAT_HURTBOX_INSET_Y = 6, STAND_HEIGHT = 100, DUCK_HEIGHT = 50:
+ *   - Ducking collision: [catY+6, catY+44]
+ *   - Standing collision: [catY+6, catY+94]
+ *   - Obstacle's effective y-range must be entirely in (catY+44, catY+94]
+ *
+ * A safety margin of 4px ensures the fuzzed values never graze the boundary.
  */
 const arbitraryDuckClearingScenario = fc
   .tuple(
-    finiteDouble(0, 100), // catY
-    finiteDouble(0, 1), // r1: fraction for gap above the ducking ceiling
-    finiteDouble(0, 1), // r2: fraction for obstacle height within remaining room
-    finiteDouble(5, 50) // width
+    finiteDouble(0, 100),  // catY
+    finiteDouble(0, 1),    // r1: vertical position fraction
+    finiteDouble(0, 1),    // r2: obstacle height fraction
+    finiteDouble(8, 50)    // width (min 8 so 35% inset doesn't collapse to 0)
   )
   .map(([catY, r1, r2, width]) => {
-    const gap = 0.5 + r1 * (DUCK_TO_STAND_GAP - 2); // in [0.5, DUCK_TO_STAND_GAP - 1.5]
-    const maxHeight = DUCK_TO_STAND_GAP - gap - 0.5; // remaining headroom, >= 1
-    const height = 0.5 + r2 * Math.max(maxHeight - 0.5, 0.1);
-    const y = catY + DUCK_HEIGHT + gap;
-    const x = CAT_X + CAT_WIDTH / 2 - width / 2;
+    const standingTop = catY + STAND_HEIGHT - CAT_HURTBOX_INSET_Y_TEST; // catY + 92
+    const duckingTop  = catY + DUCK_HEIGHT  - CAT_HURTBOX_INSET_Y_TEST; // catY + 42
+    const bandH = standingTop - duckingTop; // 50
 
-    return { catY, y, height, x, width };
+    // After 25% inset on both sides the effective height is rawHeight*0.5.
+    // We want it to fit in bandH with 4px margin:
+    const maxH = (bandH - 4) / (1 - 2 * OBSTACLE_HURTBOX_INSET_Y_RATIO_TEST); // 46/0.5=92
+    const rawH = 8 + r2 * Math.max(maxH - 8, 1);
+
+    const insetBot = rawH * OBSTACLE_HURTBOX_INSET_Y_RATIO_TEST;
+
+    // ySafeMin + insetBot > duckingTop  =>  ySafeMin = duckingTop - insetBot + 2
+    // y + (rawH - insetBot) < standingTop => y < standingTop - (rawH - insetBot) - 2
+    const yMin = duckingTop - insetBot + 2;
+    const yMax = standingTop - (rawH - insetBot) - 2;
+    const y = yMin + r1 * Math.max(yMax - yMin, 1);
+
+    // Center obstacle horizontally on the cat's *collision* hurtbox so
+    // we always overlap in x regardless of insets.
+    const catCx = CAT_X + CAT_HURTBOX_INSET_X_TEST + (CAT_WIDTH - 2 * CAT_HURTBOX_INSET_X_TEST) / 2;
+    // Obstacle inset collision center = x + insetX + (width - 2*insetX)/2 = x + width/2
+    // Set x + width/2 = catCx => x = catCx - width/2
+    const x = catCx - width / 2;
+
+    return { catY, y, height: rawH, x, width };
   });
 
 describe("Property 10: Ducking reduces hurtbox height", () => {

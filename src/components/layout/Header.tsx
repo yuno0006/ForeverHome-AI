@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import { Heart, Home, LogOut, Menu, X, Bookmark, LayoutDashboard, Cat, MessageCircle, Sparkles, Info, ArrowLeft } from "lucide-react";
+import { usePathname } from "next/navigation";
+import { Heart, Home, LogOut, Menu, X, Bookmark, LayoutDashboard, Cat, MessageCircle, Sparkles, Info } from "lucide-react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/hooks/useAuth";
@@ -22,7 +22,6 @@ function getInitials(name: string | undefined | null): string {
 export default function Header() {
   const { user, userDoc, role, loading, logout } = useAuth();
   const pathname = usePathname();
-  const router = useRouter();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [savedCount, setSavedCount] = useState(0);
 
@@ -78,31 +77,20 @@ export default function Header() {
   return (
     <header className="sticky top-0 z-50 glass border-b-2 border-cocoa/10">
       <div className="max-w-6xl mx-auto px-4 py-3.5 flex items-center justify-between">
-        {/* Back Button & Logo */}
-        <div className="flex items-center gap-3">
-          {pathname !== "/" && (
-            <button
-              onClick={() => router.back()}
-              className="p-2 -ml-2 rounded-full hover:bg-cocoa/5 text-cocoa/70 hover:text-cocoa transition-colors"
-              aria-label="Go back"
-            >
-              <ArrowLeft className="w-5 h-5" />
-            </button>
-          )}
-          <Link href="/" className="flex items-center gap-2.5 group">
-            <div className="relative w-[49px] h-[49px] rounded-2xl bg-gradient-to-br from-coral/15 to-honey/15 flex items-center justify-center border-2 border-cocoa/10 shadow-[3px_3px_0px_0px_rgba(42,29,20,0.15)] group-hover:shadow-[5px_5px_0px_0px_rgba(255,107,107,0.4)] group-hover:-translate-y-0.5 group-hover:border-coral/30 transition-all">
-              <Image src="/cat.png" alt="Logo" width={60} height={60} className="w-[85%] h-[85%] object-contain" />
-            </div>
-            <div className="flex flex-col">
-              <span className="font-display font-black text-xl tracking-tight text-cocoa leading-none">
-                ForeverHome <span className="text-coral">AI</span>
-              </span>
-              <span className="text-[10px] font-bold text-cocoa/50 tracking-[0.1em] uppercase mt-0.5">
-                Cat Adoption
-              </span>
-            </div>
-          </Link>
-        </div>
+        {/* Logo */}
+        <Link href="/" className="flex items-center gap-2.5 group">
+          <div className="relative w-[49px] h-[49px] rounded-2xl bg-gradient-to-br from-coral/15 to-honey/15 flex items-center justify-center border-2 border-cocoa/10 shadow-[3px_3px_0px_0px_rgba(42,29,20,0.15)] group-hover:shadow-[5px_5px_0px_0px_rgba(255,107,107,0.4)] group-hover:-translate-y-0.5 group-hover:border-coral/30 transition-all">
+            <Image src="/cat.png" alt="Logo" width={60} height={60} className="w-[85%] h-[85%] object-contain" />
+          </div>
+          <div className="flex flex-col">
+            <span className="font-display font-black text-xl tracking-tight text-cocoa leading-none">
+              ForeverHome <span className="text-coral">AI</span>
+            </span>
+            <span className="text-[10px] font-bold text-cocoa/50 tracking-[0.1em] uppercase mt-0.5">
+              Cat Adoption
+            </span>
+          </div>
+        </Link>
 
         {/* Desktop Links — always show: Home, Cats, AI Coach, Quiz, About */}
         <div className="hidden lg:flex items-center gap-1 bg-white/60 border-2 border-cocoa/10 rounded-full p-1">

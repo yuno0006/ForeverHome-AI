@@ -5,11 +5,16 @@
 // section), and renders the cat + obstacles by writing ref-driven inline
 // `transform` styles rather than re-rendering on every frame.
 //
-// Keyboard input (Space/ArrowUp = jump, ArrowDown = duck-while-held) is
-// wired in (task 12.2). Pointer/touch input (tap-to-jump on the track,
-// on-screen Jump/Duck buttons) is wired in (task 12.3). Remaining pieces
-// are extended by later tasks:
-//   12.4 - parallax background layer
+// Nyan Cat Visual Style (Requirement 5.5):
+//   - Blue sky background and green land
+//   - Nyan Cat sprite with animations (jump, run, tail wag)
+//   - Only ground obstacles (no duck/air obstacles)
+//   - Space/ArrowUp or tap to jump
+//
+// Keyboard input (Space/ArrowUp = jump) is wired in (task 12.2).
+// Pointer/touch input (tap-to-jump on the track, on-screen Jump button)
+// is wired in (task 12.3). Remaining pieces are extended by later tasks:
+//   12.4 - parallax background layer (now Nyan Cat sky)
 //   12.5 - HUD (score / best score) — done, see the HUD row below
 //   12.6 - idle overlay (start prompt) — done, see the idle overlay Card
 //          below; the idle->running status transition itself is wired
@@ -19,13 +24,12 @@
 //          done, see the Results_Panel block below.
 
 import { useEffect, useRef, useState } from "react";
-import type { PointerEvent as ReactPointerEvent } from "react";
-import { ArrowUp, ArrowDown } from "lucide-react";
 import confetti from "canvas-confetti";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { StickerBadge } from "@/components/ui/CatElements";
-import { CatSprite, type CatPose } from "@/components/game/sprites/CatSprite";
+import { useAuth } from "@/hooks/useAuth";
+import { submitScore } from "@/lib/whiskerRunner/leaderboardService";
+import { NyanCatSprite, type CatPose } from "@/components/game/sprites/NyanCatSprite";
 import { ObstacleSprite } from "@/components/game/sprites/ObstacleSprite";
 import {
   createInitialState,
@@ -37,7 +41,141 @@ import {
   setBestScoreIfHigher,
 } from "@/lib/whiskerRunner/highScoreStorage";
 import type { GameState, InputState } from "@/types/whiskerRunner";
-import { CAT_X, CAT_WIDTH, STAND_HEIGHT } from "@/types/whiskerRunner";
+import { CAT_X, CAT_WIDTH, STAND_HEIGHT, CAT_RENDER_WIDTH, CAT_RENDER_HEIGHT } from "@/types/whiskerRunner";
+
+// ─── Web Audio API sound effects (synthesised, no external files) ───
+
+let _audioCtx: AudioContext | null = null;
+let _masterGain: GainNode | null = null;
+let _audioReady = false;
+let _isMuted = false;
+
+let _musicTimer: number | null = null;
+let _musicIndex = 0;
+const MELODY = [
+  523.25, 659.25, 783.99, 1046.50, // C5, E5, G5, C6
+  880.00, 1046.50, 1318.51, 1046.50, // A5, C6, E6, C6
+  698.46, 880.00, 1046.50, 880.00, // F5, A5, C6, A5
+  783.99, 987.77, 1174.66, 987.77, // G5, B5, D6, B5
+];
+
+function playMusicNote(freq: number) {
+  if (!_audioCtx || !_masterGain || !_audioReady) return;
+  const ctx = _audioCtx;
+  const now = ctx.currentTime;
+  const duration = 0.8; // 800ms note duration
+  
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  
+  osc.type = "sine"; // soft healing tone
+  osc.frequency.setValueAtTime(freq, now);
+  
+  gain.gain.setValueAtTime(0, now);
+  gain.gain.linearRampToValueAtTime(0.12, now + 0.1); // soft ambient music level
+  gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+  
+  osc.connect(gain);
+  gain.connect(_masterGain);
+  
+  osc.start(now);
+  osc.stop(now + duration);
+}
+
+function startMusic() {
+  if (_musicTimer) return;
+  initAudio();
+  _musicIndex = 0;
+  
+  if (MELODY[_musicIndex]) {
+    playMusicNote(MELODY[_musicIndex]);
+  }
+  
+  _musicTimer = window.setInterval(() => {
+    _musicIndex = (_musicIndex + 1) % MELODY.length;
+    playMusicNote(MELODY[_musicIndex]);
+  }, 750);
+}
+
+function stopMusic() {
+  if (_musicTimer) {
+    clearInterval(_musicTimer);
+    _musicTimer = null;
+  }
+}
+
+/** Must be called from a user-gesture handler (pointer/key-down) so the
+ *  browser unsuspends the AudioContext. Safe to call multiple times. */
+function initAudio(): void {
+  if (_audioReady) return;
+  if (typeof window === "undefined") return;
+  try {
+    if (!_audioCtx || _audioCtx.state === "closed") {
+      _audioCtx = new AudioContext();
+    }
+    if (_audioCtx.state === "suspended") {
+      _audioCtx.resume();
+    }
+    if (!_masterGain) {
+      _masterGain = _audioCtx.createGain();
+      _masterGain.gain.value = 1.0;
+      _masterGain.connect(_audioCtx.destination);
+    }
+    _audioReady = true;
+  } catch {
+    // Silently ignore — audio is optional decoration
+  }
+}
+
+function playTone(
+  frequency: number,
+  durationMs: number,
+  type: OscillatorType = "square",
+  volume = 0.6,
+  frequencyEnd?: number,
+): OscillatorNode | null {
+  initAudio();
+  if (!_audioCtx || !_masterGain || !_audioReady) return null;
+
+  const ctx = _audioCtx;
+  const now = ctx.currentTime;
+  const end = now + durationMs / 1000;
+
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.type = type;
+  osc.frequency.setValueAtTime(frequency, now);
+  if (frequencyEnd !== undefined) {
+    osc.frequency.linearRampToValueAtTime(frequencyEnd, end);
+  }
+  gain.gain.setValueAtTime(volume, now);
+  gain.gain.exponentialRampToValueAtTime(0.001, end);
+  osc.connect(gain);
+  gain.connect(_masterGain);
+  osc.start(now);
+  osc.stop(end);
+  return osc;
+}
+
+const SoundFx = {
+  /** Cute "boing" chirp on jump */
+  jump() {
+    playTone(523, 80, "square", 0.16, 1047);       // C5→C6 chirp
+    setTimeout(() => playTone(659, 50, "square", 0.10), 40); // quick E5 follow
+  },
+  /** Sparkly coin ding every 100 points */
+  score() {
+    playTone(1175, 130, "triangle", 0.22);          // D6
+    setTimeout(() => playTone(1480, 100, "triangle", 0.18), 80);   // F#6
+    setTimeout(() => playTone(1760, 120, "triangle", 0.14), 160);  // A6
+  },
+  /** Sad descending buzz on game over */
+  gameOver() {
+    playTone(523, 150, "sawtooth", 0.4, 392);  // C5→G4 fall
+    setTimeout(() => playTone(330, 200, "sawtooth", 0.35, 196), 130);   // E4→G3
+    setTimeout(() => playTone(220, 350, "sawtooth", 0.3, 110), 280);  // A3→A2
+  },
+};
 
 interface WhiskerRunnerGameProps {
   catName: string;
@@ -52,7 +190,7 @@ interface WhiskerRunnerGameProps {
 }
 
 /** Fixed height of the track's rendering surface, in px. */
-const TRACK_HEIGHT = 220;
+const TRACK_HEIGHT = 400;
 
 /**
  * Minimal, HUD-relevant slice of `GameState` that drives re-renders. Kept
@@ -75,7 +213,6 @@ interface GameTick {
 }
 
 function poseFromState(state: GameState): CatPose {
-  if (state.isDucking) return "ducking";
   if (state.catY > 0) return "jumping";
   return "standing";
 }
@@ -108,6 +245,18 @@ function tickEquals(a: GameTick, b: GameTick): boolean {
 }
 
 export function WhiskerRunnerGame({ catName, onClose }: WhiskerRunnerGameProps) {
+  const { user, userDoc } = useAuth();
+
+  // Keep auth info in refs so the RAF loop (captured in useEffect([], []))
+  // always reads the latest identity, not stale closure values.
+  const userIdRef = useRef(user?.uid ?? "guest");
+  const displayNameRef = useRef(
+    userDoc?.displayName || user?.displayName || user?.email?.split("@")[0] || "Anonymous Cat",
+  );
+  userIdRef.current = user?.uid ?? "guest";
+  displayNameRef.current =
+    userDoc?.displayName || user?.displayName || user?.email?.split("@")[0] || "Anonymous Cat";
+
   // Authoritative game state, mutated every frame by the pure `stepGame`.
   // A ref (not useState) so the RAF loop can read/write it every frame
   // without triggering a re-render on every single update.
@@ -118,16 +267,35 @@ export function WhiskerRunnerGame({ catName, onClose }: WhiskerRunnerGameProps) 
   // once per frame for now; later tasks may refine the throttling.
   const [tick, setTick] = useState<GameTick>(() => tickFromState(stateRef.current, false));
 
+  // Audio muting state
+  const [isMutedState, setIsMutedState] = useState(false);
+
+  // Milestone confetti burst and celebration banner
+  const [milestoneTrigger, setMilestoneTrigger] = useState(0);
+  const currentMilestone = Math.floor(tick.score / 100);
+
+  useEffect(() => {
+    if (currentMilestone > 0) {
+      setMilestoneTrigger(currentMilestone);
+      const timer = setTimeout(() => setMilestoneTrigger(0), 1800); // Display for 1.8s
+      return () => clearTimeout(timer);
+    }
+  }, [currentMilestone]);
+
+  // Controlled background music loop
+  useEffect(() => {
+    if (tick.status === "running") {
+      startMusic();
+    } else {
+      stopMusic();
+    }
+    return () => stopMusic();
+  }, [tick.status]);
+
   // DOM refs for direct, reconciliation-free positioning of the cat and
   // obstacle sprites every frame.
   const catNodeRef = useRef<HTMLDivElement | null>(null);
   const obstacleNodesRef = useRef<Map<string, HTMLDivElement | null>>(new Map());
-  // Scrolling ground strip (fixes "no land illustrating the cat is
-  // running"): a dashed baseline whose `backgroundPosition` is advanced
-  // every frame in lockstep with `distance`, exactly like obstacle
-  // scrolling, so it reads as a physical running surface rather than a
-  // decorative loop disconnected from the actual game speed.
-  const groundNodeRef = useRef<HTMLDivElement | null>(null);
 
   // Keyboard input state (task 12.2). `jumpRequestedRef` is edge-triggered:
   // `keydown` sets it to `true` only on the initial press (tracked via
@@ -139,6 +307,9 @@ export function WhiskerRunnerGame({ catName, onClose }: WhiskerRunnerGameProps) 
   const heldKeysRef = useRef<Set<string>>(new Set());
   const jumpRequestedRef = useRef(false);
   const isDuckingRef = useRef(false);
+  const passedObstaclesRef = useRef<Set<string>>(new Set());
+  const backHillsRef = useRef<HTMLDivElement | null>(null);
+  const frontHillsRef = useRef<HTMLDivElement | null>(null);
 
   // Guards `setBestScoreIfHigher` so it only fires once per run, even though
   // the RAF loop may observe `status === "ended"` on multiple consecutive
@@ -165,26 +336,6 @@ export function WhiskerRunnerGame({ catName, onClose }: WhiskerRunnerGameProps) 
   const rafIdRef = useRef<number | null>(null);
   const lastFrameTimeRef = useRef<number | null>(null);
 
-  // Parallax background (task 12.4): purely decorative, has no bearing on
-  // `stepGame`'s timing/physics or the RAF loop above. Tracks the OS/browser
-  // `prefers-reduced-motion` preference so the slow-drifting paw-pattern
-  // layer can be paused without touching gameplay.
-  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
-
-  useEffect(() => {
-    const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
-    setPrefersReducedMotion(mediaQuery.matches);
-
-    function handleChange(event: MediaQueryListEvent) {
-      setPrefersReducedMotion(event.matches);
-    }
-
-    mediaQuery.addEventListener("change", handleChange);
-    return () => {
-      mediaQuery.removeEventListener("change", handleChange);
-    };
-  }, []);
-
   // Keyboard listeners (task 12.2). Registered in their own `useEffect` with
   // its own cleanup, kept separate from the RAF effect below so the two
   // concerns (input wiring vs. the frame loop) don't need to share a single
@@ -194,33 +345,13 @@ export function WhiskerRunnerGame({ catName, onClose }: WhiskerRunnerGameProps) 
       const key = event.key;
 
       if (key === " " || key === "Spacebar" || key === "ArrowUp") {
-        // Prevent default browser behavior (page scroll on Space/Up) only
-        // for the keys this game actually uses.
         event.preventDefault();
 
-        // Edge-trigger: only flag a jump request on the initial press, not
-        // on OS key-repeat `keydown` events fired while the key is held.
         if (!heldKeysRef.current.has(key)) {
           heldKeysRef.current.add(key);
-          jumpRequestedRef.current = true;
-
-          // Starting the Run: a jump input while `"idle"` dismisses the
-          // start prompt and begins the Run. The idle overlay itself is
-          // task 12.6's concern; this is just the underlying status
-          // transition, wired here since it's tightly coupled to jump
-          // input handling.
-          if (stateRef.current.status === "idle") {
-            bestScoreBeforeRunRef.current = stateRef.current.bestScore;
-            stateRef.current = { ...stateRef.current, status: "running" };
-          }
+          triggerJumpRequest();
         }
         return;
-      }
-
-      if (key === "ArrowDown") {
-        event.preventDefault();
-        heldKeysRef.current.add(key);
-        isDuckingRef.current = true;
       }
     }
 
@@ -230,11 +361,6 @@ export function WhiskerRunnerGame({ catName, onClose }: WhiskerRunnerGameProps) 
       if (key === " " || key === "Spacebar" || key === "ArrowUp") {
         heldKeysRef.current.delete(key);
         return;
-      }
-
-      if (key === "ArrowDown") {
-        heldKeysRef.current.delete(key);
-        isDuckingRef.current = false;
       }
     }
 
@@ -252,11 +378,21 @@ export function WhiskerRunnerGame({ catName, onClose }: WhiskerRunnerGameProps) 
   // canvas taps and the on-screen Jump button both funnel through this one
   // path.
   function triggerJumpRequest() {
-    jumpRequestedRef.current = true;
+    // Only allow jump if no jump is already requested this frame,
+    // and the cat is either on the ground (catY === 0) or the game is idle.
+    if (
+      !jumpRequestedRef.current &&
+      (stateRef.current.status === "idle" ||
+        (stateRef.current.status === "running" && stateRef.current.catY === 0))
+    ) {
+      jumpRequestedRef.current = true;
+      SoundFx.jump();
 
-    if (stateRef.current.status === "idle") {
-      bestScoreBeforeRunRef.current = stateRef.current.bestScore;
-      stateRef.current = { ...stateRef.current, status: "running" };
+      if (stateRef.current.status === "idle") {
+        bestScoreBeforeRunRef.current = stateRef.current.bestScore;
+        stateRef.current = { ...stateRef.current, status: "running" };
+        passedObstaclesRef.current.clear();
+      }
     }
   }
 
@@ -268,28 +404,6 @@ export function WhiskerRunnerGame({ catName, onClose }: WhiskerRunnerGameProps) 
   // that land on the track itself.
   function handleTrackPointerDown() {
     triggerJumpRequest();
-  }
-
-  // On-screen Jump button: a redundant, always-visible path to the same
-  // jump-request mechanism. `stopPropagation` prevents this pointerdown
-  // from also bubbling up to the track's own handler and double-triggering
-  // a jump.
-  function handleJumpButtonPointerDown(event: ReactPointerEvent<HTMLButtonElement>) {
-    event.stopPropagation();
-    triggerJumpRequest();
-  }
-
-  // On-screen Duck button: press-and-hold semantics matching the keyboard's
-  // ArrowDown-held behavior. `onPointerUp`/`onPointerLeave`/`onPointerCancel`
-  // all release the duck so a finger/mouse leaving the button while still
-  // "down" can't leave `isDuckingRef` stuck at `true`.
-  function handleDuckButtonPointerDown(event: ReactPointerEvent<HTMLButtonElement>) {
-    event.stopPropagation();
-    isDuckingRef.current = true;
-  }
-
-  function handleDuckButtonRelease() {
-    isDuckingRef.current = false;
   }
 
   // Results_Panel (task 12.7): "Play again" (Requirement 4.4). Per
@@ -304,6 +418,7 @@ export function WhiskerRunnerGame({ catName, onClose }: WhiskerRunnerGameProps) 
     bestScoreRecordedRef.current = false;
     isNewHighScoreRef.current = false;
     lastFrameTimeRef.current = null;
+    passedObstaclesRef.current.clear();
     setTick(tickFromState(stateRef.current, false));
   }
 
@@ -342,9 +457,17 @@ export function WhiskerRunnerGame({ catName, onClose }: WhiskerRunnerGameProps) 
           const collided = checkCollision(stepped);
 
           if (collided) {
+            SoundFx.gameOver();
             if (!bestScoreRecordedRef.current) {
               bestScoreRecordedRef.current = true;
               const { best, isNewHighScore } = setBestScoreIfHigher(stepped.score);
+
+              // Submit score to global leaderboard (personal best per user)
+              if (stepped.score > 0) {
+                submitScore(userIdRef.current, displayNameRef.current, stepped.score).catch((err) => {
+                  console.error("Failed to submit score:", err);
+                });
+              }
 
               // Requirement 4.6: treat "final score beat the pre-run best"
               // as an equivalent, redundant celebration trigger alongside
@@ -376,6 +499,13 @@ export function WhiskerRunnerGame({ catName, onClose }: WhiskerRunnerGameProps) 
             }
           } else {
             stateRef.current = stepped;
+            // Play score sound when passing an obstacle
+            for (const obstacle of stepped.obstacles) {
+              if (obstacle.x + obstacle.width < CAT_X && !passedObstaclesRef.current.has(obstacle.id)) {
+                passedObstaclesRef.current.add(obstacle.id);
+                SoundFx.score();
+              }
+            }
           }
         }
 
@@ -394,12 +524,17 @@ export function WhiskerRunnerGame({ catName, onClose }: WhiskerRunnerGameProps) 
             node.style.transform = `translateX(${obstacle.x}px)`;
           }
         }
-        // Scroll the ground strip in lockstep with world-space `distance`
-        // (same value obstacles scroll by), so the running surface always
-        // matches the game's actual speed instead of an independent loop.
-        const groundNode = groundNodeRef.current;
-        if (groundNode) {
-          groundNode.style.backgroundPositionX = `${-next.distance}px`;
+
+        // Parallax scrolling for hills
+        const distance = next.distance;
+        const backOffset = -(distance * 0.08) % 512;
+        const frontOffset = -(distance * 0.22) % 512;
+
+        if (backHillsRef.current) {
+          backHillsRef.current.style.transform = `translateX(${backOffset}px)`;
+        }
+        if (frontHillsRef.current) {
+          frontHillsRef.current.style.transform = `translateX(${frontOffset}px)`;
         }
 
         const nextTick = tickFromState(next, isNewHighScoreRef.current);
@@ -422,6 +557,54 @@ export function WhiskerRunnerGame({ catName, onClose }: WhiskerRunnerGameProps) 
 
   const obstacles = stateRef.current.obstacles;
 
+  // Automated 7-Phase Cycle: repeats every 7000 points.
+  // 7 seasons of 1000 pts each (700 pts stay, 300 pts transition).
+  const localScore = tick.score % 7000;
+  const seasonIndex = Math.floor(localScore / 1000);
+  const nextSeasonIndex = (seasonIndex + 1) % 7;
+  const progressInSeason = localScore % 1000;
+
+  let currentWeight = 1;
+  let nextWeight = 0;
+
+  if (progressInSeason >= 700) {
+    const t = (progressInSeason - 700) / 300;
+    currentWeight = 1 - t;
+    nextWeight = t;
+  }
+
+  const weights = Array(7).fill(0);
+  weights[seasonIndex] = currentWeight;
+  weights[nextSeasonIndex] = nextWeight;
+
+  // Let's define the moon weight (Spooky season (1) and Cosmic space (3) are night!)
+  const nightW = weights[1] + weights[3];
+  
+  // Morning/Day weight (Summer (0), Spring (2), Rainy (5), Winter (6))
+  const morningW = weights[0] + weights[2] + weights[5] + weights[6];
+
+  // Evening/Sunset weight (Autumn (4))
+  const eveningW = weights[4];
+
+  // Calculate Sun position and size based on Morning vs Evening weights
+  const sunActiveW = morningW + eveningW;
+  const sunRightPercent = sunActiveW > 0 ? (morningW * 15 + eveningW * 65) / sunActiveW : 15;
+  const sunTopPx = sunActiveW > 0 ? (morningW * 28 + eveningW * 65) / sunActiveW : 28;
+  const sunScale = sunActiveW > 0 ? (morningW * 1.0 + eveningW * 1.15) / sunActiveW : 1.0;
+
+  // Select thematic information for Game Over screen based on crashed season
+  const crashSeason = Math.floor((tick.score % 7000) / 1000);
+  const seasonDetails = [
+    { label: "Beach Breeze 🏖️", msg: "Splashed by a big wave!" },
+    { label: "Mystic Night 👻", msg: "Spooked by glowing wisps!" },
+    { label: "Spring Breeze 🌸", msg: "Cherry blossoms caught your paws!" },
+    { label: "Cosmic Space 🌌", msg: "Lost in the sparkling kitty nebula!" },
+    { label: "Autumn Wind 🍂", msg: "Swept away by tumbling leaves!" },
+    { label: "Monsoon Rain 🌧️", msg: "Slipped on a wet puddle!" },
+    { label: "Winter Snow ❄️", msg: "Brrr! Paws are frozen solid!" },
+  ];
+  const currentSeasonInfo = seasonDetails[crashSeason] || seasonDetails[0];
+
   return (
     <div
       // `min-w-[240px]` sets a functional floor for the track — below this
@@ -440,125 +623,657 @@ export function WhiskerRunnerGame({ catName, onClose }: WhiskerRunnerGameProps) 
       data-cat-name={catName}
       onPointerDown={handleTrackPointerDown}
     >
-      {/* Parallax background, layer 1 (task 12.4): bottommost sky-gradient
-          layer, behind the cat/obstacles/HUD. Purely decorative. */}
-      <div className="absolute inset-0 z-0 bg-gradient-to-b from-honey/10 to-cream" />
-
-      {/* Parallax background, layer 2 (task 12.4): a slow-drifting
-          paw-print strip, paused when `prefers-reduced-motion: reduce` is
-          set. This is a decorative/visual toggle only — it never affects
-          `stepGame`'s timing/physics or the RAF loop. */}
+      {/* ─── Sky Layer 0: Summer Beach (Vibrant Sky Blue) ─── */}
       <div
-        className={`absolute inset-0 z-0 paw-pattern opacity-70 ${
-          prefersReducedMotion ? "" : "animate-bg-drift"
-        }`}
-        aria-hidden="true"
-      />
-
-      {/* Ground: the "land" the cat runs on, previously missing entirely
-          (nothing communicated forward motion besides the obstacles
-          scrolling by). Two pieces, Chrome-Dino-style:
-          1. A solid baseline right at the ground line (where the cat's
-             feet and ground obstacles actually sit) — static, since it's
-             a fixed reference line, not something that needs to scroll.
-          2. A textured pebble/crack strip just above the baseline, whose
-             `backgroundPositionX` is written from the ref every frame in
-             lockstep with `distance` (the exact same value obstacles
-             scroll by), so it always visually matches the game's real
-             speed instead of running as a disconnected decorative loop. */}
-      <div
-        className="absolute inset-x-0 bottom-0 z-[1] h-[3px] bg-cocoa/70"
-        aria-hidden="true"
-      />
-      <div
-        ref={groundNodeRef}
-        className="absolute inset-x-0 bottom-[3px] z-[1] h-2 bg-repeat-x opacity-60"
+        className="absolute inset-0 z-0"
         style={{
-          backgroundImage:
-            "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='8' viewBox='0 0 40 8'%3E%3Cg fill='%232A1D14'%3E%3Crect x='2' y='5' width='3' height='2'/%3E%3Crect x='11' y='6' width='2' height='1'/%3E%3Crect x='19' y='4' width='4' height='2'/%3E%3Crect x='28' y='6' width='2' height='2'/%3E%3Crect x='34' y='5' width='3' height='1'/%3E%3C/g%3E%3C/svg%3E\")",
-          backgroundSize: "40px 8px",
-          backgroundPosition: "0 0",
+          background: "linear-gradient(180deg, #1E88E5 0%, #4FC3F7 60%, #E0F7FA 100%)",
+          opacity: weights[0],
         }}
-        aria-hidden="true"
+      />
+      {/* ─── Sky Layer 1: Spooky (Indigo & Glow Green) ─── */}
+      <div
+        className="absolute inset-0 z-0"
+        style={{
+          background: "linear-gradient(180deg, #2C003E 0%, #510A32 50%, #15B7B9 100%)",
+          opacity: weights[1],
+        }}
+      />
+      {/* ─── Sky Layer 2: Spring (Cherry Blossom Pink) ─── */}
+      <div
+        className="absolute inset-0 z-0"
+        style={{
+          background: "linear-gradient(180deg, #FFD1D4 0%, #D4E6F1 100%)",
+          opacity: weights[2],
+        }}
+      />
+      {/* ─── Sky Layer 3: Cosmic (Galaxy Pink-Purple) ─── */}
+      <div
+        className="absolute inset-0 z-0"
+        style={{
+          background: "linear-gradient(180deg, #090A1A 0%, #120D2C 40%, #5F0F40 75%, #0F4C81 100%)",
+          opacity: weights[3],
+        }}
+      />
+      {/* ─── Sky Layer 4: Autumn (Sunset Orange) ─── */}
+      <div
+        className="absolute inset-0 z-0"
+        style={{
+          background: "linear-gradient(180deg, #D35400 0%, #F39C12 60%, #FDEBD0 100%)",
+          opacity: weights[4],
+        }}
+      />
+      {/* ─── Sky Layer 5: Rainy (Stormy Dark Grey) ─── */}
+      <div
+        className="absolute inset-0 z-0"
+        style={{
+          background: "linear-gradient(180deg, #34495E 0%, #5D6D7E 50%, #BDC3C7 100%)",
+          opacity: weights[5],
+        }}
+      />
+      {/* ─── Sky Layer 6: Winter (Soft Grey-Blue) ─── */}
+      <div
+        className="absolute inset-0 z-0"
+        style={{
+          background: "linear-gradient(180deg, #5D6D7E 0%, #AEB6BF 60%, #EAEDED 100%)",
+          opacity: weights[6],
+        }}
       />
 
-      {/* HUD (task 12.5): current score + Best_Score, shown simultaneously
-          during "running" and "ended" (Requirement 3.6). Positioned at the
-          top of the track, above the parallax background layers (z-10 vs
-          their z-0) but `pointer-events-none` so it never intercepts the
-          track's own tap-to-jump pointerdown handler. */}
-      {(tick.status === "running" || tick.status === "ended") && (
-        <div className="absolute top-2 left-2 z-10 flex gap-2 pointer-events-none">
-          <span className="rounded-full bg-cream/90 px-3 py-1 text-sm font-bold text-cocoa shadow-sm">
-            Score: {tick.score}
-          </span>
-          <span className="rounded-full bg-cream/90 px-3 py-1 text-sm font-bold text-cocoa shadow-sm">
-            Best: {tick.bestScore}
-          </span>
+      {/* ─── Stars (Visible in Night: Case 5 & 6) ─── */}
+      <div
+        className="absolute inset-0 z-[1] overflow-hidden pointer-events-none"
+        style={{ opacity: nightW }}
+        aria-hidden="true"
+      >
+        {[
+          [5,4], [14,8], [23,3], [35,10], [48,5],
+          [55,12], [66,6], [78,9], [88,4], [92,11],
+          [8,16], [18,18], [30,14], [42,20], [60,15],
+          [72,19], [85,13], [94,17], [28,22], [50,24],
+          [68,26], [82,22], [10,28], [38,30], [58,28],
+        ].map(([left, top], i) => (
+          <div
+            key={`star-${i}`}
+            className="absolute rounded-full bg-white"
+            style={{
+              left: `${left}%`,
+              top: `${top}%`,
+              width: `${1.5 + (i % 3) * 1.2}px`,
+              height: `${1.5 + (i % 3) * 1.2}px`,
+              opacity: 0.35 + (i % 5) * 0.13,
+              animation: `star-twinkle ${2 + (i % 3)}s ease-in-out ${i * 0.17}s infinite`,
+              boxShadow: i % 7 === 0 ? "0 0 3px 1px rgba(255,255,255,0.3)" : "none",
+            }}
+          />
+        ))}
+      </div>
+
+      {/* ─── Cute Crescent Moon (Rises at night, sets otherwise) ─── */}
+      <div
+        className="absolute left-[15%] z-[1] pointer-events-none select-none"
+        style={{
+          top: "32px",
+          transform: `translateY(${(1 - nightW) * 60}px) rotate(${(1 - nightW) * -15}deg)`,
+          opacity: nightW,
+        }}
+      >
+        <svg viewBox="0 0 100 100" className="w-12 h-12 filter drop-shadow-[0_0_8px_rgba(255,253,200,0.4)]">
+          <path d="M60,15 C35,15 15,32 15,55 C15,78 35,95 60,95 C44,95 35,80 35,55 C35,30 44,15 60,15 Z" fill="#FFFDE6" />
+          {/* Left Eye (Closed happy/sleeping) */}
+          <path d="M21,50 Q23,47 25,50" stroke="#3A2E2B" strokeWidth="2.2" strokeLinecap="round" fill="none" />
+          {/* Right Eye (Closed happy/sleeping) */}
+          <path d="M27,50 Q29,47 31,50" stroke="#3A2E2B" strokeWidth="2.2" strokeLinecap="round" fill="none" />
+          {/* Cute Cat Smile */}
+          <path d="M24.5,53.8 Q26,55.5 27.5,53.8" stroke="#3A2E2B" strokeWidth="2" strokeLinecap="round" fill="none" />
+          {/* Rosy Cheeks */}
+          <circle cx="19.5" cy="53.5" r="1.8" fill="#FF8A80" opacity="0.8" />
+          <circle cx="32.5" cy="53.5" r="1.8" fill="#FF8A80" opacity="0.8" />
+        </svg>
+      </div>
+
+      {/* ─── Cute Smiling Sun (Transitions/transits during morning and evening) ─── */}
+      <div
+        className="absolute z-[1] pointer-events-none select-none"
+        style={{
+          right: `${sunRightPercent}%`,
+          top: `${sunTopPx}px`,
+          transform: `scale(${sunScale}) rotate(${(1 - sunActiveW) * 15}deg)`,
+          opacity: sunActiveW > 0 ? (morningW * 1.0 + eveningW * 0.8) : 0,
+        }}
+      >
+        <svg viewBox="0 0 100 100" className="w-14 h-14 filter drop-shadow-[0_0_10px_rgba(255,200,50,0.35)]">
+          <defs>
+            <linearGradient id="sunGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#FFF59D" />
+              <stop offset="100%" stopColor="#FF9800" />
+            </linearGradient>
+          </defs>
+          <path d="M50,10 L50,16 M50,84 L50,90 M10,50 L16,50 M84,50 L90,50 M22,22 L26,26 M74,74 L78,78 M22,74 L26,70 M74,22 L78,26" stroke="#FFB74D" strokeWidth="4" strokeLinecap="round" />
+          <circle cx="50" cy="50" r="24" fill="url(#sunGrad)" />
+          {/* Cute Face */}
+          <circle cx="44" cy="48" r="2" fill="#5D4037" />
+          <circle cx="56" cy="48" r="2" fill="#5D4037" />
+          <path d="M48,54 Q50,57 52,54" stroke="#5D4037" strokeWidth="2.5" strokeLinecap="round" fill="none" />
+          <circle cx="40" cy="52" r="2" fill="#FF8A80" opacity="0.8" />
+          <circle cx="60" cy="52" r="2" fill="#FF8A80" opacity="0.8" />
+        </svg>
+      </div>
+      {/* ─── Season 0: Summer Beach (Drifting Dandelions in Sky) ─── */}
+      {weights[0] > 0.1 && (
+        <div className="absolute inset-0 z-[1] overflow-hidden pointer-events-none" style={{ opacity: weights[0] }}>
+          {[0, 1, 2, 3, 4, 5].map((i) => (
+            <div
+              key={`dandelion-${i}`}
+              className="absolute pointer-events-none"
+              style={{
+                left: `${i * 18 + 5}%`,
+                top: `${(i % 3) * 20 - 20}px`,
+                animation: `petal-drift ${5 + (i % 3) * 1.5}s linear ${i * 0.4}s infinite`,
+              }}
+            >
+              <svg viewBox="0 0 12 12" className="w-3.5 h-3.5 fill-white/80 filter drop-shadow-[0_0_2px_rgba(255,255,255,0.4)]">
+                <circle cx="6" cy="3" r="1.2" />
+                <line x1="6" y1="3" x2="3.5" y2="1.5" stroke="white" strokeWidth="0.8" />
+                <line x1="6" y1="3" x2="8.5" y2="1.5" stroke="white" strokeWidth="0.8" />
+                <line x1="6" y1="3" x2="6" y2="0.8" stroke="white" strokeWidth="0.8" />
+                <line x1="6" y1="3" x2="6" y2="8.5" stroke="white" strokeWidth="0.8" />
+              </svg>
+            </div>
+          ))}
         </div>
       )}
 
-      {/* Idle overlay (task 12.6): start prompt shown before a Run begins.
-          Conditionally rendered on `tick.status === "idle"`, so it
-          disappears automatically once the idle->running transition (wired
-          in the keydown handler and `triggerJumpRequest` above) flips the
-          status — no separate dismiss logic is needed here. Deliberately
-          does NOT stop propagation or use `pointer-events-none`: a tap
-          anywhere on the track, including directly on this card, should
-          bubble up to the track's own `onPointerDown` and start the Run,
-          mirroring the primary tap-to-jump input model (Requirement 2.9). */}
+      {/* ─── Season 1: Spring (Cherry Blossom Petals) ─── */}
+      {weights[1] > 0.1 && (
+        <div className="absolute inset-0 z-[1] overflow-hidden pointer-events-none" style={{ opacity: weights[1] }}>
+          {[0, 1, 2, 3, 4, 5].map((i) => (
+            <div
+              key={`petal-${i}`}
+              className="absolute w-2.5 h-3.5 rounded-br-full rounded-tl-full bg-[#FF6CA7] shadow-[0_0_5px_rgba(255,108,167,0.6)]"
+              style={{
+                left: `${i * 18 + 5}%`,
+                top: `${(i % 3) * 20 - 20}px`,
+                animation: `petal-drift ${4 + (i % 3) * 1.5}s linear ${i * 0.4}s infinite`,
+              }}
+            />
+          ))}
+        </div>
+      )}
+
+      {/* ─── Season 2: Autumn (Maple Leaves) ─── */}
+      {weights[2] > 0.1 && (
+        <div className="absolute inset-0 z-[1] overflow-hidden pointer-events-none" style={{ opacity: weights[2] }}>
+          {[0, 1, 2, 3, 4, 5].map((i) => (
+            <div
+              key={`leaf-${i}`}
+              className="absolute w-3 h-3 bg-amber-600/90"
+              style={{
+                left: `${i * 18 + 5}%`,
+                top: `${(i % 3) * 20 - 20}px`,
+                borderRadius: "50% 0 50% 0",
+                animation: `leaf-drift ${5 + (i % 2) * 2}s linear ${i * 0.5}s infinite`,
+              }}
+            />
+          ))}
+        </div>
+      )}
+
+      {/* ─── Season 3: Winter (Falling Snowflakes) ─── */}
+      {weights[3] > 0.1 && (
+        <div className="absolute inset-0 z-[1] overflow-hidden pointer-events-none" style={{ opacity: weights[3] }}>
+          {[0, 1, 2, 3, 4, 5, 6, 7].map((i) => (
+            <div
+              key={`snow-${i}`}
+              className="absolute rounded-full bg-white/90 shadow-[0_0_2px_white]"
+              style={{
+                left: `${i * 13 + 3}%`,
+                top: `-10px`,
+                width: `${2 + (i % 3) * 1.5}px`,
+                height: `${2 + (i % 3) * 1.5}px`,
+                animation: `snow-fall ${3 + (i % 3) * 1.2}s linear ${i * 0.3}s infinite`,
+              }}
+            />
+          ))}
+        </div>
+      )}
+
+      {/* ─── Season 4: Rainy (Falling Raindrops) ─── */}
+      {weights[4] > 0.1 && (
+        <div className="absolute inset-0 z-[1] overflow-hidden pointer-events-none" style={{ opacity: weights[4] }}>
+          {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map((i) => (
+            <div
+              key={`rain-${i}`}
+              className="absolute bg-sky-200/50"
+              style={{
+                left: `${i * 10 + 2}%`,
+                top: `-20px`,
+                width: "1px",
+                height: "14px",
+                transform: "rotate(15deg)",
+                animation: `rain-fall ${1 + (i % 3) * 0.4}s linear ${i * 0.1}s infinite`,
+              }}
+            />
+          ))}
+        </div>
+      )}
+
+      {/* ─── Season 5: Spooky (Floating Glowing Fireflies) ─── */}
+      {weights[5] > 0.1 && (
+        <div
+          className="absolute inset-0 z-[1] overflow-hidden pointer-events-none"
+          style={{ opacity: weights[5] }}
+          aria-hidden="true"
+        >
+          {[
+            { left: 15, bottom: 42, delay: 0 },
+            { left: 35, bottom: 62, delay: 1.2 },
+            { left: 58, bottom: 38, delay: 0.5 },
+            { left: 72, bottom: 52, delay: 1.8 },
+            { left: 88, bottom: 46, delay: 2.3 },
+          ].map((ff, i) => (
+            <div
+              key={`firefly-${i}`}
+              className="absolute w-1.5 h-1.5 rounded-full bg-yellow-200 filter blur-[0.4px] shadow-[0_0_8px_3px_rgba(254,240,138,0.6)]"
+              style={{
+                left: `${ff.left}%`,
+                bottom: `${ff.bottom}px`,
+                animation: `firefly-float ${3.5 + (i % 2) * 0.8}s ease-in-out ${ff.delay}s infinite alternate`,
+              }}
+            />
+          ))}
+        </div>
+      )}
+
+      {/* ─── Season 6: Cosmic (Shooting Stars & Nebula dust) ─── */}
+      {weights[6] > 0.1 && (
+        <div className="absolute inset-0 z-[1] overflow-hidden pointer-events-none" style={{ opacity: weights[6] }}>
+          {[0, 1, 2].map((i) => (
+            <div
+              key={`shooting-star-${i}`}
+              className="absolute bg-gradient-to-r from-cyan-300 to-transparent"
+              style={{
+                left: `${i * 30 + 10}%`,
+                top: `${i * 15 + 10}%`,
+                width: "60px",
+                height: "2px",
+                transform: "rotate(-35deg)",
+                animation: `cosmic-shoot ${6 + i * 4}s linear ${i * 1.5}s infinite`,
+              }}
+            />
+          ))}
+        </div>
+      )}
+
+      {/* ─── Milestone Celebration Notification Overlay (Top Right Corner) ─── */}
+      {milestoneTrigger > 0 && (
+        <div className="absolute top-3 right-3 z-30 pointer-events-none flex items-center justify-center animate-milestone-popup">
+          <div className="text-honey text-sm font-extrabold drop-shadow-[0_1px_4px_rgba(212,163,89,0.2)] bg-white/95 px-4 py-2 rounded-xl border border-honey/30 shadow-lg flex items-center gap-1">
+            ✨ {milestoneTrigger * 100} pts!
+          </div>
+          {/* Confetti bursting particles */}
+          <div className="absolute inset-0 flex items-center justify-center">
+            {[...Array(12)].map((_, i) => (
+              <div
+                key={`confetti-${i}`}
+                className="absolute w-1.5 h-1.5 rounded-full bg-honey"
+                style={{
+                  "--angle": `${i * 30}deg`,
+                  animation: "confetti-burst 1.2s cubic-bezier(0.1, 0.8, 0.3, 1) forwards",
+                } as React.CSSProperties}
+              />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ─── Self-contained custom keyframe animations ─── */}
+      <style>{`
+        @keyframes bird-fly-1 {
+          0% { left: -40px; transform: translateY(0px) scale(0.8); }
+          50% { transform: translateY(-10px) scale(0.8); }
+          100% { left: 550px; transform: translateY(0px) scale(0.8); }
+        }
+        @keyframes bird-fly-2 {
+          0% { left: -40px; transform: translateY(0px) scale(0.6); }
+          50% { transform: translateY(-8px) scale(0.6); }
+          100% { left: 550px; transform: translateY(0px) scale(0.6); }
+        }
+        @keyframes firefly-float {
+          0% { transform: translateY(0px) translateX(0px); opacity: 0.3; }
+          50% { opacity: 1.0; }
+          100% { transform: translateY(-16px) translateX(6px); opacity: 0.4; }
+        }
+        @keyframes petal-drift {
+          0% { transform: translateY(-20px) translateX(0) rotate(0deg); opacity: 0; }
+          10% { opacity: 0.8; }
+          90% { opacity: 0.8; }
+          100% { transform: translateY(380px) translateX(-50px) rotate(360deg); opacity: 0; }
+        }
+        @keyframes leaf-drift {
+          0% { transform: translateY(-20px) translateX(0) rotate(0deg); opacity: 0; }
+          15% { opacity: 0.9; }
+          85% { opacity: 0.9; }
+          100% { transform: translateY(380px) translateX(-80px) rotate(720deg); opacity: 0; }
+        }
+        @keyframes snow-fall {
+          0% { transform: translateY(0px) translateX(0px); opacity: 0; }
+          10% { opacity: 0.9; }
+          90% { opacity: 0.9; }
+          100% { transform: translateY(380px) translateX(30px); opacity: 0; }
+        }
+        @keyframes rain-fall {
+          0% { transform: translateY(0px) translateX(0px); opacity: 0; }
+          10% { opacity: 0.7; }
+          90% { opacity: 0.7; }
+          100% { transform: translateY(380px) translateX(-100px); opacity: 0; }
+        }
+        @keyframes cosmic-shoot {
+          0% { transform: translate(-100px, -100px) rotate(-35deg); opacity: 0; }
+          5% { opacity: 1.0; }
+          15% { transform: translate(300px, 200px) rotate(-35deg); opacity: 0; }
+          100% { transform: translate(300px, 200px) rotate(-35deg); opacity: 0; }
+        }
+        @keyframes milestone-popup {
+          0% { transform: scale(0.6); opacity: 0; }
+          15% { transform: scale(1.15); opacity: 1; }
+          85% { transform: scale(1.0); opacity: 1; }
+          100% { transform: scale(1.2) translateY(-25px); opacity: 0; }
+        }
+        @keyframes confetti-burst {
+          0% { transform: rotate(var(--angle, 0deg)) translateY(0px) scale(1); opacity: 1; }
+          100% { transform: rotate(var(--angle, 0deg)) translateY(65px) scale(0); opacity: 0; }
+        }
+      `}</style>
+
+      {/* ─── Clouds: fluffy clouds drifting across the sky ─── */}
+      <div className="absolute inset-0 z-[1] overflow-hidden pointer-events-none" aria-hidden="true">
+        {[
+          { top: 28, scale: 0.55, speed: 32, delay: 0 },
+          { top: 38, scale: 0.40, speed: 26, delay: 7 },
+          { top: 22, scale: 0.48, speed: 29, delay: 14 },
+          { top: 32, scale: 0.35, speed: 35, delay: 3 },
+          { top: 18, scale: 0.62, speed: 24, delay: 18 },
+        ].map((cloud, i) => (
+          <div
+            key={`cloud-${i}`}
+            className="absolute"
+            style={{
+              top: `${cloud.top}%`,
+              left: `${i * 22 + 5}%`,
+              transform: `scale(${cloud.scale})`,
+              animation: `cloud-float ${cloud.speed}s linear ${cloud.delay}s infinite`,
+              opacity: 0.8,
+            }}
+          >
+            <div className="relative" style={{ width: 90, height: 44 }}>
+              <div className="absolute bg-white/75 rounded-full" style={{ width: 44, height: 44, bottom: 0, left: 0 }} />
+              <div className="absolute bg-white/85 rounded-full" style={{ width: 54, height: 54, bottom: 8, left: 18 }} />
+              <div className="absolute bg-white/70 rounded-full" style={{ width: 38, height: 38, bottom: 2, left: 46 }} />
+              <div className="absolute bg-white/80 rounded-full" style={{ width: 34, height: 34, bottom: 0, left: 30 }} />
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* ─── Distant Parallax Hills & Oceans (Back Layer) ─── */}
+      <div className="absolute inset-x-0 bottom-[26px] z-[2] h-[75px] overflow-hidden pointer-events-none select-none">
+        <div
+          ref={backHillsRef}
+          className="flex h-full w-[1536px] will-change-transform"
+          style={{ transform: "translateX(0px)" }}
+        >
+          {[0, 1, 2].map((idx) => (
+            <div key={`back-layer-${idx}`} className="relative w-[512px] h-full shrink-0">
+              {/* Green Hills (Visible in all non-beach seasons) */}
+              <div className="absolute inset-0" style={{ opacity: 1 - weights[0] }}>
+                <svg viewBox="0 0 512 80" className="w-full h-full" preserveAspectRatio="none">
+                  <path
+                    d="M0,80 L0,40 Q60,15 130,45 T280,35 Q360,10 440,38 T512,30 L512,80 Z"
+                    fill="#5E9374"
+                    opacity="0.45"
+                  />
+                  <circle cx="100" cy="30" r="5" fill="#4B7A5C" opacity="0.4" />
+                  <circle cx="106" cy="32" r="4" fill="#4B7A5C" opacity="0.4" />
+                  <polygon points="360,14 356,22 364,22" fill="#4B7A5C" opacity="0.4" />
+                  <polygon points="360,8 357,14 363,14" fill="#4B7A5C" opacity="0.4" />
+                </svg>
+              </div>
+              {/* Blue Ocean Horizon & Waves (Visible in Beach Season) */}
+              <div className="absolute inset-0" style={{ opacity: weights[0] }}>
+                <svg viewBox="0 0 512 80" className="w-full h-full" preserveAspectRatio="none">
+                  {/* Distant Sea Horizon */}
+                  <rect x="0" y="32" width="512" height="48" fill="#1565C0" opacity="0.4" />
+                  {/* Distant Wave crests */}
+                  <path d="M0,45 Q40,41 80,45 T160,45 T240,45 T320,45 T400,45 T480,45 T512,45" fill="none" stroke="#2196F3" strokeWidth="1.5" opacity="0.5" />
+                  <path d="M0,58 Q40,54 80,58 T160,58 T240,58 T320,58 T400,58 T480,58 T512,58" fill="none" stroke="#2196F3" strokeWidth="1.5" opacity="0.4" />
+                </svg>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* ─── Near Parallax Hills & Oceans (Front Layer) ─── */}
+      <div className="absolute inset-x-0 bottom-[26px] z-[2] h-[50px] overflow-hidden pointer-events-none select-none">
+        <div
+          ref={frontHillsRef}
+          className="flex h-full w-[1536px] will-change-transform"
+          style={{ transform: "translateX(0px)" }}
+        >
+          {[0, 1, 2].map((idx) => (
+            <div key={`front-layer-${idx}`} className="relative w-[512px] h-full shrink-0">
+              {/* Green Hills (Visible in all non-beach seasons) */}
+              <div className="absolute inset-0" style={{ opacity: 1 - weights[0] }}>
+                <svg viewBox="0 0 512 80" className="w-full h-full" preserveAspectRatio="none">
+                  <path
+                    d="M0,80 L0,50 Q80,25 160,55 T320,45 Q400,20 470,52 T512,45 L512,80 Z"
+                    fill="#4D8061"
+                    opacity="0.75"
+                  />
+                  <circle cx="200" cy="46" r="6" fill="#3D664D" opacity="0.7" />
+                  <circle cx="207" cy="48" r="5" fill="#3D664D" opacity="0.7" />
+                  <polygon points="410,28 405,38 415,38" fill="#3D664D" opacity="0.7" />
+                  <polygon points="410,33 403,45 417,45" fill="#3D664D" opacity="0.7" />
+                </svg>
+              </div>
+              {/* Nearer Ocean Waves (Visible in Beach Season) */}
+              <div className="absolute inset-0" style={{ opacity: weights[0] }}>
+                <svg viewBox="0 0 512 80" className="w-full h-full" preserveAspectRatio="none">
+                  {/* Rolling turquoise waves */}
+                  <path
+                    d="M0,80 L0,48 Q40,38 80,48 T160,48 T240,48 T320,48 T400,48 T480,48 T512,48 L512,80 Z"
+                    fill="#00ACC1"
+                    opacity="0.75"
+                  />
+                  {/* Wave foam accents */}
+                  <path d="M0,48 Q40,38 80,48 T160,48 T240,48 T320,48 T400,48 T480,48 T512,48" fill="none" stroke="#E0F7FA" strokeWidth="2.5" opacity="0.9" />
+                  {/* Additional wave lines */}
+                  <path d="M20,62 Q60,56 100,62 T180,62 T260,62 T340,62 T420,62 T500,62" fill="none" stroke="#E0F7FA" strokeWidth="1.5" opacity="0.6" />
+                </svg>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* ─── Ground: dynamically crossfaded earth matching the time of day ─── */}
+      <div
+        className="absolute inset-x-0 bottom-0 z-[2] overflow-hidden"
+        style={{
+          height: "28px",
+          borderTop: "2px solid rgba(255,255,255,0.18)",
+          boxShadow: "0 -1px 3px rgba(0,0,0,0.05) inset",
+        }}
+        aria-hidden="true"
+      >
+        {/* Ground: Summer Beach Sand (golden sandy brown) */}
+        <div
+          className="absolute inset-0"
+          style={{
+            background: "linear-gradient(180deg, #F4D090 0%, #E2B770 40%, #C49850 85%, #9E7430 100%)",
+            opacity: weights[0],
+          }}
+        />
+        {/* Ground: Spooky (graveyard moss green) */}
+        <div
+          className="absolute inset-0"
+          style={{
+            background: "linear-gradient(180deg, #4A574A 0%, #303A30 40%, #202720 85%, #121812 100%)",
+            opacity: weights[1],
+          }}
+        />
+        {/* Ground: Spring (Vibrant blossom green) */}
+        <div
+          className="absolute inset-0"
+          style={{
+            background: "linear-gradient(180deg, #A2D19E 0%, #76A572 40%, #52824E 85%, #395E35 100%)",
+            opacity: weights[2],
+          }}
+        />
+        {/* Ground: Cosmic (galactic purple/neon) */}
+        <div
+          className="absolute inset-0"
+          style={{
+            background: "linear-gradient(180deg, #5C2C90 0%, #3F176B 40%, #29084A 85%, #180033 100%)",
+            opacity: weights[3],
+          }}
+        />
+        {/* Ground: Autumn (warm sunset-kissed orange-gold) */}
+        <div
+          className="absolute inset-0"
+          style={{
+            background: "linear-gradient(180deg, #DEAA73 0%, #B98651 40%, #7E5F3D 85%, #594025 100%)",
+            opacity: weights[4],
+          }}
+        />
+        {/* Ground: Rainy (wet dark mud) */}
+        <div
+          className="absolute inset-0"
+          style={{
+            background: "linear-gradient(180deg, #786C5F 0%, #5A4E42 40%, #3F3327 85%, #2B2117 100%)",
+            opacity: weights[5],
+          }}
+        />
+        {/* Ground: Winter Snow (soft white-grey snow) */}
+        <div
+          className="absolute inset-0"
+          style={{
+            background: "linear-gradient(180deg, #FFFFFF 0%, #E4E7EB 40%, #C8CED4 85%, #ADB5BD 100%)",
+            opacity: weights[6],
+          }}
+        />
+
+        {/* Grass blade accents (semi-transparent white so they auto-tint with the ground) */}
+        {[4, 14, 26, 38, 50, 62, 74, 86, 94].map((left, i) => (
+          <div
+            key={`grass-${i}`}
+            className="absolute z-10"
+            style={{
+              left: `${left}%`,
+              bottom: "22px",
+              width: "2px",
+              height: `${6 + (i % 3) * 3}px`,
+              background: "rgba(255, 255, 255, 0.28)",
+              borderRadius: "1px 1px 0 0",
+              transform: `rotate(${(i % 5) * 6 - 12}deg)`,
+            }}
+          />
+        ))}
+      </div>
+
+      {/* ─── HUD: always-visible scoreboard on the left, Chrome Dino style ─── */}
+      <div className="absolute top-3 left-3 z-10 flex items-center gap-2.5 pointer-events-none">
+        <span className="rounded-xl bg-white/90 backdrop-blur-md px-4 py-2 text-base font-extrabold text-cocoa shadow-lg border border-cocoa/10 tracking-tight">
+          🐾 {tick.score.toString().padStart(5, "0")}
+        </span>
+        <span className="rounded-xl bg-white/80 backdrop-blur-md px-3 py-2 text-xs font-bold text-cocoa/50 shadow-sm border border-cocoa/5 tracking-wide uppercase">
+          HI {tick.bestScore.toString().padStart(5, "0")}
+        </span>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          onPointerDown={(e) => {
+            e.stopPropagation();
+            initAudio();
+            if (_masterGain) {
+              _isMuted = !_isMuted;
+              _masterGain.gain.setValueAtTime(_isMuted ? 0 : 1.0, _audioCtx?.currentTime || 0);
+              setIsMutedState(_isMuted);
+            }
+          }}
+          className="h-8 w-8 rounded-xl bg-white/80 backdrop-blur-md shadow-sm border border-cocoa/5 hover:bg-white flex items-center justify-center pointer-events-auto"
+          aria-label={isMutedState ? "Unmute audio" : "Mute audio"}
+        >
+          {isMutedState ? (
+            <svg viewBox="0 0 24 24" className="w-4 h-4 fill-cocoa/60">
+              <path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77zM4.3 3L3 4.3 8.7 10H5v4h3l5 5v-6.7l4.3 4.3c-.63.48-1.34.86-2.13 1.1v2.04c1.33-.29 2.53-.94 3.54-1.84L20.3 21 21 19.7 4.3 3zM12 4L9.9 6.1 12 8.2V4z" />
+            </svg>
+          ) : (
+            <svg viewBox="0 0 24 24" className="w-4 h-4 fill-cocoa/60">
+              <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z" />
+            </svg>
+          )}
+        </Button>
+      </div>
+
+      {/* ─── Idle overlay: polished start prompt ─── */}
       {tick.status === "idle" && (
-        <div className="absolute inset-0 z-20 flex items-center justify-center p-4">
-          <Card className="max-w-xs text-center">
-            <CardContent className="pt-6 space-y-1">
-              <p className="text-lg font-bold text-cocoa">Whisker Runner 🐾</p>
-              <p className="text-sm text-cocoa/70">
-                Help {catName} dodge the household hazards! Tap, click, or
-                press Space to start.
+        <div className="absolute inset-0 z-20 flex items-center justify-center p-4 bg-cocoa/15 backdrop-blur-[2px]">
+          <Card className="max-w-xs text-center shadow-2xl border-cocoa/10 bg-white/95">
+            <CardContent className="pt-6 pb-5 space-y-2">
+              <p className="text-xl font-bold text-cocoa">🐾 Whisker Runner</p>
+              <p className="text-sm text-cocoa/60 leading-relaxed">
+                Help <span className="font-bold text-cocoa/80">{catName}</span> dodge household hazards!<br />
+                <span className="text-xs text-cocoa/40">Tap anywhere • Click • Press Space</span>
               </p>
+              <Button
+                type="button"
+                className="mt-2 rounded-full px-6 font-bold shadow-md"
+                onPointerDown={(e) => {
+                  e.stopPropagation();
+                  triggerJumpRequest();
+                }}
+              >
+                Start Running
+              </Button>
             </CardContent>
           </Card>
         </div>
       )}
 
-      {/* Results_Panel (task 12.7): shown immediately after a collision
-          ends the Run, inline within the same game surface — no separate
-          "Game Over" screen (Requirement 4.1). Positioned like the idle
-          overlay above it, but DOES stop propagation on pointerdown:
-          unlike idle's "tap anywhere to start", taps on this panel's own
-          buttons must not also bubble up to the track's tap-to-jump
-          handler (which would be meaningless anyway since a jump input is
-          a no-op once `status === "ended"`, but stopping propagation here
-          keeps intent explicit and avoids relying on that no-op). */}
+      {/* ─── Results panel: polished game-over card ─── */}
       {tick.status === "ended" && (
         <div
-          className="absolute inset-0 z-20 flex items-center justify-center p-4"
+          className="absolute inset-0 z-20 flex items-center justify-center p-4 bg-cocoa/25 backdrop-blur-[2px]"
           onPointerDown={(event) => event.stopPropagation()}
         >
-          <Card className="max-w-xs text-center">
-            <CardContent className="pt-6 space-y-2">
+          <Card className="max-w-xs text-center shadow-2xl border-cocoa/10 bg-white/95 animate-pop-in">
+            <CardContent className="pt-6 pb-5 space-y-2">
               {tick.isNewHighScore && (
-                <StickerBadge color="honey" className="mx-auto">
-                  New High Score! 🎉
-                </StickerBadge>
+                <div className="mx-auto rounded-full bg-honey/20 px-4 py-1 text-sm font-extrabold text-honey border border-honey/30">
+                  ⭐ New High Score!
+                </div>
               )}
-              <p className="text-2xl font-bold text-cocoa">{tick.score}</p>
-              <p className="text-sm text-cocoa/50">Best: {tick.bestScore}</p>
-              {/* Stacked on narrow widths (`flex-col`) rather than a fixed
-                  side-by-side row: at the track's `min-w-[240px]` floor,
-                  "Play again" + "Back to your request" side-by-side would
-                  exceed the available width (both buttons use
-                  `whitespace-nowrap` text), clipping "Back to your
-                  request". Stacking keeps both fully legible and tappable
-                  without needing horizontal scrolling (Requirement 6.4);
-                  `sm:flex-row` restores the side-by-side layout once
-                  there's room. */}
-              <div className="flex flex-col gap-2 justify-center pt-2 sm:flex-row">
-                <Button type="button" onClick={handlePlayAgain}>
-                  Play again
+              <div className="space-y-0.5">
+                <p className="text-3xl font-extrabold text-cocoa">{tick.score}</p>
+                <p className="text-xs text-cocoa/40">
+                  Best: <span className="font-bold text-cocoa/60">{tick.bestScore}</span>
+                </p>
+              </div>
+              <div className="rounded-xl bg-cocoa/5 p-2.5 border border-cocoa/5">
+                <p className="text-xs font-extrabold text-honey">{currentSeasonInfo.label}</p>
+                <p className="text-[11px] text-cocoa/60 font-medium italic leading-snug mt-0.5">
+                  "{currentSeasonInfo.msg}"
+                </p>
+              </div>
+              <div className="flex flex-col gap-2 justify-center pt-1 sm:flex-row">
+                <Button type="button" onClick={handlePlayAgain} className="font-bold rounded-full px-5">
+                  Play Again
                 </Button>
-                <Button type="button" variant="outline" onClick={handleBackToRequest}>
-                  Back to your request
+                <Button type="button" variant="outline" onClick={handleBackToRequest} className="rounded-full px-5">
+                  Back
                 </Button>
               </div>
             </CardContent>
@@ -566,50 +1281,20 @@ export function WhiskerRunnerGame({ catName, onClose }: WhiskerRunnerGameProps) 
         </div>
       )}
 
-      <div className="absolute bottom-2 right-2 z-10 flex gap-2">
-        <Button
-          type="button"
-          size="icon"
-          variant="outline"
-          // Bumped from the default `icon` size (32px) to meet the ~44x44px
-          // minimum touch target guidance (WCAG 2.5.5 / mobile platform
-          // guidelines), since this button is a primary touch control
-          // (Requirement 6.2), not just a desktop-only affordance.
-          // `touch-none` (touch-action: none) stops the browser from
-          // waiting to see if this is the start of a scroll/zoom gesture
-          // before delivering the pointerdown — without it, taps on mobile
-          // can feel delayed by up to ~300ms.
-          className="size-11 touch-none"
-          aria-label="Jump"
-          onPointerDown={handleJumpButtonPointerDown}
-        >
-          <ArrowUp />
-        </Button>
-        <Button
-          type="button"
-          size="icon"
-          variant="outline"
-          className="size-11 touch-none"
-          aria-label="Duck"
-          onPointerDown={handleDuckButtonPointerDown}
-          onPointerUp={handleDuckButtonRelease}
-          onPointerLeave={handleDuckButtonRelease}
-          onPointerCancel={handleDuckButtonRelease}
-        >
-          <ArrowDown />
-        </Button>
-      </div>
 
       <div
         ref={catNodeRef}
-        className="absolute bottom-0 left-0"
+        className="absolute bottom-0 left-0 overflow-visible z-[3]"
         style={{
-          width: CAT_WIDTH,
-          height: STAND_HEIGHT,
+          width: CAT_RENDER_WIDTH,
+          height: CAT_RENDER_HEIGHT,
+          // Offset so the collision hurtbox stays centered inside the larger visual container
+          marginLeft: -(CAT_RENDER_WIDTH - CAT_WIDTH) / 2,
+          marginBottom: -(CAT_RENDER_HEIGHT - STAND_HEIGHT),
           transform: `translateX(${CAT_X}px) translateY(0px)`,
         }}
       >
-        <CatSprite pose={tick.pose} size={CAT_WIDTH} />
+        <NyanCatSprite pose={tick.pose} />
       </div>
 
       {obstacles.map((obstacle) => (
@@ -618,7 +1303,7 @@ export function WhiskerRunnerGame({ catName, onClose }: WhiskerRunnerGameProps) 
           ref={(node) => {
             obstacleNodesRef.current.set(obstacle.id, node);
           }}
-          className="absolute left-0"
+          className="absolute left-0 z-[2]"
           style={{
             width: obstacle.width,
             height: obstacle.height,
@@ -626,7 +1311,12 @@ export function WhiskerRunnerGame({ catName, onClose }: WhiskerRunnerGameProps) 
             transform: `translateX(${obstacle.x}px)`,
           }}
         >
-          <ObstacleSprite type={obstacle.type} size={obstacle.height} />
+          <ObstacleSprite
+            type={obstacle.type}
+            size={obstacle.height}
+            variant={parseInt(obstacle.id.split("-")[1]) || 0}
+            seasonIndex={seasonIndex}
+          />
         </div>
       ))}
     </div>

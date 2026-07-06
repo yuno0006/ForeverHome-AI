@@ -47,18 +47,23 @@ export const GROUND_Y = 0;
 // the cat (a "close" jump) now has enough time to rise above it before
 // the x-ranges finish overlapping, not just a jump started well in advance.
 export const GRAVITY = -2200; // px/s^2
-export const JUMP_VELOCITY = 760; // px/s, applied instantaneously on jump
-export const STAND_HEIGHT = 56; // px, cat hurtbox height when standing/jumping
-export const DUCK_HEIGHT = 28; // px, cat hurtbox height while ducking
-export const CAT_X = 48; // px, fixed horizontal hurtbox position
-export const CAT_WIDTH = 48; // px
+export const JUMP_VELOCITY = 820; // px/s, applied instantaneously on jump
+export const STAND_HEIGHT = 100; // px, cat hurtbox height when standing/jumping
+export const DUCK_HEIGHT = 50; // px, cat hurtbox height while ducking
+export const CAT_X = 80; // px, fixed horizontal hurtbox position (Chrome Dino style — ~12-15% from left edge)
+export const CAT_WIDTH = 88; // px (collision hurtbox width)
+// Visual scale applied ONLY to the DOM rendering — collision geometry is
+// unaffected, so a bigger-looking cat doesn't absorb more hits.
+export const CAT_VISUAL_SCALE = 1.55;
+export const CAT_RENDER_WIDTH = Math.round(CAT_WIDTH * CAT_VISUAL_SCALE);
+export const CAT_RENDER_HEIGHT = Math.round(STAND_HEIGHT * CAT_VISUAL_SCALE);
 // Speed/spacing eased down overall (easier, less twitchy): slower start,
 // lower ceiling, slower ramp, and more breathing room between obstacles.
 export const BASE_SPEED = 220; // px/s at run start
 export const MAX_SPEED = 480; // px/s speed cap
 export const SPEED_RAMP_PER_SEC = 4; // px/s added per elapsed second, until MAX_SPEED
-export const MIN_SPAWN_GAP = 380; // px, minimum world distance between spawns
-export const MAX_SPAWN_GAP = 680; // px, maximum world distance between spawns
+export const MIN_SPAWN_GAP = 460; // px, minimum world distance between spawns
+export const MAX_SPAWN_GAP = 760; // px, maximum world distance between spawns
 export const SCORE_PER_WORLD_UNIT = 0.1; // score = floor(distance * SCORE_PER_WORLD_UNIT)
 
 // design.md's stepGame preconditions reference a clamp for a stalled/backgrounded

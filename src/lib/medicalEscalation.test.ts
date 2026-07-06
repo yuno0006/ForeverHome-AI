@@ -2,7 +2,7 @@
  * Property-Based Tests for Medical Escalation Module
  * 
  * This file tests the emergency phrase detection system using property-based testing
- * to ensure all 25 emergency phrases are correctly detected regardless of context.
+ * to ensure all emergency phrases are correctly detected regardless of context.
  * 
  * Validates: Requirements 2.1, 2.4, 2.5
  */
@@ -16,27 +16,30 @@ import { isMedicalEmergency, getEmergencyMessage } from './medicalEscalation'
 // =============================================================================
 
 /**
- * All 25 emergency phrases organized by category
+ * All emergency phrases organized by category
  * These must match the URGENT_PHRASES array in medicalEscalation.ts
  * 
- * Categories per Requirement 2.4:
- * - breathing difficulties (5 phrases)
- * - collapse/unresponsive (6 phrases)
- * - seizures (3 phrases)
- * - bleeding/trauma (4 phrases)
+ * Categories:
+ * - breathing difficulties (8 phrases)
+ * - collapse/unresponsive (10 phrases)
+ * - seizures (4 phrases)
+ * - bleeding/trauma (10 phrases)
  * - poisoning (3 phrases)
- * - other urgent conditions (4 phrases)
+ * - layperson emergency language (9 phrases)
  */
 const EMERGENCY_PHRASES = {
-  // Breathing difficulties: 5 phrases
+  // Breathing difficulties: 8 phrases
   breathing: [
     'trouble breathing',
     'struggling to breathe',
     "can't breathe",
     'cannot breathe',
     'difficulty breathing',
+    'not breathing',
+    'stopped breathing',
+    'labored breathing',
   ],
-  // Collapse/unresponsive: 6 phrases
+  // Collapse/unresponsive: 10 phrases
   collapseUnresponsive: [
     'collapse',
     "can't stand",
@@ -44,18 +47,29 @@ const EMERGENCY_PHRASES = {
     'fell over',
     'collapsed',
     'unresponsive',
+    'not moving',
+    "can't move",
+    'cant move',
+    'paralyzed',
   ],
-  // Seizures: 3 phrases
+  // Seizures: 4 phrases
   seizures: [
     'seizure',
     'fitting',
     'convulsing',
+    'convulsion',
   ],
-  // Bleeding/trauma: 4 phrases
+  // Bleeding/trauma: 10 phrases
   bleedingTrauma: [
     'uncontrolled bleeding',
     "won't stop bleeding",
     'wont stop bleeding',
+    'vomiting blood',
+    'throwing up blood',
+    'blood in vomit',
+    'blood in stool',
+    'bleeding from',
+    'pale gums',
     'hit by car',
   ],
   // Poisoning: 3 phrases
@@ -64,29 +78,42 @@ const EMERGENCY_PHRASES = {
     'poisoned',
     'ate something toxic',
   ],
-  // Other urgent conditions: 4 phrases
-  otherUrgent: [
+  // Common layperson emergency language: 9 phrases
+  laypersonEmergency: [
     'trauma',
-    'broken',
-    'not moving',
-    'convulsion',
+    'broken bone',
+    'broken leg',
+    'broken paw',
+    'limp',
+    'dying',
+    'not responding',
+    'unconscious',
+    'passed out',
+    'emergency vet',
+    'emergency room',
   ],
 } as const
 
 // Flatten all phrases into a single array
 const ALL_EMERGENCY_PHRASES: string[] = Object.values(EMERGENCY_PHRASES).flat()
 
-// Verify we have exactly 25 phrases
-const EXPECTED_PHRASE_COUNT = 25
+// Expected total — used for verification
+const TOTAL_PHRASES = ALL_EMERGENCY_PHRASES.length
 
 // =============================================================================
 // PROPERTY 10: EMERGENCY PHRASE DETECTION
 // =============================================================================
 
 describe('Property 10: Emergency Phrase Detection', () => {
-  it('should detect all 25 emergency phrases', () => {
-    // Verify we have exactly 25 phrases defined
-    expect(ALL_EMERGENCY_PHRASES.length).toBe(EXPECTED_PHRASE_COUNT)
+  it('should detect all emergency phrases', () => {
+    // Verify the category breakdown matches
+    expect(EMERGENCY_PHRASES.breathing.length).toBe(8)
+    expect(EMERGENCY_PHRASES.collapseUnresponsive.length).toBe(10)
+    expect(EMERGENCY_PHRASES.seizures.length).toBe(4)
+    expect(EMERGENCY_PHRASES.bleedingTrauma.length).toBe(10)
+    expect(EMERGENCY_PHRASES.poisoning.length).toBe(3)
+    expect(EMERGENCY_PHRASES.laypersonEmergency.length).toBe(11)
+    expect(ALL_EMERGENCY_PHRASES.length).toBe(TOTAL_PHRASES)
   })
 
   it('should return true for any message containing an emergency phrase', () => {
@@ -145,7 +172,7 @@ describe('Property 10: Emergency Phrase Detection', () => {
   })
 
   // Test each category explicitly for documentation purposes
-  describe('Emergency Category: Breathing Difficulties (5 phrases)', () => {
+  describe('Emergency Category: Breathing Difficulties (8 phrases)', () => {
     EMERGENCY_PHRASES.breathing.forEach((phrase) => {
       it(`should detect "${phrase}" as emergency`, () => {
         expect(isMedicalEmergency(phrase)).toBe(true)
@@ -155,7 +182,7 @@ describe('Property 10: Emergency Phrase Detection', () => {
     })
   })
 
-  describe('Emergency Category: Collapse/Unresponsive (6 phrases)', () => {
+  describe('Emergency Category: Collapse/Unresponsive (10 phrases)', () => {
     EMERGENCY_PHRASES.collapseUnresponsive.forEach((phrase) => {
       it(`should detect "${phrase}" as emergency`, () => {
         expect(isMedicalEmergency(phrase)).toBe(true)
@@ -165,7 +192,7 @@ describe('Property 10: Emergency Phrase Detection', () => {
     })
   })
 
-  describe('Emergency Category: Seizures (3 phrases)', () => {
+  describe('Emergency Category: Seizures (4 phrases)', () => {
     EMERGENCY_PHRASES.seizures.forEach((phrase) => {
       it(`should detect "${phrase}" as emergency`, () => {
         expect(isMedicalEmergency(phrase)).toBe(true)
@@ -175,7 +202,7 @@ describe('Property 10: Emergency Phrase Detection', () => {
     })
   })
 
-  describe('Emergency Category: Bleeding/Trauma (4 phrases)', () => {
+  describe('Emergency Category: Bleeding/Trauma (10 phrases)', () => {
     EMERGENCY_PHRASES.bleedingTrauma.forEach((phrase) => {
       it(`should detect "${phrase}" as emergency`, () => {
         expect(isMedicalEmergency(phrase)).toBe(true)
@@ -195,11 +222,11 @@ describe('Property 10: Emergency Phrase Detection', () => {
     })
   })
 
-  describe('Emergency Category: Other Urgent Conditions (4 phrases)', () => {
-    EMERGENCY_PHRASES.otherUrgent.forEach((phrase) => {
+  describe('Emergency Category: Layperson Emergency Language (11 phrases)', () => {
+    EMERGENCY_PHRASES.laypersonEmergency.forEach((phrase) => {
       it(`should detect "${phrase}" as emergency`, () => {
         expect(isMedicalEmergency(phrase)).toBe(true)
-        expect(isMedicalEmergency(`My cat was ${phrase}`)).toBe(true)
+        expect(isMedicalEmergency(`My cat is ${phrase}`)).toBe(true)
         expect(isMedicalEmergency(phrase.toUpperCase())).toBe(true)
       })
     })
@@ -282,18 +309,19 @@ describe('Property 11: Non-Emergency Message Handling', () => {
       'My cat is struggling to catch the mouse toy',
       'My cat difficulty jumping',
       'My cat fell asleep',           // "fell" alone is not "fell over"
-      'My cat broken the toy',        // This contains "broken" - will trigger
+      'My cat broken the toy',        // "broken" alone is not "broken bone/leg/paw"
       'My cat ate something new',     // "ate something" alone is not "ate something toxic"
       'My cat hit the toy with his paw',
     ]
 
-    // Note: "My cat broken the toy" contains "broken" which IS an emergency phrase
-    // So we need to test truly non-matching phrases
+    // With the updated keyword list, "broken" standalone no longer triggers.
+    // It requires "broken bone", "broken leg", or "broken paw".
     const trulyNonEmergency = [
       'My cat has trouble catching the toy',
       'My cat is struggling to catch the mouse toy',
       'My cat difficulty jumping',
       'My cat fell asleep',
+      'My cat broken the toy',
       'My cat ate something new',
       'My cat hit the toy with his paw',
     ]
@@ -379,36 +407,36 @@ describe('Emergency Message Content', () => {
 // =============================================================================
 
 describe('Emergency Phrase Coverage Verification', () => {
-  it('should have all breathing difficulty phrases (5 phrases)', () => {
+  it('should have all breathing difficulty phrases (8 phrases)', () => {
     const breathingPhrases = EMERGENCY_PHRASES.breathing
-    expect(breathingPhrases.length).toBe(5)
+    expect(breathingPhrases.length).toBe(8)
     
     breathingPhrases.forEach((phrase) => {
       expect(isMedicalEmergency(phrase)).toBe(true)
     })
   })
 
-  it('should have all collapse/unresponsive phrases (6 phrases)', () => {
+  it('should have all collapse/unresponsive phrases (10 phrases)', () => {
     const collapseUnresponsivePhrases = EMERGENCY_PHRASES.collapseUnresponsive
-    expect(collapseUnresponsivePhrases.length).toBe(6)
+    expect(collapseUnresponsivePhrases.length).toBe(10)
     
     collapseUnresponsivePhrases.forEach((phrase) => {
       expect(isMedicalEmergency(phrase)).toBe(true)
     })
   })
 
-  it('should have all seizure phrases (3 phrases)', () => {
+  it('should have all seizure phrases (4 phrases)', () => {
     const seizurePhrases = EMERGENCY_PHRASES.seizures
-    expect(seizurePhrases.length).toBe(3)
+    expect(seizurePhrases.length).toBe(4)
     
     seizurePhrases.forEach((phrase) => {
       expect(isMedicalEmergency(phrase)).toBe(true)
     })
   })
 
-  it('should have all bleeding/trauma phrases (4 phrases)', () => {
+  it('should have all bleeding/trauma phrases (10 phrases)', () => {
     const bleedingTraumaPhrases = EMERGENCY_PHRASES.bleedingTrauma
-    expect(bleedingTraumaPhrases.length).toBe(4)
+    expect(bleedingTraumaPhrases.length).toBe(10)
     
     bleedingTraumaPhrases.forEach((phrase) => {
       expect(isMedicalEmergency(phrase)).toBe(true)
@@ -424,25 +452,25 @@ describe('Emergency Phrase Coverage Verification', () => {
     })
   })
 
-  it('should have all other urgent conditions phrases (4 phrases)', () => {
-    const otherUrgentPhrases = EMERGENCY_PHRASES.otherUrgent
-    expect(otherUrgentPhrases.length).toBe(4)
+  it('should have all layperson emergency phrases (11 phrases)', () => {
+    const laypersonEmergencyPhrases = EMERGENCY_PHRASES.laypersonEmergency
+    expect(laypersonEmergencyPhrases.length).toBe(11)
     
-    otherUrgentPhrases.forEach((phrase) => {
+    laypersonEmergencyPhrases.forEach((phrase) => {
       expect(isMedicalEmergency(phrase)).toBe(true)
     })
   })
 
-  it('should verify total phrase count matches requirement', () => {
-    // Requirement 2.4 states 25 phrases total
+  it('should verify total phrase count covers all categories', () => {
     const totalPhrases = 
       EMERGENCY_PHRASES.breathing.length +
       EMERGENCY_PHRASES.collapseUnresponsive.length +
       EMERGENCY_PHRASES.seizures.length +
       EMERGENCY_PHRASES.bleedingTrauma.length +
       EMERGENCY_PHRASES.poisoning.length +
-      EMERGENCY_PHRASES.otherUrgent.length
+      EMERGENCY_PHRASES.laypersonEmergency.length
     
-    expect(totalPhrases).toBe(EXPECTED_PHRASE_COUNT)
+    expect(totalPhrases).toBe(TOTAL_PHRASES)
+    expect(totalPhrases).toBe(ALL_EMERGENCY_PHRASES.length)
   })
 })

@@ -125,7 +125,7 @@ export default function ReportPage() {
     if (!ttsSupported) return;
     window.speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(text);
-    utterance.rate = 1.1;
+    utterance.rate = 1.2;
     utterance.pitch = 1.0;
     utterance.onstart = () => setSpeaking(true);
     utterance.onend = () => setSpeaking(false);

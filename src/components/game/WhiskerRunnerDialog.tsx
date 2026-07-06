@@ -22,11 +22,16 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { LeaderboardPanel } from "./LeaderboardPanel";
 
 const WhiskerRunnerGame = dynamic(
   () => import("./WhiskerRunnerGame").then((mod) => mod.WhiskerRunnerGame),
   { ssr: false }
 );
+
+// Leaderboard panel is small and pure-UI (no game loop/RAF), so load it
+// eagerly — its 180px width is needed for the dialog layout from the start.
+const LeaderboardPanelEager = LeaderboardPanel;
 
 interface WhiskerRunnerDialogProps {
   open: boolean;
@@ -41,22 +46,31 @@ export function WhiskerRunnerDialog({
 }: WhiskerRunnerDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      {/* `overflow-x-auto` is a fallback for Requirement 6.6, not the
-          primary responsive strategy: `WhiskerRunnerGame`'s track scales
-          via `w-full` and only carries a `min-w-[240px]` floor, so on
-          ordinary mobile/desktop viewport widths the dialog and track fit
-          without a scrollbar ever appearing (Requirement 6.4). This only
-          engages if a viewport is narrower than the track can otherwise
-          shrink to, letting the dialog scroll horizontally rather than
-          clipping/breaking the game. */}
-      <DialogContent className="sm:max-w-md overflow-x-auto">
+      {/* Wider dialog to accommodate leaderboard + game side-by-side.
+          On small screens (<640px), the leaderboard hides and the game
+          takes full width with `overflow-x-auto` fallback per Requirement 6.6. */}
+      <DialogContent className="sm:max-w-[800px] max-w-[95vw] overflow-x-auto">
         <DialogHeader>
           <DialogTitle>Whisker Runner 🐾</DialogTitle>
         </DialogHeader>
-        <WhiskerRunnerGame
-          catName={catName}
-          onClose={() => onOpenChange(false)}
-        />
+
+        {/* Game + Leaderboard side by side on sm+ screens;
+            stacked vertically on mobile. */}
+        <div className="flex flex-col sm:flex-row gap-3 items-start">
+          {/* Leaderboard on the left — visible on all screen sizes.
+              On mobile, it renders below the game in a compact row. */}
+          <div className="shrink-0 w-full sm:w-auto">
+            <LeaderboardPanelEager />
+          </div>
+
+          {/* Game track fills remaining space */}
+          <div className="flex-1 min-w-0">
+            <WhiskerRunnerGame
+              catName={catName}
+              onClose={() => onOpenChange(false)}
+            />
+          </div>
+        </div>
       </DialogContent>
     </Dialog>
   );

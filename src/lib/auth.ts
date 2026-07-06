@@ -2,9 +2,12 @@ import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
   signOut,
   GoogleAuthProvider,
   updateProfile,
+  type User,
 } from "firebase/auth";
 import {
   doc,
@@ -55,17 +58,10 @@ export async function loginWithEmail(email: string, password: string) {
 }
 
 /**
- * Sign in with Google popup.
- * If no Firestore user doc exists, a placeholder doc is created with
- * onboardingComplete: false so the onboarding flow can let the user pick
- * their real role. The "adopter" role here is only a temporary default and
- * is overwritten once the user completes onboarding.
+ * Shared logic after a Google user is authenticated (popup or redirect).
+ * Ensures token freshness and creates a Firestore placeholder doc if needed.
  */
-export async function loginWithGoogle() {
-  const provider = new GoogleAuthProvider();
-  const credential = await signInWithPopup(auth, provider);
-  const { user } = credential;
-
+export async function completeGoogleSignIn(user: User) {
   // Ensure the Firestore client picks up the fresh auth token before
   // attempting any reads/writes that depend on security rules.
   await user.getIdToken(true);
@@ -92,8 +88,61 @@ export async function loginWithGoogle() {
     // so onboarding still triggers. Just log and continue.
     console.warn("Firestore unavailable during Google sign-in, user doc not persisted:", err);
   }
+}
 
-  return credential;
+/**
+ * Sign in with Google.
+ * Tries popup first; if popups are blocked (Brave, ad-blockers, etc.),
+ * automatically falls back to redirect-based sign-in.
+ *
+ * If no Firestore user doc exists, a placeholder doc is created with
+ * onboardingComplete: false so the onboarding flow can let the user pick
+ * their real role. The "adopter" role here is only a temporary default and
+ * is overwritten once the user completes onboarding.
+ */
+export async function loginWithGoogle() {
+  const provider = new GoogleAuthProvider();
+
+  try {
+    const credential = await signInWithPopup(auth, provider);
+    await completeGoogleSignIn(credential.user);
+    return credential;
+  } catch (err: unknown) {
+    // FirebaseError has a .code property like "auth/popup-blocked"
+    const code =
+      err && typeof err === "object" && "code" in err
+        ? (err as { code: string }).code
+        : "";
+
+    if (code === "auth/popup-blocked") {
+      // Popup was blocked by browser (Brave shield, ad-blocker, etc.)
+      // Switch to redirect flow which navigates the full page and can't be blocked.
+      // This function never returns — getGoogleRedirectResult() picks up the result.
+      await signInWithRedirect(auth, provider);
+      // Never reached — the page will redirect to Google.
+      throw new Error("REDIRECTING_TO_GOOGLE");
+    }
+
+    // Re-throw other errors (network issues, cancelled, etc.)
+    throw err;
+  }
+}
+
+/**
+ * Call this on app/context mount to consume a pending Google redirect result.
+ * Returns the UserCredential if a redirect just completed, or null if none.
+ */
+export async function getGoogleRedirectResult() {
+  try {
+    const result = await getRedirectResult(auth);
+    if (result) {
+      await completeGoogleSignIn(result.user);
+    }
+    return result;
+  } catch (err) {
+    console.error("Google redirect sign-in failed:", err);
+    throw err;
+  }
 }
 
 /**

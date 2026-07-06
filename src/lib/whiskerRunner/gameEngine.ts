@@ -36,8 +36,8 @@ import { createRng } from "@/lib/whiskerRunner/rng";
 // enough that jumping clears them, but tall enough (and at `y = 0`) that
 // they still overlap a grounded cat's hurtbox.
 const GROUND_OBSTACLE_MIN_WIDTH = 24; // px
-const GROUND_OBSTACLE_MAX_WIDTH = 32; // px
-const GROUND_OBSTACLE_MIN_HEIGHT = 32; // px
+const GROUND_OBSTACLE_MAX_WIDTH = 34; // px
+const GROUND_OBSTACLE_MIN_HEIGHT = 28; // px
 const GROUND_OBSTACLE_MAX_HEIGHT = 40; // px
 
 // Air obstacle sizing (hanging string / bird toy): `y` is fixed just above
@@ -47,10 +47,10 @@ const GROUND_OBSTACLE_MAX_HEIGHT = 40; // px
 // (`[0, DUCK_HEIGHT]`), matching `checkCollision`'s (task 6.1) expected
 // duck-vs-jump dilemma. `AIR_OBSTACLE_Y + AIR_OBSTACLE_MAX_HEIGHT` (52px)
 // stays safely below `STAND_HEIGHT` (56px) for every possible height roll.
-const AIR_OBSTACLE_MIN_WIDTH = 28; // px
-const AIR_OBSTACLE_MAX_WIDTH = 36; // px
-const AIR_OBSTACLE_MIN_HEIGHT = 16; // px
-const AIR_OBSTACLE_MAX_HEIGHT = 20; // px
+const AIR_OBSTACLE_MIN_WIDTH = 16; // px
+const AIR_OBSTACLE_MAX_WIDTH = 22; // px
+const AIR_OBSTACLE_MIN_HEIGHT = 10; // px
+const AIR_OBSTACLE_MAX_HEIGHT = 14; // px
 const AIR_OBSTACLE_Y = DUCK_HEIGHT + 4; // px, 32 — safely above DUCK_HEIGHT (28)
 
 // The pure engine has no concept of the rendered track's pixel width (that's
@@ -177,37 +177,23 @@ export function stepGame(
 
   if (distance >= state.nextSpawnDistance) {
     const rng = createRng(state.rngSeed);
-    const typeRoll = rng();
-    const type: ObstacleType = typeRoll < 0.5 ? "ground" : "air";
+    // Nyan Cat mode: only spawn ground obstacles (no air obstacles)
+    // This simplifies gameplay to focus on jumping
     const sizeRoll = rng();
     const gapRoll = rng();
 
-    const newObstacle: Obstacle =
-      type === "ground"
-        ? {
-            id: `obstacle-${state.rngSeed}-${scrolledObstacles.length}`,
-            type,
-            x: SPAWN_X,
-            width:
-              GROUND_OBSTACLE_MIN_WIDTH +
-              sizeRoll * (GROUND_OBSTACLE_MAX_WIDTH - GROUND_OBSTACLE_MIN_WIDTH),
-            y: 0,
-            height:
-              GROUND_OBSTACLE_MIN_HEIGHT +
-              sizeRoll * (GROUND_OBSTACLE_MAX_HEIGHT - GROUND_OBSTACLE_MIN_HEIGHT),
-          }
-        : {
-            id: `obstacle-${state.rngSeed}-${scrolledObstacles.length}`,
-            type,
-            x: SPAWN_X,
-            width:
-              AIR_OBSTACLE_MIN_WIDTH +
-              sizeRoll * (AIR_OBSTACLE_MAX_WIDTH - AIR_OBSTACLE_MIN_WIDTH),
-            y: AIR_OBSTACLE_Y,
-            height:
-              AIR_OBSTACLE_MIN_HEIGHT +
-              sizeRoll * (AIR_OBSTACLE_MAX_HEIGHT - AIR_OBSTACLE_MIN_HEIGHT),
-          };
+    const newObstacle: Obstacle = {
+      id: `obstacle-${state.rngSeed}-${scrolledObstacles.length}`,
+      type: "ground",
+      x: SPAWN_X,
+      width:
+        GROUND_OBSTACLE_MIN_WIDTH +
+        sizeRoll * (GROUND_OBSTACLE_MAX_WIDTH - GROUND_OBSTACLE_MIN_WIDTH),
+      y: 0,
+      height:
+        GROUND_OBSTACLE_MIN_HEIGHT +
+        sizeRoll * (GROUND_OBSTACLE_MAX_HEIGHT - GROUND_OBSTACLE_MIN_HEIGHT),
+    };
 
     obstacles = [...scrolledObstacles, newObstacle];
     // Derive a new seed from this spawn's random draws so subsequent spawns
@@ -301,21 +287,29 @@ export function setDucking(state: GameState, ducking: boolean): GameState {
 // evenly off both edges) gives a grace window without changing how fast
 // obstacles move or how they look. Vertical (duck-vs-jump) geometry is
 // left exactly as documented, since that distinction should stay crisp.
-const OBSTACLE_HURTBOX_INSET_RATIO = 0.25;
+// Tight hurtboxes so collision only fires when the cat *visibly* touches
+// the obstacle. Both the cat and each obstacle shrink inward before we
+// check overlap — this eliminates the "invisible layer" around obstacles.
+const OBSTACLE_HURTBOX_INSET_RATIO = 0.40; // % shrunk from each horizontal side
+const OBSTACLE_HURTBOX_INSET_Y_RATIO = 0.30; // % shrunk from each vertical side
+const CAT_HURTBOX_INSET_X = 8;  // px shrunk from each horizontal side
+const CAT_HURTBOX_INSET_Y = 6;  // px shrunk from each vertical side
 
 export function checkCollision(state: GameState): boolean {
   const catHurtboxHeight = state.isDucking ? DUCK_HEIGHT : STAND_HEIGHT;
-  const catXMin = CAT_X;
-  const catXMax = CAT_X + CAT_WIDTH;
-  const catYMin = state.catY;
-  const catYMax = state.catY + catHurtboxHeight;
+
+  const catXMin = CAT_X + CAT_HURTBOX_INSET_X;
+  const catXMax = CAT_X + CAT_WIDTH - CAT_HURTBOX_INSET_X;
+  const catYMin = state.catY + CAT_HURTBOX_INSET_Y;
+  const catYMax = state.catY + catHurtboxHeight - CAT_HURTBOX_INSET_Y;
 
   return state.obstacles.some((obstacle) => {
     const insetX = obstacle.width * OBSTACLE_HURTBOX_INSET_RATIO;
+    const insetY = obstacle.height * OBSTACLE_HURTBOX_INSET_Y_RATIO;
     const obstacleXMin = obstacle.x + insetX;
     const obstacleXMax = obstacle.x + obstacle.width - insetX;
-    const obstacleYMin = obstacle.y;
-    const obstacleYMax = obstacle.y + obstacle.height;
+    const obstacleYMin = obstacle.y + insetY;
+    const obstacleYMax = obstacle.y + obstacle.height - insetY;
 
     const xOverlaps = catXMin < obstacleXMax && obstacleXMin < catXMax;
     const yOverlaps = catYMin < obstacleYMax && obstacleYMin < catYMax;

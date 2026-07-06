@@ -252,7 +252,7 @@ function AIQuizWidget({ catName, catBreed, onStartAssessment }: { catName: strin
   };
 
   return (
-    <Card className="border border-white/60 bg-white/90 backdrop-blur-md shadow-xl shadow-cocoa/5 rounded-2xl overflow-hidden">
+    <Card className="border-2 border-cocoa/20 bg-white shadow-[4px_4px_0px_0px_rgba(42,29,20,1)] rounded-2xl overflow-hidden">
       {/* Header */}
       <div className="bg-gradient-to-r from-lavender to-sage px-5 py-3.5 flex items-center gap-3">
         <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center border-2 border-lavender/30 overflow-hidden">
@@ -291,6 +291,7 @@ function AIQuizWidget({ catName, catBreed, onStartAssessment }: { catName: strin
       <CardContent className="p-5">
         {step === "intro" && (
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-4 text-center">
+            {/* Cat avatar icon */}
             <div className="w-16 h-16 mx-auto rounded-2xl bg-lavender-light flex items-center justify-center border-2 border-lavender/30 overflow-hidden">
               <svg viewBox="0 0 64 64" width="36" height="36" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M12 20 L8 8 L22 16 Z" fill="#F59E0B" /><path d="M13 19 L10 12 L18 17 Z" fill="#FCD34D" />
@@ -312,11 +313,9 @@ function AIQuizWidget({ catName, catBreed, onStartAssessment }: { catName: strin
             </div>
             <Button
               onClick={startQuiz}
-              className="bg-lavender hover:bg-lavender-deep text-white rounded-full font-bold shadow-lg shadow-lavender/30 hover:shadow-xl hover:shadow-lavender/40 hover:-translate-y-0.5 transition-all duration-300 px-6 relative group overflow-hidden"
+              className="bg-lavender hover:bg-lavender-deep text-white rounded-full font-bold shadow-[3px_3px_0px_0px_rgba(42,29,20,1)] px-6"
             >
-              <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out" />
-              <Sparkles className="w-4 h-4 mr-2 relative z-10" />
-              <span className="relative z-10">Start AI Quick Match</span>
+              <Sparkles className="w-4 h-4 mr-2" /> Start AI Quick Match
             </Button>
           </motion.div>
         )}
@@ -333,10 +332,10 @@ function AIQuizWidget({ catName, catBreed, onStartAssessment }: { catName: strin
                   className={`flex ${m.role === "bot" ? "justify-start" : "justify-end"}`}
                 >
                   <div
-                    className={`max-w-[85%] rounded-2xl px-5 py-3.5 text-sm font-medium leading-relaxed transition-all duration-300 hover:shadow-md ${
+                    className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-sm font-medium leading-relaxed ${
                       m.role === "bot"
-                        ? "bg-white/90 backdrop-blur-md border border-white/60 text-cocoa rounded-tl-sm shadow-sm shadow-cocoa/5"
-                        : "bg-gradient-to-br from-lavender to-lavender-deep text-white rounded-tr-sm shadow-md shadow-lavender/20"
+                        ? "bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-200/60 text-cocoa rounded-tl-sm shadow-[2px_2px_0px_0px_rgba(251,191,36,0.12)]"
+                        : "bg-gradient-to-br from-lavender to-lavender-deep text-white rounded-tr-sm shadow-[2px_2px_0px_0px_rgba(42,29,20,0.15)]"
                     }`}
                   >
                     {m.content}
@@ -352,7 +351,7 @@ function AIQuizWidget({ catName, catBreed, onStartAssessment }: { catName: strin
                 <button
                   key={opt.value}
                   onClick={() => handleAnswer(opt.value, opt.label)}
-                  className="w-full text-left px-4 py-3 rounded-xl bg-white/60 border border-white/60 hover:bg-lavender/5 hover:border-lavender/40 hover:shadow-md hover:shadow-lavender/5 transition-all duration-300 text-sm font-semibold text-cocoa"
+                  className="w-full text-left px-4 py-3 rounded-xl border-2 border-cocoa/10 hover:border-lavender hover:bg-lavender-light/50 transition-all text-sm font-semibold text-cocoa"
                 >
                   {opt.label}
                 </button>
@@ -390,7 +389,7 @@ function AIQuizWidget({ catName, catBreed, onStartAssessment }: { catName: strin
             {!loadingAI && (
               <Button
                 onClick={onStartAssessment}
-                className="bg-coral hover:bg-coral-deep text-white rounded-full font-bold shadow-lg shadow-coral/30 hover:shadow-xl hover:shadow-coral/40 hover:-translate-y-0.5 transition-all duration-300 px-6"
+                className="bg-coral hover:bg-coral-deep text-white rounded-full font-bold shadow-[3px_3px_0px_0px_rgba(42,29,20,1)] px-6"
               >
                 <ClipboardCheck className="w-4 h-4 mr-2" /> Start Full Assessment
                 <ArrowRight className="w-4 h-4 ml-1" />

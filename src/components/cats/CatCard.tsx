@@ -7,7 +7,7 @@ import { Cat } from "@/types/cat";
 import { Zap, Heart, Sparkles, MapPin, Clock } from "lucide-react";
 import { getShelterById } from "@/data/demoShelters";
 import { useAuth } from "@/hooks/useAuth";
-import { fetchSavedCatIds, saveCatToWishlist, removeCatFromWishlist } from "@/lib/firestoreService";
+import { getIdToken } from "@/lib/auth";
 
 interface CatCardProps {
   cat: Cat;
@@ -36,9 +36,14 @@ export default function CatCard({ cat }: CatCardProps) {
       setSaved(false);
       return;
     }
-    fetchSavedCatIds(user.uid)
-      .then((ids) => setSaved(ids.includes(cat.id)))
-      .catch(() => {});
+    getIdToken().then((token) => {
+      fetch(`/api/saved?uid=${encodeURIComponent(user.uid)}`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      })
+        .then((r) => r.json())
+        .then((d) => setSaved((d.saved || []).includes(cat.id)))
+        .catch(() => {});
+    });
   }, [user, cat.id]);
 
   const toggleSaved = async (e: React.MouseEvent) => {
@@ -47,14 +52,19 @@ export default function CatCard({ cat }: CatCardProps) {
     if (!user || busy) return;
     setBusy(true);
     try {
-      if (saved) {
-        await removeCatFromWishlist(user.uid, cat.id);
-      } else {
-        await saveCatToWishlist(user.uid, cat.id);
-      }
-      setSaved(!saved);
-    } catch (err) {
-      console.error("Failed to update wishlist:", err);
+      const token = await getIdToken();
+      const method = saved ? "DELETE" : "POST";
+      const res = await fetch("/api/saved", {
+        method,
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ uid: user.uid, catId: cat.id }),
+      });
+      if (res.ok) setSaved(!saved);
+    } catch {
+      // silently ignore — non-critical UX feature
     } finally {
       setBusy(false);
     }

@@ -45,3 +45,10 @@ next-env.d.ts
 
 # local debug output
 tsc_errors.txt
+
+# IDE / editor configs
+.codebuddy/
+.vs/
+AGENTS.md
+CLAUDE.md
+*.code-workspace

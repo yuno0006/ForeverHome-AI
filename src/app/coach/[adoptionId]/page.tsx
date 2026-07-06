@@ -471,7 +471,7 @@ export default function CoachPage() {
       {/* Medical Escalation */}
       {showEmergency && (
         <div className="mb-6">
-          <MedicalEscalation />
+          <MedicalEscalation open={showEmergency} onOpenChange={setShowEmergency} />
         </div>
       )}
 

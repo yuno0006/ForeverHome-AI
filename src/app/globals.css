@@ -213,6 +213,20 @@ h1, h2, h3, .font-display {
 
 .animate-bg-drift { animation: bg-drift 20s linear infinite; }
 
+/* ========= WHISKER RUNNER SKY ANIMATIONS ========= */
+
+/* Clouds drift horizontally across the sky — GPU-composited, no JS cost */
+@keyframes cloud-float {
+  0%   { transform: translateX(-120px); }
+  100% { transform: translateX(calc(100vw + 120px)); }
+}
+
+/* Stars twinkle with a subtle opacity pulse */
+@keyframes star-twinkle {
+  0%, 100% { opacity: 0.3; }
+  50%      { opacity: 0.9; }
+}
+
 /* ========= GRADIENT TEXT ========= */
 .text-gradient-warm {
   background: linear-gradient(120deg, #FF6B6B 0%, #F5B942 100%);

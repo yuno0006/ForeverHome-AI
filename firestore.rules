@@ -217,6 +217,32 @@ service cloud.firestore {
     match /users/{userId} {
       allow read, write: if request.auth.uid == userId;
     }
+
+    // ============================================
+    // WHISKER RUNNER LEADERBOARD
+    // ============================================
+    // Public read for the global leaderboard.
+    // One document per user (docId == userId), only updated if the new
+    // score beats the user's existing best — prevents score flooding.
+    match /whiskerRunnerScores/{scoreId} {
+      // Anyone can read the leaderboard (including unauthenticated browsers)
+      allow read: if true;
+      
+      // Only create your own score entry; userId field must match auth
+      allow create: if request.auth != null &&
+        request.resource.data.userId is string &&
+        request.auth.uid == request.resource.data.userId;
+      
+      // Only update your own entry AND the new score must beat the old one
+      allow update: if request.auth != null &&
+        resource.data.userId is string &&
+        request.auth.uid == resource.data.userId &&
+        request.resource.data.score is number &&
+        request.resource.data.score > resource.data.score;
+      
+      // Scores are never deleted
+      allow delete: if false;
+    }
     
     // ============================================
     // DEFAULT DENY

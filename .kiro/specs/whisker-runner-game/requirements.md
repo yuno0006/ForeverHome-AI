@@ -88,6 +88,22 @@ Whisker Runner is a cat-themed endless runner mini-game added to ForeverHome AI 
 4. THE Game SHALL use smooth, animated transitions (via CSS transitions, Framer Motion, or `requestAnimationFrame`-driven rendering) for gameplay motion and for the Game_Dialog's open/close and Results_Panel transitions.
 5. THE Game SHALL render the cat character and Obstacles using a pixel-art (blocky, retro, low-resolution-styled) sprite aesthetic evoking the Chrome Dino game, while using the app's existing Design_Palette colors instead of grayscale.
 
+### Requirement 5.5: Nyan Cat Visual Style Enhancement
+
+**User Story:** As a player, I want the game to have a Nyan Cat-inspired visual style with a blue sky and green land, so that it feels more playful and recognizable while maintaining the same gameplay mechanics.
+
+#### Acceptance Criteria
+
+1. THE Game SHALL render a blue sky gradient background (light blue to slightly darker blue) instead of the current honey/cream gradient, evoking the classic Nyan Cat sky.
+2. THE Game SHALL render a green land/grass strip at the bottom of the track (solid green with optional pixel-art grass texture) instead of the current brown baseline, evoking the classic Nyan Cat ground.
+3. THE Game SHALL render the cat character as a Nyan Cat-inspired sprite: a pixel-art cat with a Pop-Tart body (rectangular shape with rounded corners and a cat face/head emerging from the top), using bright, playful colors (pink/fuchsia for the Pop-Tart body, gray/white for the cat head, optional small stars/sparkles around it).
+4. THE Game SHALL NOT render a rainbow trail behind the cat character, keeping the visual clean and focused on the gameplay.
+5. THE Game SHALL maintain all existing gameplay mechanics (jump, collision, scoring, speed ramp) unchanged by the visual style update, with the exception that duck obstacles are removed (only ground obstacles remain).
+6. THE Game SHALL continue to use Space or Up arrow for jump on desktop, and on-screen Jump button for touch devices. Duck controls are removed.
+7. THE Game SHALL render only ground obstacles (no air obstacles), simplifying the gameplay to focus on jumping.
+8. THE Game SHALL ensure the Nyan Cat sprite's hurtbox dimensions remain functionally equivalent to the current cat sprite's hurtbox (same width, height, and collision behavior) so gameplay balance is unaffected.
+9. THE Game SHALL animate the Nyan Cat sprite with: running animation (legs moving), jumping pose (legs tucked, slight rotation), and tail wagging (constant subtle tail movement).
+
 ### Requirement 6: Responsive and Accessible Controls
 
 **User Story:** As a player on any device, I want controls that work naturally whether I'm on a phone or a laptop, so that I don't need special knowledge to play.

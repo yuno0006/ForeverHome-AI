@@ -15,6 +15,7 @@ import {
   registerWithEmail,
   loginWithEmail,
   loginWithGoogle as loginWithGoogleFn,
+  getGoogleRedirectResult,
   logoutUser,
   fetchUserDocument,
 } from "@/lib/auth";
@@ -46,6 +47,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [user, setUser] = useState<User | null>(null);
   const [userDoc, setUserDoc] = useState<UserDocument | null>(null);
   const [loading, setLoading] = useState(true);
+
+  // Consume pending Google redirect result on mount (Brave / ad-blocker fallback)
+  useEffect(() => {
+    getGoogleRedirectResult().catch((err) => {
+      console.error("Failed to process Google redirect result:", err);
+    });
+  }, []);
 
   // Listen for auth state changes
   useEffect(() => {
