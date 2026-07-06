@@ -43,6 +43,8 @@ export default function GamePage() {
       return;
     }
 
+    const uid = user.uid;
+
     async function checkAdoptions() {
       const USE_FIRESTORE = process.env.NEXT_PUBLIC_FIREBASE_API_KEY !== undefined;
       if (USE_FIRESTORE) {
@@ -51,7 +53,7 @@ export default function GamePage() {
           const { db } = await import("@/lib/firebase");
           const q = query(
             collection(db, "activeAdoptions"),
-            where("adopterUid", "==", user.uid)
+            where("adopterUid", "==", uid)
           );
           const snap = await getDocs(q);
           setHasAccess(!snap.empty);
@@ -61,7 +63,7 @@ export default function GamePage() {
         }
       } else {
         const stored = JSON.parse(sessionStorage.getItem("activeAdoptions") || "[]");
-        const userAdoptions = stored.filter((item: any) => !item.adopterUid || item.adopterUid === user.uid);
+        const userAdoptions = stored.filter((item: any) => !item.adopterUid || item.adopterUid === uid);
         setHasAccess(userAdoptions.length > 0);
       }
     }

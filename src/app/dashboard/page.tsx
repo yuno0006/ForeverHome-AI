@@ -80,6 +80,7 @@ function DashboardContent() {
 
   useEffect(() => {
     if (!user) return;
+    const uid = user.uid;
     async function loadAdoptions() {
       setAdoptionsLoading(true);
       const USE_FIRESTORE = process.env.NEXT_PUBLIC_FIREBASE_API_KEY !== undefined;
@@ -87,7 +88,7 @@ function DashboardContent() {
         try {
           const { collection, query, where, getDocs } = await import("firebase/firestore");
           const { db } = await import("@/lib/firebase");
-          const q = query(collection(db, "activeAdoptions"), where("adopterUid", "==", user.uid));
+          const q = query(collection(db, "activeAdoptions"), where("adopterUid", "==", uid));
           const snap = await getDocs(q);
           const list: Adoption[] = [];
           snap.forEach((doc) => {
@@ -106,7 +107,7 @@ function DashboardContent() {
         const stored = JSON.parse(sessionStorage.getItem("activeAdoptions") || "[]");
         // Filter by adopterUid if available, else show all in local demo
         const list = stored
-          .filter((item: any) => !item.adopterUid || item.adopterUid === user.uid)
+          .filter((item: any) => !item.adopterUid || item.adopterUid === uid)
           .map((item: any) => ({
             id: item.id,
             catName: item.catName,
