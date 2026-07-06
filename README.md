@@ -81,11 +81,11 @@ This was a deliberate design trade-off: **AI handles 90% of questions instantly 
 
 Whisker Runner isn't filler — it's strategic:
 
-1. **Retention & dwell time** — hackathon judges and adopters spend more time on the platform when there's something fun between serious features
-2. **Brand reinforcement** — the cat dodging obstacles and collecting treats mirrors the adoption journey itself (overcoming challenges, finding rewards)
-3. **PWA showcase** — the game demonstrates that the Progressive Web App handles intensive Canvas rendering and keyboard input, proving it's a real app, not just a form
-4. **No account required** — the game works for unauthenticated guests, serving as a low-friction entry point before signup
-5. **Technical depth** — custom sprite animations, deterministic RNG, collision detection, high score persistence — shows engineering capability beyond CRUD
+1. **Retention & dwell time** — hackathon judges and adopters spend more time on the platform when there's something fun between serious features.
+2. **Brand reinforcement** — the cat dodging obstacles and collecting treats mirrors the adoption journey itself (overcoming challenges, finding rewards).
+3. **PWA showcase** — the game demonstrates that the Progressive Web App handles intensive Canvas rendering and keyboard input, proving it's a real app, not just a form.
+4. **Guest Retention** — unauthenticated guests can play immediately, see their scores dynamically ranked with medals on the leaderboard, and are nudged to register to save progress globally.
+5. **Technical depth** — features an 8-season visual cycle (including a custom-drawn City Night Lights theme), unique theme obstacles (traffic cones, hydrants, trash cans), and 4 structured difficulty levels (Easy -> Moderate -> Medium -> Hard).
 
 ### Full Screen-by-Screen Feature Map
 

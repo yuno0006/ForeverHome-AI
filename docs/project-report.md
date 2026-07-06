@@ -158,7 +158,12 @@ When concerning patterns emerge (missed check-ins, declining metrics), adopters 
 An auto-rotating carousel on the landing page featuring 19 beautifully designed cards with cat facts spanning history, science, and pop culture: Egyptian cat gods, healing purr frequencies (25-140 Hz for tissue regeneration), unique nose prints, inability to taste sweetness, 70% of life spent sleeping, whisker air-current detection, 32 ear muscles, 6x body-length jumps, Félicette the space cat, Mayor Stubbs of Talkeetna Alaska, reflective eye layer for night vision, 53 vertebrae for flexibility, missing collarbone ("cats are liquid"), meowing evolved for humans, paw-pad sweating, left/right-pawedness, 30 mph sprint speed, Isaac Newton's cat flap invention, and Viking ship cats. Cards auto-rotate every 5 seconds with manual prev/next/pause controls. Designed to educate adopters about cat capabilities and set realistic expectations.
 
 ### Whisker Runner Mini-Game
-Endless-runner platformer built in Canvas + TypeScript: custom cat sprite animations (run, jump, idle, hit, celebration), progressive obstacle difficulty, deterministic RNG for reproducible levels, high score persistence.
+Endless-runner platformer built in Canvas + TypeScript featuring:
+- **8-Season Theme Cycle**: Drifts through Beach, Spooky, Spring, Cosmic, Autumn, Rainy, Winter, and the brand-new **City Night Lights 🏙️** theme.
+- **Custom Obstacles per Theme**: From falling sakura piles to city traffic cones, metal trash cans, and fire hydrants, each season renders distinct vector obstacles.
+- **Structured Difficulty Progression**: Dynamically scales speed and spawn density across four distinct tiers: *Easy*, *Moderate*, *Medium*, and *Hard* (achieved at 3000+ points).
+- **Symmetrical Dashboard Layout**: Flanked by a global leaderboard and an interactive Game Guide panel.
+- **Guest-Friendly Leaderboard**: Local high scores for non-logged-in players are dynamically injected into the leaderboard with earned medals (🥇🥈🥉) to encourage signup via a global save warning.
 
 ### TTS Narration & Accessibility
 Compatibility reports feature text-to-speech via Web Speech API for accessibility. The entire app supports dark mode with a warm dark palette, ARIA labels, semantic HTML, and keyboard navigation.
@@ -213,11 +218,11 @@ We intentionally did NOT build messaging between shelters and adopters:
 
 Whisker Runner is strategic, not filler:
 
-1. **Retention & dwell time** — users spend more time on the platform when there's something fun between serious features
-2. **Brand reinforcement** — dodging obstacles and collecting treats mirrors the adoption journey (overcoming challenges, finding rewards)
-3. **PWA showcase** — proves the app handles intensive Canvas rendering and keyboard input — it's a real app, not just a form
-4. **Low-friction entry** — the game works without login, serving as a gentle introduction before account creation
-5. **Technical depth** — custom sprite animations, deterministic RNG, collision detection, high score persistence — demonstrates engineering capability beyond CRUD
+1. **Retention & dwell time** — users spend more time on the platform when there's something fun between serious features.
+2. **Brand reinforcement** — dodging obstacles and collecting treats mirrors the adoption journey (overcoming challenges, finding rewards).
+3. **PWA showcase** — proves the app handles intensive Canvas rendering and keyboard input — it's a real app, not just a form.
+4. **Low-friction entry & Guest Engagement** — guests can play instantly without an account, see their scores ranked on the leaderboard with custom medals, and are nudged to log in to save their scores globally.
+5. **Technical depth** — features 8 visual themes (including the night skyline of City Night Lights), custom SVG obstacles, an active 4-tier difficulty progression (Easy -> Moderate -> Medium -> Hard), and a clean symmetrical layout flanked by a guide card and leaderboard.
 
 ### Why Fun Facts Slideshow
 

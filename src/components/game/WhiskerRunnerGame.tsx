@@ -53,17 +53,18 @@ let _isMuted = false;
 let _musicTimer: number | null = null;
 let _musicIndex = 0;
 const MELODY = [
-  523.25, 659.25, 783.99, 1046.50, // C5, E5, G5, C6
-  880.00, 1046.50, 1318.51, 1046.50, // A5, C6, E6, C6
-  698.46, 880.00, 1046.50, 880.00, // F5, A5, C6, A5
-  783.99, 987.77, 1174.66, 987.77, // G5, B5, D6, B5
+  659.25, 0, 783.99, 0, 1046.50, 0, 880.00, 0, // E5, rest, G5, rest, C6, rest, A5, rest
+  698.46, 880.00, 1046.50, 0, 987.77, 0, 783.99, 0, // F5, A5, C6, rest, B5, rest, G5, rest
+  659.25, 0, 783.99, 0, 1318.51, 0, 1046.50, 0, // E5, rest, G5, rest, E6, rest, C6, rest
+  880.00, 1046.50, 1174.66, 0, 987.77, 1174.66, 1318.51, 0, // A5, C6, D6, rest, B5, D6, E6, rest
 ];
 
 function playMusicNote(freq: number) {
+  if (freq === 0) return; // Support rests for peaceful pacing
   if (!_audioCtx || !_masterGain || !_audioReady) return;
   const ctx = _audioCtx;
   const now = ctx.currentTime;
-  const duration = 0.8; // 800ms note duration
+  const duration = 0.9; // Slightly longer note tail for a spacious, peaceful vibe
   
   const osc = ctx.createOscillator();
   const gain = ctx.createGain();
@@ -72,7 +73,7 @@ function playMusicNote(freq: number) {
   osc.frequency.setValueAtTime(freq, now);
   
   gain.gain.setValueAtTime(0, now);
-  gain.gain.linearRampToValueAtTime(0.12, now + 0.1); // soft ambient music level
+  gain.gain.linearRampToValueAtTime(0.06, now + 0.15); // soft ambient music level, slightly quieter for peace
   gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
   
   osc.connect(gain);
@@ -87,9 +88,7 @@ function startMusic() {
   initAudio();
   _musicIndex = 0;
   
-  if (MELODY[_musicIndex]) {
-    playMusicNote(MELODY[_musicIndex]);
-  }
+  playMusicNote(MELODY[_musicIndex]);
   
   _musicTimer = window.setInterval(() => {
     _musicIndex = (_musicIndex + 1) % MELODY.length;
@@ -1260,8 +1259,8 @@ export function WhiskerRunnerGame({ catName, onClose }: WhiskerRunnerGameProps) 
             <CardContent className="pt-6 pb-5 space-y-2">
               <p className="text-xl font-bold text-cocoa">🐾 Whisker Runner</p>
               <p className="text-sm text-cocoa/60 leading-relaxed">
-                Help <span className="font-bold text-cocoa/80">{catName}</span> dodge household hazards!<br />
-                <span className="text-xs text-cocoa/40">Tap anywhere • Click • Press Space</span>
+                Help <span className="font-bold text-cocoa/80">Nyan Cat ({catName})</span> dodge obstacles!<br />
+                <span className="text-xs text-cocoa/40">📱 Phone: Tap • 💻 Desktop: Press Space</span>
               </p>
               <Button
                 type="button"
