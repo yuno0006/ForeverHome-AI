@@ -64,6 +64,17 @@ const MELODY = [
   783.99, 987.77, 1174.66, 1567.98, 1174.66, 987.77, 783.99, 0,
 ];
 
+const seasonDetails = [
+  { label: "Beach Breeze 🏖️", msg: "Splashed by a big wave!" },
+  { label: "Mystic Night 👻", msg: "Spooked by glowing wisps!" },
+  { label: "Spring Breeze 🌸", msg: "Cherry blossoms caught your paws!" },
+  { label: "Cosmic Space 🌌", msg: "Lost in the sparkling kitty nebula!" },
+  { label: "Autumn Wind 🍂", msg: "Swept away by tumbling leaves!" },
+  { label: "Monsoon Rain 🌧️", msg: "Slipped on a wet puddle!" },
+  { label: "Winter Snow ❄️", msg: "Brrr! Paws are frozen solid!" },
+  { label: "City Night Lights 🏙️", msg: "Distracted by the neon lights!" },
+];
+
 function playMusicNote(freq: number) {
   if (freq === 0) return; // Support rests
   if (!_audioCtx || !_masterGain || !_audioReady) return;
@@ -192,6 +203,7 @@ interface WhiskerRunnerGameProps {
    * behavior.
    */
   onClose?: () => void;
+  onSeasonChange?: (current: string, next: string, targetScore: number) => void;
 }
 
 /** Fixed height of the track's rendering surface, in px. */
@@ -249,7 +261,7 @@ function tickEquals(a: GameTick, b: GameTick): boolean {
   );
 }
 
-export function WhiskerRunnerGame({ catName, onClose }: WhiskerRunnerGameProps) {
+export function WhiskerRunnerGame({ catName, onClose, onSeasonChange }: WhiskerRunnerGameProps) {
   const { user, userDoc } = useAuth();
 
   // Keep auth info in refs so the RAF loop (captured in useEffect([], []))
@@ -267,13 +279,8 @@ export function WhiskerRunnerGame({ catName, onClose }: WhiskerRunnerGameProps) 
   // without triggering a re-render on every single update.
   const stateRef = useRef<GameState>(createInitialState(getBestScore()));
   
-  const initialBestScore = getBestScore();
-  const [bestScore, setBestScore] = useState(initialBestScore);
-  
-  // Random starting theme offset: if bestScore < 8000, only pick seasons 0-6.
-  const themeOffsetRef = useRef(
-    Math.floor(Math.random() * (initialBestScore >= 8000 ? 8 : 7)) * 1000
-  );
+  // Random starting theme offset (0 to 7 seasons)
+  const themeOffsetRef = useRef(Math.floor(Math.random() * 8) * 1000);
 
   // Throttled(-ish) React state slice for the pieces of the UI that need to
   // re-render (score digits, status banner, etc.). Synced from `stateRef`
@@ -427,11 +434,7 @@ export function WhiskerRunnerGame({ catName, onClose }: WhiskerRunnerGameProps) 
   // (and the RAF loop's first frame after this reset) behaves exactly like
   // a freshly mounted game.
   function handlePlayAgain() {
-    const currentBest = getBestScore();
-    setBestScore(currentBest);
-    const range = currentBest >= 8000 ? 8 : 7;
-    themeOffsetRef.current = Math.floor(Math.random() * range) * 1000;
-
+    themeOffsetRef.current = Math.floor(Math.random() * 8) * 1000;
     stateRef.current = createInitialState(stateRef.current.bestScore);
     bestScoreRecordedRef.current = false;
     isNewHighScoreRef.current = false;
@@ -575,15 +578,33 @@ export function WhiskerRunnerGame({ catName, onClose }: WhiskerRunnerGameProps) 
 
   const obstacles = stateRef.current.obstacles;
 
-  // Automated Cycle: repeats every cycleLength points.
-  // 1000 pts per season (700 pts stay, 300 pts transition).
-  const isCityNightUnlocked = bestScore >= 8000;
-  const cycleLength = isCityNightUnlocked ? 8000 : 7000;
-
-  const localScore = (tick.score + themeOffsetRef.current) % cycleLength;
+  // Automated 8-Phase Cycle: repeats every 8000 points.
+  // 8 seasons of 1000 pts each (700 pts stay, 300 pts transition).
+  const localScore = (tick.score + themeOffsetRef.current) % 8000;
   const seasonIndex = Math.floor(localScore / 1000);
-  const nextSeasonIndex = (seasonIndex + 1) % (cycleLength / 1000);
+  const nextSeasonIndex = (seasonIndex + 1) % 8;
   const progressInSeason = localScore % 1000;
+
+  // Notify parent component about current and upcoming seasons
+  const lastReportedSeasonIndex = useRef(-1);
+  useEffect(() => {
+    const computedLocalScore = (tick.score + themeOffsetRef.current) % 8000;
+    const currentSeasonIdx = Math.floor(computedLocalScore / 1000);
+    
+    if (currentSeasonIdx !== lastReportedSeasonIndex.current) {
+      lastReportedSeasonIndex.current = currentSeasonIdx;
+      const nextSeasonIdx = (currentSeasonIdx + 1) % 8;
+      
+      const ptsRemaining = 1000 - (computedLocalScore % 1000);
+      const nextScoreThreshold = tick.score + ptsRemaining;
+
+      onSeasonChange?.(
+        seasonDetails[currentSeasonIdx].label,
+        seasonDetails[nextSeasonIdx].label,
+        nextScoreThreshold
+      );
+    }
+  }, [tick.score, onSeasonChange]);
 
   let currentWeight = 1;
   let nextWeight = 0;
@@ -614,17 +635,7 @@ export function WhiskerRunnerGame({ catName, onClose }: WhiskerRunnerGameProps) 
   const sunScale = sunActiveW > 0 ? (morningW * 1.0 + eveningW * 1.15) / sunActiveW : 1.0;
 
   // Select thematic information for Game Over screen based on crashed season
-  const crashSeason = Math.floor(((tick.score + themeOffsetRef.current) % cycleLength) / 1000);
-  const seasonDetails = [
-    { label: "Beach Breeze 🏖️", msg: "Splashed by a big wave!" },
-    { label: "Mystic Night 👻", msg: "Spooked by glowing wisps!" },
-    { label: "Spring Breeze 🌸", msg: "Cherry blossoms caught your paws!" },
-    { label: "Cosmic Space 🌌", msg: "Lost in the sparkling kitty nebula!" },
-    { label: "Autumn Wind 🍂", msg: "Swept away by tumbling leaves!" },
-    { label: "Monsoon Rain 🌧️", msg: "Slipped on a wet puddle!" },
-    { label: "Winter Snow ❄️", msg: "Brrr! Paws are frozen solid!" },
-    { label: "City Night Lights 🏙️", msg: "Distracted by the neon lights!" },
-  ];
+  const crashSeason = Math.floor(((tick.score + themeOffsetRef.current) % 8000) / 1000);
   const currentSeasonInfo = seasonDetails[crashSeason] || seasonDetails[0];
 
   return (

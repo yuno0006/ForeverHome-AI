@@ -1,18 +1,19 @@
-// Gemini AI integration for Adoption Counselor, General Assistant, and 14-Day Coach
-// Uses TWO API keys with model-outer rotation + rate-limit caching.
+// Gemini AI integration for Adoption Counselor, General Assistant, and 14-Day Coach.
+// Uses TWO API keys with model-outer rotation + rate-limit caching (90s TTL).
 //
-// Strategy: for each model tier, try Key1 then Key2. If a (model, key) pair
-// returns 429, it's cached as exhausted for 90s. On 400/403 (bad key/bad
-// request), skip that key permanently for this request. All 5xx/timeout
-// results move to the next tier.
+// Strategy: exhaust the best model on all keys, then move to the next model.
+// Two separate chains:
+//   Listing AI  (counselor, questions, general assistant): 3 models × 2 keys = 6 attempts
+//   Chat AI     (14-day coach): 2 models × 2 keys = 4 attempts
 
 const GEMINI_KEY1 = process.env.GEMINI_API_KEY;
 const GEMINI_KEY2 = process.env.GEMINI_API_KEY_2;
 
 // ─── Rate-limit cache ───────────────────────────────────
+
 interface RateLimitEntry { exhaustedAt: number }
 const _RATE_LIMIT_CACHE = new Map<string, RateLimitEntry>();
-const RATE_LIMIT_TTL_MS = 90_000; // 90 seconds
+const RATE_LIMIT_TTL_MS = 90_000;
 
 function pruneRateLimitCache() {
   const now = Date.now();
@@ -35,24 +36,28 @@ function markRateLimited(model: string, key: string) {
   _RATE_LIMIT_CACHE.set(`${model}::${key}`, { exhaustedAt: Date.now() });
 }
 
-// ─── Model tiers (model-outer: exhaust best model on all keys first) ──
+// ─── Model chains ───────────────────────────────────────
 
-interface ModelTier {
-  model: string;
-  lite?: string;
-}
-
-const MODEL_TIERS: ModelTier[] = [
-  { model: "gemini-2.5-flash", lite: "gemini-2.0-flash" },
-  { model: "gemini-2.0-flash", lite: "gemini-2.0-flash-lite" },
-  { model: "gemini-1.5-flash" },
+// Listing AI: heavy tasks (counselor, questions, general assistant)
+// Model-outer: exhaust best model on both keys, then fall back.
+const LISTING_MODELS = [
+  "gemini-3.5-flash",
+  "gemini-3-flash-preview",
+  "gemini-2.5-flash",
 ];
+
+// Chat AI: lighter tasks (14-day coach)
+// Model-outer: exhaust best lite model on both keys, then fall back.
+const CHAT_MODELS = [
+  "gemini-3.1-flash-lite",
+  "gemini-2.5-flash",
+];
+
+// ─── Core fetch ─────────────────────────────────────────
 
 function getModelUrl(model: string, apiKey: string): string {
   return `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
 }
-
-// ─── Core fetch ────────────────────────────────────────
 
 interface GeminiResponse {
   candidates?: {
@@ -118,7 +123,7 @@ async function callModel(
   }
 }
 
-// ─── Model-outer callAI (exhaust best model on all keys first) ──
+// ─── callAI (model-outer: exhaust best model on all keys first) ──
 
 function getActiveKeys(): string[] {
   const keys: string[] = [];
@@ -127,7 +132,13 @@ function getActiveKeys(): string[] {
   return keys;
 }
 
-async function callAI(prompt: string, image?: ImageInput): Promise<string | null> {
+type AIPurpose = "listing" | "chat";
+
+async function callAI(
+  prompt: string,
+  image?: ImageInput,
+  purpose: AIPurpose = "listing",
+): Promise<string | null> {
   pruneRateLimitCache();
   const keys = getActiveKeys();
   if (keys.length === 0) {
@@ -135,27 +146,18 @@ async function callAI(prompt: string, image?: ImageInput): Promise<string | null
     return null;
   }
 
-  for (const tier of MODEL_TIERS) {
-    // Try all keys for this model tier, skipping rate-limited combos
-    for (const key of keys) {
-      if (isRateLimited(tier.model, key)) continue;
+  const models = purpose === "chat" ? CHAT_MODELS : LISTING_MODELS;
 
-      const { text, status } = await callModel(tier.model, key, prompt, image);
+  for (const model of models) {
+    for (const key of keys) {
+      if (isRateLimited(model, key)) continue;
+
+      const { text, status } = await callModel(model, key, prompt, image);
       if (text) return text;
 
       if (status === 400 || status === 403) continue;
       // 429: already marked by callModel, try next key
       // 5xx / timeout / network: try next key
-    }
-
-    // Lite fallback for this tier (only if tier has a lite variant)
-    if (tier.lite) {
-      for (const key of keys) {
-        if (isRateLimited(tier.lite, key)) continue;
-        const { text, status } = await callModel(tier.lite, key, prompt, image);
-        if (text) return text;
-        if (status === 400 || status === 403) continue;
-      }
     }
   }
 
@@ -169,7 +171,7 @@ async function callAI(prompt: string, image?: ImageInput): Promise<string | null
     console.warn(`[gemini] All key/model combos rate-limited, waiting ${Math.ceil(minExpiry / 1000)}s...`);
     await new Promise(r => setTimeout(r, minExpiry + 500));
     pruneRateLimitCache();
-    return callAI(prompt, image);
+    return callAI(prompt, image, purpose);
   }
 
   return null;
@@ -336,7 +338,7 @@ ${lengthInstruction}
 
 Be warm and reassuring — the adopter may be anxious. If the message mentions medical emergency symptoms (bleeding, not eating for 24+ hours, difficulty breathing, seizures), immediately advise contacting an emergency vet as your first and most prominent point. NEVER cut off mid-sentence.`;
 
-  const result = await callAI(prompt, image);
+  const result = await callAI(prompt, image, "chat");
   return result ?? fallbackCoachResponse(catName, adoptionDay, message);
 }
 

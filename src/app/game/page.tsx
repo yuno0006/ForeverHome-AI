@@ -25,7 +25,11 @@ import { getBestScore } from "@/lib/whiskerRunner/highScoreStorage";
 export default function GamePage() {
   const { user, role, loading } = useAuth();
   const [hasAccess, setHasAccess] = useState<boolean | null>(null);
-  const [bestScore, setBestScore] = useState(0);
+  const [upcomingSeason, setUpcomingSeason] = useState<{
+    current: string;
+    next: string;
+    targetScore: number;
+  } | null>(null);
 
   const randomCatName = useMemo(() => {
     return demoCats[Math.floor(Math.random() * demoCats.length)].name;
@@ -63,7 +67,6 @@ export default function GamePage() {
     }
 
     checkAdoptions();
-    setBestScore(getBestScore());
   }, [user, role, loading]);
 
   if (loading || hasAccess === null) {
@@ -99,7 +102,12 @@ export default function GamePage() {
     <div className="relative flex min-h-screen flex-col lg:flex-row items-center justify-center p-4 gap-6 max-w-7xl mx-auto">
       {/* Game track centered perfectly in the screen (order-1 on mobile/tablet, order-2 on large screens) */}
       <div className="w-full max-w-2xl z-10 order-1 lg:order-2">
-        <WhiskerRunnerGame catName={randomCatName} />
+        <WhiskerRunnerGame 
+          catName={randomCatName} 
+          onSeasonChange={(current, next, targetScore) => {
+            setUpcomingSeason({ current, next, targetScore });
+          }}
+        />
       </div>
 
       {/* Leaderboard on the left (order-3 on mobile/tablet, order-1 on large screens, floats absolutely on XL+) */}
@@ -137,10 +145,24 @@ export default function GamePage() {
                 </ul>
               </div>
 
-              <div className="border-t border-[#5D4037]/10 pt-2 text-[10px] text-[#8D6E63] italic">
-                {bestScore >= 8000
-                  ? "🎉 City Night Lights theme is UNLOCKED! Run into the city lights!"
-                  : "🌃 Reach 8,000 points to unlock the new City Night Lights theme!"}
+              <div className="border-t border-[#5D4037]/10 pt-2 text-[10px] text-[#8D6E63] space-y-1.5">
+                {upcomingSeason ? (
+                  <>
+                    <p className="flex justify-between">
+                      <span>🌅 Current Theme:</span>
+                      <span className="font-bold text-[#5D4037]">{upcomingSeason.current}</span>
+                    </p>
+                    <p className="flex justify-between">
+                      <span>🌃 Next Up Theme:</span>
+                      <span className="font-bold text-[#D84315]">{upcomingSeason.next}</span>
+                    </p>
+                    <p className="text-right text-[9px] text-[#8D6E63]/70 font-medium">
+                      Unlocks at {upcomingSeason.targetScore} points
+                    </p>
+                  </>
+                ) : (
+                  <p className="italic text-center">Loading game themes...</p>
+                )}
               </div>
             </div>
           </CardContent>
