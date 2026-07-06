@@ -1,7 +1,8 @@
 "use client";
 
+import { useMemo } from "react";
 import dynamic from "next/dynamic";
-
+import { demoCats } from "@/data/demoCats";
 import { LeaderboardPanel } from "@/components/game/LeaderboardPanel";
 
 const WhiskerRunnerGame = dynamic(
@@ -13,6 +14,10 @@ const WhiskerRunnerGame = dynamic(
 );
 
 export default function GamePage() {
+  const randomCatName = useMemo(() => {
+    return demoCats[Math.floor(Math.random() * demoCats.length)].name;
+  }, []);
+
   return (
     <div className="relative flex min-h-screen flex-col-reverse md:flex-row items-center justify-center p-4">
       {/* Leaderboard on the left side corner on desktop, below the game on mobile */}
@@ -21,7 +26,7 @@ export default function GamePage() {
       </div>
       {/* Game track centered perfectly in the screen */}
       <div className="w-full max-w-2xl z-10">
-        <WhiskerRunnerGame catName="Whiskers" />
+        <WhiskerRunnerGame catName={randomCatName} />
       </div>
     </div>
   );

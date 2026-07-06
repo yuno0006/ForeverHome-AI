@@ -547,6 +547,47 @@ function StarTrophySvg() {
   );
 }
 
+// ─── Traffic Cone (City) ────────────────────────────────────────
+function TrafficConeSvg() {
+  return (
+    <svg viewBox="0 0 48 56" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="traffic cone">
+      <rect x="8" y="46" width="32" height="4" rx="2" fill="#E65100" />
+      <polygon points="14,46 34,46 28,16 20,16" fill="#FF9800" />
+      <polygon points="16,36 32,36 30,26 18,26" fill="#FFF" />
+      <ellipse cx="24" cy="16" rx="4" ry="2" fill="#E65100" />
+    </svg>
+  );
+}
+
+// ─── Trash Can (City) ───────────────────────────────────────────
+function TrashCanSvg() {
+  return (
+    <svg viewBox="0 0 48 56" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="trash can">
+      <rect x="12" y="24" width="24" height="26" fill="#78909C" />
+      <rect x="10" y="20" width="28" height="4" rx="2" fill="#546E7A" />
+      <rect x="18" y="16" width="12" height="4" rx="2" fill="#546E7A" />
+      <line x1="16" y1="28" x2="16" y2="46" stroke="#546E7A" strokeWidth="2" />
+      <line x1="24" y1="28" x2="24" y2="46" stroke="#546E7A" strokeWidth="2" />
+      <line x1="32" y1="28" x2="32" y2="46" stroke="#546E7A" strokeWidth="2" />
+    </svg>
+  );
+}
+
+// ─── Fire Hydrant (City) ────────────────────────────────────────
+function FireHydrantSvg() {
+  return (
+    <svg viewBox="0 0 48 56" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="fire hydrant">
+      <rect x="14" y="46" width="20" height="4" rx="2" fill="#B71C1C" />
+      <rect x="18" y="24" width="12" height="22" fill="#D32F2F" />
+      <circle cx="24" cy="22" r="8" fill="#D32F2F" />
+      <rect x="12" y="30" width="6" height="8" rx="2" fill="#B71C1C" />
+      <rect x="30" y="30" width="6" height="8" rx="2" fill="#B71C1C" />
+      <circle cx="24" cy="34" r="4" fill="#B71C1C" />
+      <rect x="20" y="14" width="8" height="4" rx="2" fill="#B71C1C" />
+    </svg>
+  );
+}
+
 function getComponent(type: ObstacleType, variant: number, seasonIndex: number) {
   if (type === "ground") {
     switch (seasonIndex) {
@@ -571,6 +612,9 @@ function getComponent(type: ObstacleType, variant: number, seasonIndex: number) 
       case 6: // Winter
         const winterList = [CardboardBoxSvg, SnowmanSvg, IceBlockSvg, HollyBushSvg];
         return winterList[((variant % winterList.length) + winterList.length) % winterList.length];
+      case 7: // City Night Lights
+        const cityList = [CardboardBoxSvg, TrafficConeSvg, TrashCanSvg, FireHydrantSvg];
+        return cityList[((variant % cityList.length) + cityList.length) % cityList.length];
       default:
         return CardboardBoxSvg;
     }

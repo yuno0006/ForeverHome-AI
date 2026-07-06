@@ -557,11 +557,11 @@ export function WhiskerRunnerGame({ catName, onClose }: WhiskerRunnerGameProps) 
 
   const obstacles = stateRef.current.obstacles;
 
-  // Automated 7-Phase Cycle: repeats every 7000 points.
-  // 7 seasons of 1000 pts each (700 pts stay, 300 pts transition).
-  const localScore = tick.score % 7000;
+  // Automated 8-Phase Cycle: repeats every 8000 points.
+  // 8 seasons of 1000 pts each (700 pts stay, 300 pts transition).
+  const localScore = tick.score % 8000;
   const seasonIndex = Math.floor(localScore / 1000);
-  const nextSeasonIndex = (seasonIndex + 1) % 7;
+  const nextSeasonIndex = (seasonIndex + 1) % 8;
   const progressInSeason = localScore % 1000;
 
   let currentWeight = 1;
@@ -573,12 +573,12 @@ export function WhiskerRunnerGame({ catName, onClose }: WhiskerRunnerGameProps) 
     nextWeight = t;
   }
 
-  const weights = Array(7).fill(0);
+  const weights = Array(8).fill(0);
   weights[seasonIndex] = currentWeight;
   weights[nextSeasonIndex] = nextWeight;
 
-  // Let's define the moon weight (Spooky season (1) and Cosmic space (3) are night!)
-  const nightW = weights[1] + weights[3];
+  // Let's define the moon weight (Spooky (1), Cosmic (3), City Night (7) are night!)
+  const nightW = weights[1] + weights[3] + weights[7];
   
   // Morning/Day weight (Summer (0), Spring (2), Rainy (5), Winter (6))
   const morningW = weights[0] + weights[2] + weights[5] + weights[6];
@@ -593,7 +593,7 @@ export function WhiskerRunnerGame({ catName, onClose }: WhiskerRunnerGameProps) 
   const sunScale = sunActiveW > 0 ? (morningW * 1.0 + eveningW * 1.15) / sunActiveW : 1.0;
 
   // Select thematic information for Game Over screen based on crashed season
-  const crashSeason = Math.floor((tick.score % 7000) / 1000);
+  const crashSeason = Math.floor((tick.score % 8000) / 1000);
   const seasonDetails = [
     { label: "Beach Breeze 🏖️", msg: "Splashed by a big wave!" },
     { label: "Mystic Night 👻", msg: "Spooked by glowing wisps!" },
@@ -602,6 +602,7 @@ export function WhiskerRunnerGame({ catName, onClose }: WhiskerRunnerGameProps) 
     { label: "Autumn Wind 🍂", msg: "Swept away by tumbling leaves!" },
     { label: "Monsoon Rain 🌧️", msg: "Slipped on a wet puddle!" },
     { label: "Winter Snow ❄️", msg: "Brrr! Paws are frozen solid!" },
+    { label: "City Night Lights 🏙️", msg: "Distracted by the neon lights!" },
   ];
   const currentSeasonInfo = seasonDetails[crashSeason] || seasonDetails[0];
 
@@ -679,6 +680,40 @@ export function WhiskerRunnerGame({ catName, onClose }: WhiskerRunnerGameProps) 
           opacity: weights[6],
         }}
       />
+      {/* ─── Sky Layer 7: City Night Lights (Deep Purple-Blue) ─── */}
+      <div
+        className="absolute inset-0 z-0 overflow-hidden"
+        style={{
+          background: "linear-gradient(180deg, #1A1A3A 0%, #29295C 50%, #442266 100%)",
+          opacity: weights[7],
+        }}
+      >
+        {/* City Skyline Silhouette */}
+        <div className="absolute bottom-[35px] w-full h-[60%] flex items-end">
+          <svg viewBox="0 0 1000 200" preserveAspectRatio="none" className="w-full h-full opacity-70" fill="#111122">
+            {/* Buildings */}
+            <rect x="2%" y="80" width="8%" height="120" />
+            <rect x="15%" y="40" width="10%" height="160" />
+            <rect x="30%" y="90" width="12%" height="110" />
+            <rect x="48%" y="20" width="14%" height="180" />
+            <rect x="68%" y="70" width="10%" height="130" />
+            <rect x="85%" y="100" width="10%" height="100" />
+            {/* Cute Neon Windows */}
+            <rect x="17%" y="55" width="2%" height="5" fill="#FFC107" />
+            <rect x="21%" y="55" width="2%" height="5" fill="#FFC107" />
+            <rect x="19%" y="75" width="2%" height="5" fill="#FFC107" />
+            
+            <rect x="51%" y="40" width="2%" height="5" fill="#E040FB" />
+            <rect x="56%" y="40" width="2%" height="5" fill="#E040FB" />
+            <rect x="49%" y="65" width="2%" height="5" fill="#E040FB" />
+            <rect x="58%" y="65" width="2%" height="5" fill="#E040FB" />
+
+            <rect x="71%" y="90" width="2%" height="5" fill="#00E676" />
+            <rect x="75%" y="90" width="2%" height="5" fill="#00E676" />
+            <rect x="71%" y="110" width="2%" height="5" fill="#00E676" />
+          </svg>
+        </div>
+      </div>
 
       {/* ─── Stars (Visible in Night: Case 5 & 6) ─── */}
       <div

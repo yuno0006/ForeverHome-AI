@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useMemo } from "react";
 import {
   subscribeLeaderboard,
   type LeaderboardEntry,
 } from "@/lib/whiskerRunner/leaderboardService";
 import { useAuth } from "@/hooks/useAuth";
+import { getBestScore } from "@/lib/whiskerRunner/highScoreStorage";
 
 const MEDAL_COLORS = ["#F9A825", "#9E9E9E", "#8D6E63"];
 const MEDAL_EMOJIS = ["🥇", "🥈", "🥉"];
@@ -20,6 +21,8 @@ export function LeaderboardPanel() {
   const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const [guestScore, setGuestScore] = useState<number>(0);
 
   // Track whether we've already rendered, so loading only shows on first load
   const hasLoadedRef = useRef(false);
@@ -43,6 +46,33 @@ export function LeaderboardPanel() {
       setLoading(false);
     }
   }, []);
+
+  // Poll for local high score for guests so they can see themselves on the board
+  useEffect(() => {
+    if (!currentUid) {
+      setGuestScore(getBestScore());
+      const interval = setInterval(() => {
+        setGuestScore(getBestScore());
+      }, 1000);
+      return () => clearInterval(interval);
+    }
+  }, [currentUid]);
+
+  const displayEntries = useMemo(() => {
+    let list = [...entries];
+    // If not logged in and has a local score, inject a "Guest" entry
+    if (!currentUid && guestScore > 0) {
+      list.push({
+        id: "guest-local",
+        userId: "guest",
+        displayName: "You (Guest)",
+        score: guestScore,
+        timestamp: new Date().toISOString(),
+      });
+      list.sort((a, b) => b.score - a.score);
+    }
+    return list;
+  }, [entries, currentUid, guestScore]);
 
   // Loading state — only shown on first mount before any data arrives
   if (loading && !hasLoadedRef.current) {
@@ -102,7 +132,7 @@ export function LeaderboardPanel() {
     );
   }
 
-  if (entries.length === 0) {
+  if (displayEntries.length === 0) {
     return (
       <div
         className="w-full sm:w-[180px] shrink-0 rounded-xl border-2 border-amber-200 bg-cream/70 p-3"
@@ -167,9 +197,9 @@ export function LeaderboardPanel() {
 
       {/* Rankings — compact horizontal on mobile, vertical on sm+ */}
       <div className="flex flex-row flex-wrap gap-1 sm:flex-col sm:flex-nowrap sm:gap-0 sm:space-y-1">
-        {entries.slice(0, 8).map((entry, index) => {
+        {displayEntries.slice(0, 8).map((entry, index) => {
           const isTop3 = index < 3;
-          const isMe = currentUid && entry.userId === currentUid;
+          const isMe = (currentUid && entry.userId === currentUid) || (!currentUid && entry.userId === "guest");
           const medalColor = isTop3 ? MEDAL_COLORS[index] : undefined;
 
           return (
@@ -233,9 +263,16 @@ export function LeaderboardPanel() {
       </div>
 
       {/* Footer with entry count */}
-      <div className="mt-1 sm:mt-2 flex items-center justify-between text-[10px] opacity-40" style={{ color: "#5D4037" }}>
-        <span>🐾 · 🐾 · 🐾</span>
-        <span>{entries.length} players</span>
+      <div className="mt-1 sm:mt-2 flex flex-col gap-1 text-[10px] opacity-40" style={{ color: "#5D4037" }}>
+        <div className="flex items-center justify-between">
+          <span>🐾 · 🐾 · 🐾</span>
+          <span>{displayEntries.length} players</span>
+        </div>
+        {!currentUid && (
+          <div className="text-center italic mt-1 font-medium opacity-80" style={{ color: "#D94545" }}>
+            * Log in to save score globally
+          </div>
+        )}
       </div>
     </div>
   );

@@ -133,10 +133,33 @@ export function stepGame(
 
   const elapsedMs = state.elapsedMs + clampedDeltaMs;
 
-  // Speed ramp: non-decreasing, capped at MAX_SPEED.
+  // Difficulty Progression (Easy -> Moderate -> Medium -> Hard)
+  let currentBaseSpeed = BASE_SPEED;
+  let currentMaxSpeed = MAX_SPEED;
+  let currentMinGap = MIN_SPAWN_GAP;
+  let currentMaxGap = MAX_SPAWN_GAP;
+
+  if (state.score >= 3000) { // Hard
+    currentBaseSpeed = BASE_SPEED * 1.6;
+    currentMaxSpeed = MAX_SPEED * 1.3;
+    currentMinGap = MIN_SPAWN_GAP * 0.7;
+    currentMaxGap = MAX_SPAWN_GAP * 0.7;
+  } else if (state.score >= 1500) { // Medium
+    currentBaseSpeed = BASE_SPEED * 1.4;
+    currentMaxSpeed = MAX_SPEED * 1.15;
+    currentMinGap = MIN_SPAWN_GAP * 0.8;
+    currentMaxGap = MAX_SPAWN_GAP * 0.8;
+  } else if (state.score >= 500) { // Moderate
+    currentBaseSpeed = BASE_SPEED * 1.2;
+    currentMaxSpeed = MAX_SPEED * 1.05;
+    currentMinGap = MIN_SPAWN_GAP * 0.9;
+    currentMaxGap = MAX_SPAWN_GAP * 0.9;
+  }
+
+  // Speed ramp: non-decreasing, capped at currentMaxSpeed.
   const speed = Math.min(
-    MAX_SPEED,
-    BASE_SPEED + (SPEED_RAMP_PER_SEC * elapsedMs) / 1000
+    currentMaxSpeed,
+    currentBaseSpeed + (SPEED_RAMP_PER_SEC * elapsedMs) / 1000
   );
 
   // Jump impulse: only when grounded, not ducking, and jump was requested
@@ -203,7 +226,7 @@ export function stepGame(
     // non-spawning steps.
     rngSeed = Math.floor(gapRoll * 0x100000000);
     nextSpawnDistance =
-      state.nextSpawnDistance + MIN_SPAWN_GAP + gapRoll * (MAX_SPAWN_GAP - MIN_SPAWN_GAP);
+      state.nextSpawnDistance + currentMinGap + gapRoll * (currentMaxGap - currentMinGap);
   }
 
   return {
