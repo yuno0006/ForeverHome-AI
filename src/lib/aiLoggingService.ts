@@ -9,20 +9,29 @@
  * - No full conversation context stored
  * - Logs are immutable — no updates or deletes
  * - Read access restricted to admins via Cloud Functions
+ *
+ * Note: Firestore writes only work from the browser (client SDK has auth).
+ * Server-side API routes lack an auth context, so writes are silently skipped.
  */
 import { db } from "./firebase";
 import { collection, addDoc, Timestamp } from "firebase/firestore";
 import { AILogInput, AISource } from "@/types/aiLog";
 
+const IS_BROWSER = typeof window !== "undefined";
 const USE_FIRESTORE = process.env.NEXT_PUBLIC_FIREBASE_API_KEY !== undefined;
 
 /**
- * Log an AI interaction to Firestore (or sessionStorage in demo mode).
+ * Log an AI interaction to Firestore (browser) or sessionStorage (demo mode).
+ * Server-side calls are silently skipped — Firestore client SDK has no auth
+ * context in API routes.
  *
  * @param input - The AI log entry (uid, catId, question, response, source)
  * @returns The generated log ID, or null if logging is unavailable
  */
 export async function logAIInteraction(input: AILogInput): Promise<string | null> {
+  // Server-side: skip Firestore write (client SDK lacks auth context)
+  if (!IS_BROWSER) return null;
+
   try {
     if (!USE_FIRESTORE) {
       // Demo mode: store in sessionStorage (cleared on tab close)
