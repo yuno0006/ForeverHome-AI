@@ -12,12 +12,40 @@ ForeverHome AI serves as an intelligent matching system designed to minimize ado
 
 With **7–20% of shelter cats returned within 6 months** — usually due to preventable mismatches rather than behavioral problems — ForeverHome AI addresses this at every stage of the adoption journey:
 
-- **Pre-Adoption**: A 10-question deterministic compatibility assessment flags risk areas (noise sensitivity, energy mismatch, medical needs) and automatically recommends better-matched alternatives
-- **Post-Adoption**: A gamified 14-day curriculum called the **9 Lives Protocol™** guides adopters through common challenges (hiding, not eating, zoomies), while an AI Coach (Mr. Cat) provides cat-specific contextual advice
-- **Safety**: A deterministic medical escalation layer with 26 emergency keywords intercepts urgent situations before any AI call, routing them to immediate human attention
-- **Shelter Side**: An insights dashboard helps staff track adoptions, identify concerning patterns, and prioritize cats needing attention
+- **Pre-Adoption**: A 10-question deterministic compatibility assessment flags risk areas (noise sensitivity, energy mismatch, medical needs) and automatically recommends better-matched alternatives. Every cat profile page includes an AI Quick Match widget for instant compatibility previews.
+- **Post-Adoption**: A gamified 14-day curriculum called the **9 Lives Protocol™** guides adopters through common challenges (hiding, not eating, zoomies), while an **AI Coach (Mr. Cat)** provides cat-specific contextual advice — injected with that specific cat's behavioral profile and the adopter's complete check-in history.
+- **Safety First**: A deterministic medical escalation layer with 26 emergency keywords intercepts urgent situations before any AI call, routing them to immediate human attention. We deliberately chose **not to build shelter-adopter chat** — shelters lack the staffing for real-time messaging, so AI handles 90% of questions instantly and Smart Escalation surfaces only the 10% needing human review.
+- **Shelter Side**: An insights dashboard, cat inventory management, adoption request tracking, and concern analytics help shelter staff operate efficiently.
+- **Engagement Layer**: Whisker Runner mini-game and a 19-card Fun Facts Slideshow keep users engaged while educating them about cat behavior — building realistic expectations before adoption.
 
 The system was built in **151 TypeScript files** using Next.js 16, Firebase, and Google Gemini AI — with a **deterministic-first philosophy**: AI explains results but never makes the matching decision itself. The application is deployed at **[forever-home-ai.vercel.app](https://forever-home-ai.vercel.app/)** and available as both a responsive website and an installable Progressive Web App (PWA) with offline support.
+
+### Full User Journey (Account Required)
+
+The app requires an account for all features. The onboarding flow captures lifestyle data critical for compatibility matching, and the 14-day coach requires persistent check-in history:
+
+```
+1. Login / Register (Google OAuth or Email/Password)
+     ↓
+2. Onboarding — Role Selection (Adopter or Shelter Staff)
+     ↓  (Adopter: 12 fields)
+   Home type, garden, indoor-only, children + ages, other pets, 
+   cat experience, work schedule, household activity, personality 
+   preference, age preference, special needs openness
+     ↓  (Shelter: name, address, phone, email, optional cat creation)
+     ↓
+3. Dashboard — Personalized command center
+   • Profile completion status + edit link
+   • Past assessments with risk badges (High/Moderate/Low)
+   • Active adoptions with day counter + "Open Coach" button
+   • Quick links: Browse Cats, View Report
+     ↓
+4. Browse Cats → Cat Profile (photo gallery, behavior bars, backstory, 
+   AI Quick Match) → Full Assessment (10 questions) → Compatibility Report
+   (risk badge, rules, AI explanation, TTS, alternatives) → Start 14-Day Coach
+```
+
+**Why account-first?** Compatibility data must persist across sessions. The 14-day coach requires check-in history. Shelters need verified identities for adoption requests. A demo-only experience cannot provide the continuity adopters need during the critical settling period.
 
 ---
 
@@ -47,15 +75,19 @@ Every return costs shelters time, money, kennel capacity, and emotional resource
 
 | User | Use Case |
 |------|----------|
-| **Shelter staff / behaviorists** | Standardized compatibility assessments, adoption tracking, concern pattern detection, smart escalation queue |
-| **Prospective adopters** | Browse cats with rich behavioral profiles, take the 10-question quiz, get transparent compatibility results with alternatives |
-| **Recent adopters** | Daily check-ins, gamified 14-day curriculum, AI Coach (Mr. Cat) with cat-specific behavioral advice, photo sharing |
-| **Shelter admins / directors** | Insights dashboard — active adoptions, cats needing attention, common compatibility concerns by frequency |
-| **General public (guest mode)** | Full demo without login — browse cats, take assessment, see report with TTS narration, play Whisker Runner |
+| **Shelter staff / behaviorists** | Standardized compatibility assessments, adoption tracking, concern pattern detection, smart escalation queue, cat inventory management |
+| **Prospective adopters** | Account → onboarding → browse cats with rich behavioral profiles → AI Quick Match preview → 10-question quiz → transparent compatibility report with alternatives → daily check-ins → 14-day AI coach |
+| **Recent adopters** | Daily check-ins (eating, litter, hiding, activity), gamified 14-day curriculum, AI Coach (Mr. Cat) with cat-specific behavioral advice, photo sharing, Smart Escalation when needed |
+| **Shelter admins / directors** | Insights dashboard — active adoptions, cats needing attention, common compatibility concerns ranked by frequency, adoption request review, staff management |
+
+> **Note:** An account is required to use the platform. The landing page, cat profiles, and Whisker Runner game are viewable without login, but assessment, coaching, and dashboard features require authentication + completed onboarding.
 
 ---
 
 ## 3. Key Features
+
+### Onboarding — 12-Field Adopter Profile Setup
+Immediately after login, first-time users complete onboarding: role selection (Adopter or Shelter Staff), then a 12-field lifestyle questionnaire capturing home type, garden access, indoor-only preference, children (with age ranges), other pets (with counts), cat experience level, work schedule, household activity, personality preferences, age preferences, and special-needs openness. This data is critical — it feeds directly into the compatibility engine. Without it, matching cannot be accurate.
 
 ### Deterministic Compatibility Engine (No Black-Box AI)
 10 fixed rules assess cat-adopter compatibility — no machine learning, no black-box decisions. Every concern is transparent and explained:
@@ -74,6 +106,12 @@ Every return costs shelters time, money, kennel capacity, and emotional resource
 | `fiv-experience` | FIV+ cat + no prior cat/special-needs experience |
 
 Reports show a color-coded risk badge (Green/Yellow/Red), exact rule logic, mitigation steps, and automatically recommended alternative cats with better compatibility.
+
+### AI Quick Match — On Every Cat Profile Page
+Every cat profile has an embedded chat widget (purple gradient "AI Quick Match" card) that asks 4 lifestyle questions in a conversational interface. In 30 seconds, it calls `/api/counselor` to generate a personalized compatibility preview — lowering the barrier to the full assessment.
+
+### Rich Cat Profiles — 7 Behavior Dimensions
+Each cat profile displays: photo gallery with captions, 7 behavior bar charts (energy, sociability, stress sensitivity, handling tolerance, play needs, noise tolerance, vertical space needs), compatibility indicators for children/other cats/dogs, personality trait cards with descriptions, narrative backstory with arrival date, health badges (vaccinated/microchipped/neutered), FIV status, medical notes, ideal home description, shelter info, and a Quick Facts sidebar (breed, color, weight, age, sex, adoption fee).
 
 ### 9 Lives Protocol™ — Gamified Post-Adoption Curriculum
 14-day journey turning common adoption failure points into achievement milestones:
@@ -99,6 +137,11 @@ Unlike generic pet advice apps, Mr. Cat is injected with:
 - **Current adoption day** (what's normal at each stage)
 - **Optional photo sharing** — adopter sends a photo, AI describes what it observes
 
+Example: *"I see Barnaby has been eating well (good sign!) but still hiding on Day 3. This is completely normal — let's talk about why..."*
+
+### Daily Check-ins — Structured Behavioral Tracking
+Each day, adopters complete 4 toggles (Eating normally? Using litter box? Still hiding? Normal activity?) plus a free-text note. This structured data feeds into the AI coach for context-aware responses and enables pattern detection for Smart Escalation.
+
 ### Deterministic Medical Safety Layer (Defense-in-Depth)
 26 emergency keywords scanned **before any AI call**. If detected ("not breathing", "seizure", "unconscious", "collapse", "poisoned", "bleeding"), the system returns an immediate medical emergency response without ever contacting the AI. Emergency contact buttons are permanently visible in the coach interface.
 
@@ -111,6 +154,9 @@ When concerning patterns emerge (missed check-ins, declining metrics), adopters 
 - Common compatibility concerns ranked by frequency
 - Data-driven pattern analysis for organizational learning
 
+### Fun Facts Slideshow — 19 Cat Trivia Cards
+An auto-rotating carousel on the landing page featuring 19 beautifully designed cards with cat facts spanning history, science, and pop culture: Egyptian cat gods, healing purr frequencies (25-140 Hz for tissue regeneration), unique nose prints, inability to taste sweetness, 70% of life spent sleeping, whisker air-current detection, 32 ear muscles, 6x body-length jumps, Félicette the space cat, Mayor Stubbs of Talkeetna Alaska, reflective eye layer for night vision, 53 vertebrae for flexibility, missing collarbone ("cats are liquid"), meowing evolved for humans, paw-pad sweating, left/right-pawedness, 30 mph sprint speed, Isaac Newton's cat flap invention, and Viking ship cats. Cards auto-rotate every 5 seconds with manual prev/next/pause controls. Designed to educate adopters about cat capabilities and set realistic expectations.
+
 ### Whisker Runner Mini-Game
 Endless-runner platformer built in Canvas + TypeScript: custom cat sprite animations (run, jump, idle, hit, celebration), progressive obstacle difficulty, deterministic RNG for reproducible levels, high score persistence.
 
@@ -119,6 +165,69 @@ Compatibility reports feature text-to-speech via Web Speech API for accessibilit
 
 ### PWA Support
 ForeverHome AI is available as both a **responsive website** and an **installable Progressive Web App**. Add it to your home screen on iOS or Android for a native app-like experience with offline support, custom manifest, and service worker via `@ducanh2912/next-pwa`. No app store required — just visit [forever-home-ai.vercel.app](https://forever-home-ai.vercel.app/) and tap "Add to Home Screen."
+
+---
+
+## 3a. How AI Is Used — Screen by Screen
+
+We follow a **deterministic-first, AI-for-explanation** philosophy. AI never makes the matching decision — it explains structured results in warm, human language.
+
+| Screen | AI Role | API Endpoint | What AI Receives |
+|--------|---------|-------------|------------------|
+| **Cat Profile** | AI Quick Match widget generates compatibility preview | `POST /api/counselor` | 4 adopter answers + cat breed/name |
+| **Assessment → Report** | AI Counselor explains triggered rules, risk level, and mitigation steps in narrative prose | `POST /api/counselor` | Full compatibility result (risk level, all concerns, all strengths) + cat profile + adopter profile |
+| **Coach Chat** | AI Coach (Mr. Cat) provides behavioral advice contextualized to this specific cat and adopter | `POST /api/coach` | Cat behavioral profile (all 13 fields) + complete check-in history + current adoption day + message + optional photo |
+| **General Help** | General AI assistant for site-wide questions | `POST /api/assistant` | User message |
+| **Medical Emergency** | **AI is bypassed entirely** — deterministic keyword match returns immediate emergency response | N/A (intercepted) | 26 emergency keywords scanned pre-AI |
+
+**Why AI explains, but doesn't decide:**
+- Matching decisions affect a living being's future — they must be auditable, consistent, and transparent
+- Shelters can challenge and adjust deterministic rules; they cannot audit a black-box neural network
+- Same inputs always produce the same compatibility result — critical for shelter trust and legal defensibility
+- AI hallucination on medical questions is unacceptable — the deterministic safety layer catches emergencies first
+
+**AI Failover:**
+```
+gemini-3.5-flash → gemini-3-flash-preview → gemini-2.5-flash
+With lite variants at each tier. HTTP 429 → 90s rate-limit cooldown.
+All tiers exhausted → deterministic fallback response (no AI needed).
+```
+
+---
+
+## 3b. Design Decisions & Rationale
+
+### Why No Shelter-Adopter Direct Chat
+
+We intentionally did NOT build messaging between shelters and adopters:
+
+1. **Shelters are severely understaffed** — most operate with 2-5 staff managing hundreds of animals. Real-time chat would create an unsustainable support burden.
+2. **Unanswered messages erode trust** — an adopter waiting days for a reply has a worse experience than no chat at all.
+3. **AI Coach fills the gap** — Mr. Cat provides instant 24/7 behavioral support that shelters physically cannot.
+4. **Escalation is deliberate, not casual** — requiring intentional escalation (rather than casual messaging) ensures shelter staff only see the 10% of cases needing human intervention.
+5. **Phone/email for real emergencies** — permanently visible emergency contact in the coach interface for immediate human needs.
+
+**Design trade-off:** AI handles 90% of questions instantly → Smart Escalation surfaces 10% needing humans → shelter staff focus on high-impact interventions.
+
+### Why a Mini-Game (Whisker Runner)
+
+Whisker Runner is strategic, not filler:
+
+1. **Retention & dwell time** — users spend more time on the platform when there's something fun between serious features
+2. **Brand reinforcement** — dodging obstacles and collecting treats mirrors the adoption journey (overcoming challenges, finding rewards)
+3. **PWA showcase** — proves the app handles intensive Canvas rendering and keyboard input — it's a real app, not just a form
+4. **Low-friction entry** — the game works without login, serving as a gentle introduction before account creation
+5. **Technical depth** — custom sprite animations, deterministic RNG, collision detection, high score persistence — demonstrates engineering capability beyond CRUD
+
+### Why Fun Facts Slideshow
+
+19 animated trivia cards on the landing page serve a specific purpose:
+
+1. **Education disguised as entertainment** — adopters learn about cat hearing, night vision, flexibility, and communication before adopting — setting realistic expectations
+2. **Dwell time & engagement** — auto-rotating cards with manual controls keep users scrolling and discovering
+3. **Shareability** — "Did you know cats can't taste sweetness?" is inherently shareable content, driving word-of-mouth
+4. **Brand personality** — the playful, warm tone of the facts (Mayor Stubbs! Space cat Félicette!) reinforces the app's approachable identity
+5. **No account needed** — visible to all visitors, making the landing page valuable even before signup
 
 ---
 
