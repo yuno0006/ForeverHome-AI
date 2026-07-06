@@ -42,8 +42,10 @@ export default function Header() {
       { href: "/", label: "Home", icon: Home },
       { href: "/cats", label: "Cats", icon: Cat },
       { href: "/coach", label: "AI Coach", icon: MessageCircle },
-      { href: "/assessment/new", label: "Quiz", icon: Sparkles },
     ];
+    if (!userDoc?.onboardingComplete) {
+      alwaysLinks.push({ href: "/assessment/new", label: "Quiz", icon: Sparkles });
+    }
     if (!user) return [
       ...alwaysLinks,
       { href: "/about", label: "About", icon: Info },

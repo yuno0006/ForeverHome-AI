@@ -194,6 +194,9 @@ export default function AssessmentPage() {
   const [currentStep, setCurrentStep] = useState(-1); // -1 = lifestyle questions
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
+  
+  const [dynamicQuestions, setDynamicQuestions] = useState<ScenarioQuestionData[]>(scenarioQuestions);
+  const [generatingQuestions, setGeneratingQuestions] = useState(false);
 
   // Lifestyle pre-questions state
   const [lifestyleAnswers, setLifestyleAnswers] = useState({
@@ -240,9 +243,50 @@ export default function AssessmentPage() {
     loadProfile();
   }, [user, authLoading, router, catId]);
 
+  // Load dynamic scenario questions for specific cats
+  useEffect(() => {
+    async function loadDynamicQuestions() {
+      if (isGeneralMode || !cat || profileLoading || !profile) return;
+      if (isGuest) {
+        setDynamicQuestions(scenarioQuestions.slice(0, 4));
+        return;
+      }
+      
+      setGeneratingQuestions(true);
+      try {
+        const adopterProfileStr = `Home: ${profile.homeType}, Kids: ${profile.hasChildren}, Pets: ${profile.hasExistingPets ? 'Yes' : 'No'}, Experience: ${profile.catExperience}`;
+        const res = await fetch("/api/generate-questions", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ catId, adopterProfileStr })
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.questions && data.questions.length === 4) {
+            setDynamicQuestions(data.questions);
+          } else {
+            setDynamicQuestions(scenarioQuestions.slice(0, 4));
+          }
+        } else {
+          setDynamicQuestions(scenarioQuestions.slice(0, 4));
+        }
+      } catch (e) {
+        console.error("Failed to generate questions:", e);
+        setDynamicQuestions(scenarioQuestions.slice(0, 4));
+      } finally {
+        setGeneratingQuestions(false);
+      }
+    }
+    
+    // Check if we need to load them (i.e. we're using the default 10 right now)
+    if (dynamicQuestions.length > 4 && !isGeneralMode && cat && profile) {
+      loadDynamicQuestions();
+    }
+  }, [isGeneralMode, cat, profile, profileLoading, isGuest, catId, dynamicQuestions.length]);
+
   // Handle answer selection
   const handleAnswer = (value: string) => {
-    const currentQuestion = scenarioQuestions[currentStep];
+    const currentQuestion = dynamicQuestions[currentStep];
     setAnswers({ ...answers, [currentQuestion.id]: value });
   };
 
@@ -273,16 +317,21 @@ export default function AssessmentPage() {
 
   // Handle next/submit
   const handleNext = async () => {
-    const isLastStep = currentStep === scenarioQuestions.length - 1;
+    const isLastStep = currentStep === dynamicQuestions.length - 1;
 
     if (isLastStep) {
       if (!profile) return;
 
       setSubmitting(true);
-      const scenarioAnswers: ScenarioAnswer[] = scenarioQuestions.map((q) => ({
+      const scenarioAnswers: ScenarioAnswer[] = dynamicQuestions.map((q) => ({
         questionId: q.id,
         answer: answers[q.id] || "",
       }));
+      
+      const scenarioQA = dynamicQuestions.map((q) => {
+        const option = q.options.find(o => o.value === answers[q.id]);
+        return `Q: ${q.scenario}\nA: ${option ? option.label : "No answer"} (${option?.score || 0} points)`;
+      }).join("\n\n");
 
       if (isGeneralMode) {
         // General mode: assess against ALL available cats
@@ -349,6 +398,7 @@ export default function AssessmentPage() {
             scenarioAnswers,
             result,
             timestamp: new Date().toISOString(),
+            scenarioQA,
           };
 
           if (!isGuest && user) {
@@ -391,10 +441,13 @@ export default function AssessmentPage() {
   };
 
   // Loading state
-  if (authLoading || profileLoading) {
+  if (authLoading || profileLoading || generatingQuestions) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-warm-cream">
+      <div className="flex min-h-screen items-center justify-center bg-warm-cream flex-col gap-4">
         <Loader2 className="size-8 animate-spin text-sunny" />
+        {generatingQuestions && (
+          <p className="text-cocoa font-bold">Generating personalized assessment for {cat?.name}...</p>
+        )}
       </div>
     );
   }
@@ -620,9 +673,9 @@ export default function AssessmentPage() {
   }
 
   // === QUIZ VIEW (shared by both modes) ===
-  const currentQuestion = currentStep >= 0 ? scenarioQuestions[currentStep] : null;
+  const currentQuestion = currentStep >= 0 ? dynamicQuestions[currentStep] : null;
   const currentAnswer = currentQuestion ? (answers[currentQuestion.id] || "") : "";
-  const totalQuizSteps = scenarioQuestions.length + 1; // +1 for lifestyle step
+  const totalQuizSteps = dynamicQuestions.length + 1; // +1 for lifestyle step
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -821,7 +874,7 @@ export default function AssessmentPage() {
                   >
                     {submitting ? (
                       <Loader2 className="size-4 animate-spin" />
-                    ) : currentStep === scenarioQuestions.length - 1 ? (
+                    ) : currentStep === dynamicQuestions.length - 1 ? (
                       "See Results"
                     ) : (
                       "Next"

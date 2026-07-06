@@ -51,7 +51,7 @@ The app is a **gated experience** — users must create an account before access
 
 | Stage | Feature | What It Does | AI Implementation | Why We Built It |
 |-------|---------|-------------|-------------------|-----------------|
-| **Pre-Adoption** | Compatibility Assessment | 10-question quiz (5 lifestyle + 5 scenario) → deterministic engine → transparent risk report | **AI Counselor** explains the report in warm, natural language — but never makes the matching decision | Shelters need transparent, auditable matching; AI is perfect for narrative explanation, dangerous for life-altering decisions |
+| **Pre-Adoption** | Cat-Specific Dynamic Assessment | 4 dynamic AI-generated scenario questions based on cat traits + adopter lifestyle → deterministic engine | **AI Counselor** generates the tailored questions and later explains the report incorporating these specific answers | Generic questions don't reveal how adopters will react to specific cat behaviors; dynamic AI scenarios test the exact friction points |
 | **Pre-Adoption** | AI Quick Match (Cat Profile) | 4-question chat widget on every cat page gives instant compatibility preview in 30 seconds | Calls `/api/counselor` with adopter answers + cat profile → returns personalized prose | Lowers barrier to assessment; users get instant feedback before committing to the full 10-question quiz |
 | **Pre-Adoption** | Whisker Runner Game | Endless-runner platformer with custom cat sprites, progressive difficulty, high scores | No AI — pure Canvas + TypeScript engine with deterministic RNG | Engagement & brand building: keeps users on the platform longer, reinforces cat theme, provides fun mental breaks between serious assessment steps |
 | **Pre-Adoption** | Cat Profile Pages | Rich profiles with photo gallery, backstory, personality traits, behavior bars, medical notes, care requirements, ideal home description | No AI in data — AI Quick Match widget provides interactive compatibility preview | Adopters need deep behavioral context before committing; a single photo isn't enough to decide on a 15-year commitment |
@@ -98,7 +98,7 @@ Whisker Runner isn't filler — it's strategic:
 | **Dashboard** | `/dashboard` | Greeting with name, role toggle (multi-role users), profile completion card, past assessments with risk badges, active adoptions with day counter, quick-action links |
 | **Cat Browse** | `/cats` | Grid of 9 cats with photos, personality tags, compatibility scores, wishlist hearts |
 | **Cat Profile** | `/cats/[catId]` | Photo gallery with captions, behavior bars (7 dimensions), personality traits, backstory narrative, health/care badges, medical notes, ideal home description, shelter info, AI Quick Match chat widget, adoption process steps, Quick Facts sidebar card |
-| **Assessment** | `/assessment/[catId]` | 5 lifestyle questions + 5 scenario questions, progress indicator, scenario-based UI |
+| **Assessment** | `/assessment/[catId]` | 4 dynamic cat-specific scenario questions, fallback generic scenarios, loading state, progress indicator |
 | **Report** | `/report/[matchId]` | Risk level badge (green/yellow/red), triggered rules with descriptions, mitigation guidance, AI counselor explanation, TTS narration, alternative cat recommendations |
 | **Coach** | `/coach/[adoptionId]` | 9 Lives Protocol timeline (visual progress bar), daily check-in (4 toggles + note), Mr. Cat AI chat with photo upload, emergency contact banner, Smart Escalation button |
 | **Insights** | `/insights` | Shelter-side stats, adoption patterns, common concern analysis (public view) |
@@ -201,10 +201,10 @@ Compatibility reports feature text-to-speech for accessibility — the Web Speec
 ├─────────────────────────────────────────────────────────┤
 │  FRONTEND — Next.js 16 App Router + Tailwind CSS v4     │
 │  ┌──────────┐  ┌──────────────┐  ┌───────────────────┐  │
-│  │ 9 Cats   │  │  10-Question │  │  Compatibility    │  │
-│  │ Browsing │─▶│  Assessment  │─▶│  Report + AI      │  │
-│  │ (profiles│  │  Quiz        │  │  Explanation +    │  │
-│  │  photos) │  │  (scenarios) │  │  TTS Narration    │  │
+│  │ 9 Cats   │  │  4-Question  │  │  Compatibility    │  │
+│  │ Browsing │─▶│  Dynamic     │─▶│  Report + AI      │  │
+│  │ (profiles│  │  Assessment  │  │  Explanation +    │  │
+│  │  photos) │  │  (AI-gen)    │  │  TTS Narration    │  │
 │  └──────────┘  └──────────────┘  └───────────────────┘  │
 │                                               │         │
 │  ┌────────────────────────────────────────┐   │         │
@@ -441,7 +441,7 @@ npm test        # Run tests
 | 4 | [`/dashboard`](https://forever-home-ai.vercel.app/dashboard) | Personalized dashboard — profile status, past assessments, active adoptions |
 | 5 | [`/cats`](https://forever-home-ai.vercel.app/cats) | Browse 9 cats with rich profiles — click any cat for full profile |
 | 6 | [`/cats/barnaby`](https://forever-home-ai.vercel.app/cats/barnaby) | Cat profile — photo gallery, 7 behavior bars, backstory, personality traits, AI Quick Match widget |
-| 7 | [`/assessment/barnaby`](https://forever-home-ai.vercel.app/assessment/barnaby) | 10-question compatibility quiz (5 lifestyle + 5 scenario) |
+| 7 | [`/assessment/barnaby`](https://forever-home-ai.vercel.app/assessment/barnaby) | 4-question dynamic cat-specific scenario quiz generated by AI |
 | 8 | `/report/[matchId]` | Risk badge, triggered rules, AI explanation, TTS narration, alternative cats |
 | 9 | [`/coach/barnaby-adoption-1`](https://forever-home-ai.vercel.app/coach/barnaby-adoption-1) | 9 Lives Protocol timeline, daily check-in, Mr. Cat AI chat with photo upload |
 | 10 | [`/insights`](https://forever-home-ai.vercel.app/insights) | Shelter-side — adoption patterns, concern analysis |

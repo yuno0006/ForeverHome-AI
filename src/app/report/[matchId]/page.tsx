@@ -261,6 +261,7 @@ export default function ReportPage() {
                     existingPets: match.adopterAnswers.existingPets,
                   }
                 : null,
+            scenarioQA: match.scenarioQA,
           }),
         });
 

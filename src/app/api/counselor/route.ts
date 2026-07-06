@@ -6,7 +6,7 @@ import { logAIInteractionAsync } from "@/lib/aiLoggingService";
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { compatibilityResult, cat, adopter } = body;
+    const { compatibilityResult, cat, adopter, scenarioQA } = body;
 
     // Build rich cat profile string for the AI
     const catProfileParts: string[] = [];
@@ -94,7 +94,8 @@ export async function POST(req: NextRequest) {
       cat?.personality || [],
       cat?.care?.knownMedicalNeeds || "None",
       adopter?.name || "",
-      adopter?.catExperience || "unknown"
+      adopter?.catExperience || "unknown",
+      scenarioQA
     );
 
     const source = explanation ? "gemini" : "fallback";

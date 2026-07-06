@@ -30,4 +30,5 @@ export interface Match {
   adopterAnswers: import("./adopter").AdopterAnswers;
   result: CompatibilityResult;
   timestamp: string;
+  scenarioQA?: string;
 }

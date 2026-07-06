@@ -103,6 +103,50 @@ async function callAI(prompt: string, image?: ImageInput): Promise<string | null
   return null;
 }
 
+export async function generateDynamicQuestions(
+  catName: string,
+  catProfile: string,
+  adopterProfile: string
+): Promise<any[] | null> {
+  const prompt = `You are a behavioral expert creating a personalized adoption assessment.
+Based on the cat's profile and the adopter's lifestyle, generate exactly 4 multiple-choice scenario questions.
+These scenarios should test how the adopter would handle specific challenges related to THIS cat's unique traits.
+
+Cat Name: ${catName}
+Cat Profile: ${catProfile}
+Adopter Profile: ${adopterProfile}
+
+Return the output EXACTLY as a JSON array of 4 objects. No markdown formatting, no backticks, just the raw JSON array.
+Each object must have this structure:
+{
+  "id": "scenario_1",
+  "scenario": "Scenario text here",
+  "traits": ["patience", "understanding"],
+  "options": [
+    { "value": "a", "label": "Worst response", "score": 0 },
+    { "value": "b", "label": "Okay response", "score": 1 },
+    { "value": "c", "label": "Best response", "score": 3 }
+  ]
+}
+
+DO NOT include any text before or after the JSON array.`;
+
+  const result = await callAI(prompt);
+  if (!result) return null;
+
+  try {
+    const cleaned = result.replace(/```json/gi, "").replace(/```/g, "").trim();
+    const parsed = JSON.parse(cleaned);
+    if (Array.isArray(parsed) && parsed.length === 4) {
+      return parsed;
+    }
+    return null;
+  } catch (e) {
+    console.error("Failed to parse dynamic questions:", e);
+    return null;
+  }
+}
+
 // ─── Adoption Counselor ────────────────────────────────
 export async function generateCounselorExplanation(
   catName: string,
@@ -117,7 +161,8 @@ export async function generateCounselorExplanation(
   catPersonality?: { trait: string; description: string }[],
   catMedicalNeeds?: string,
   adopterName?: string,
-  adopterCatExperience?: string
+  adopterCatExperience?: string,
+  scenarioQA?: string
 ): Promise<string> {
   const adopterGreeting = adopterName ? `Hi ${adopterName}! ` : "";
   const personalityText = catPersonality?.length
@@ -139,7 +184,7 @@ ${catMedicalNeeds && catMedicalNeeds !== "None" ? `\nMedical needs:\n${catMedica
 
 ─── THE ADOPTER ───
 ${adopterProfile}
-
+${scenarioQA ? `\nAdopter's answers to cat-specific scenarios:\n${scenarioQA}\n` : ""}
 ─── COMPATIBILITY ASSESSMENT ───
 Overall risk level: ${riskLevel}
 

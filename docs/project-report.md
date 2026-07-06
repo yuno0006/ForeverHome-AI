@@ -12,7 +12,7 @@ ForeverHome AI serves as an intelligent matching system designed to minimize ado
 
 With **7–20% of shelter cats returned within 6 months** — usually due to preventable mismatches rather than behavioral problems — ForeverHome AI addresses this at every stage of the adoption journey:
 
-- **Pre-Adoption**: A 10-question deterministic compatibility assessment flags risk areas (noise sensitivity, energy mismatch, medical needs) and automatically recommends better-matched alternatives. Every cat profile page includes an AI Quick Match widget for instant compatibility previews.
+- **Pre-Adoption**: A dynamic Cat-Specific AI Assessment tests adopters with exactly 4 scenario questions tailored to the specific cat they are applying for. The deterministic engine then flags risk areas (noise sensitivity, energy mismatch, medical needs) and automatically recommends better-matched alternatives. Every cat profile page includes an AI Quick Match widget for instant compatibility previews.
 - **Post-Adoption**: A gamified 14-day curriculum called the **9 Lives Protocol™** guides adopters through common challenges (hiding, not eating, zoomies), while an **AI Coach (Mr. Cat)** provides cat-specific contextual advice — injected with that specific cat's behavioral profile and the adopter's complete check-in history.
 - **Safety First**: A deterministic medical escalation layer with 26 emergency keywords intercepts urgent situations before any AI call, routing them to immediate human attention. We deliberately chose **not to build shelter-adopter chat** — shelters lack the staffing for real-time messaging, so AI handles 90% of questions instantly and Smart Escalation surfaces only the 10% needing human review.
 - **Shelter Side**: An insights dashboard, cat inventory management, adoption request tracking, and concern analytics help shelter staff operate efficiently.
@@ -41,7 +41,7 @@ The app requires an account for all features. The onboarding flow captures lifes
    • Quick links: Browse Cats, View Report
      ↓
 4. Browse Cats → Cat Profile (photo gallery, behavior bars, backstory, 
-   AI Quick Match) → Full Assessment (10 questions) → Compatibility Report
+   AI Quick Match) → Cat-Specific Dynamic Assessment (4 custom AI questions) → Compatibility Report
    (risk badge, rules, AI explanation, TTS, alternatives) → Start 14-Day Coach
 ```
 
@@ -76,7 +76,7 @@ Every return costs shelters time, money, kennel capacity, and emotional resource
 | User | Use Case |
 |------|----------|
 | **Shelter staff / behaviorists** | Standardized compatibility assessments, adoption tracking, concern pattern detection, smart escalation queue, cat inventory management |
-| **Prospective adopters** | Account → onboarding → browse cats with rich behavioral profiles → AI Quick Match preview → 10-question quiz → transparent compatibility report with alternatives → daily check-ins → 14-day AI coach |
+| **Prospective adopters** | Account → onboarding → browse cats with rich behavioral profiles → AI Quick Match preview → dynamic cat-specific assessment → transparent compatibility report with alternatives → daily check-ins → 14-day AI coach |
 | **Recent adopters** | Daily check-ins (eating, litter, hiding, activity), gamified 14-day curriculum, AI Coach (Mr. Cat) with cat-specific behavioral advice, photo sharing, Smart Escalation when needed |
 | **Shelter admins / directors** | Insights dashboard — active adoptions, cats needing attention, common compatibility concerns ranked by frequency, adoption request review, staff management |
 
@@ -266,9 +266,9 @@ Whisker Runner is strategic, not filler:
 │        Next.js 16 App Router + React 19 + Tailwind CSS v4      │
 │                                                                │
 │  ┌────────────┐  ┌────────────────┐  ┌─────────────────────┐  │
-│  │ Cat Browse  │  │  10-Question   │  │  Compatibility      │  │
-│  │ (9 profiles)│─▶│  Assessment    │─▶│  Report + AI        │  │
-│  │             │  │  Quiz          │  │  + TTS + Alt Cats   │  │
+│  │ Cat Browse  │  │  4-Question    │  │  Compatibility      │  │
+│  │ (9 profiles)│─▶│  Dynamic       │─▶│  Report + AI        │  │
+│  │             │  │  Assessment    │  │  + TTS + Alt Cats   │  │
 │  └────────────┘  └────────────────┘  └─────────────────────┘  │
 │                                                    │          │
 │  ┌─────────────────────────────────────────────┐   │          │
@@ -347,8 +347,8 @@ Whisker Runner is strategic, not filler:
 ### Data Flow — Assessment
 
 ```
-User → Browse Cats → Select Cat → 5 Lifestyle Questions
-  → 5 Scenario Questions → Compatibility Engine (client-side)
+User → Browse Cats → Select Cat
+  → 4 Dynamic Cat-Specific AI Scenarios → Compatibility Engine (client-side)
   → Compatibility Report (risk level + triggered rules + mitigations)
   → Optional: AI Counselor Explanation (server-side API)
   → Alternative Cat Recommendations (if moderate/high risk)

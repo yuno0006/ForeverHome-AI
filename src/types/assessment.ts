@@ -45,6 +45,7 @@ export interface AssessmentRecord {
     score: number;
     recommendation: Recommendation;
   };
+  scenarioQA?: string;
   createdAt: Timestamp;
   expiresAt: Timestamp;  // Auto-expire after 30 days
 }
