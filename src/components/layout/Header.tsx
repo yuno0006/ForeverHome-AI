@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Heart, Home, LogOut, Menu, X, Bookmark, LayoutDashboard, Cat, MessageCircle, Sparkles, Info } from "lucide-react";
+import { Heart, Home, LogOut, Menu, X, Bookmark, LayoutDashboard, Cat, MessageCircle, Sparkles, Info, Gamepad2 } from "lucide-react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/hooks/useAuth";
@@ -42,6 +42,7 @@ export default function Header() {
       { href: "/", label: "Home", icon: Home },
       { href: "/cats", label: "Cats", icon: Cat },
       { href: "/coach", label: "AI Coach", icon: MessageCircle },
+      { href: "/game", label: "Game", icon: Gamepad2 },
     ];
     if (!userDoc?.onboardingComplete) {
       alwaysLinks.push({ href: "/assessment/new", label: "Quiz", icon: Sparkles });
