@@ -52,28 +52,34 @@ let _isMuted = false;
 
 let _musicTimer: number | null = null;
 let _musicIndex = 0;
+// A cute, peaceful "Animal Crossing / Music Box" style arpeggio loop
 const MELODY = [
-  659.25, 0, 783.99, 0, 1046.50, 0, 880.00, 0, // E5, rest, G5, rest, C6, rest, A5, rest
-  698.46, 880.00, 1046.50, 0, 987.77, 0, 783.99, 0, // F5, A5, C6, rest, B5, rest, G5, rest
-  659.25, 0, 783.99, 0, 1318.51, 0, 1046.50, 0, // E5, rest, G5, rest, E6, rest, C6, rest
-  880.00, 1046.50, 1174.66, 0, 987.77, 1174.66, 1318.51, 0, // A5, C6, D6, rest, B5, D6, E6, rest
+  // C major 7 sweep up and down
+  523.25, 659.25, 783.99, 987.77, 783.99, 659.25, 523.25, 0,
+  // F major 7 sweep up and down
+  698.46, 880.00, 1046.50, 1318.51, 1046.50, 880.00, 698.46, 0,
+  // A minor 7 sweep up and down
+  880.00, 1046.50, 1318.51, 1567.98, 1318.51, 1046.50, 880.00, 0,
+  // G major sweep up and down
+  783.99, 987.77, 1174.66, 1567.98, 1174.66, 987.77, 783.99, 0,
 ];
 
 function playMusicNote(freq: number) {
-  if (freq === 0) return; // Support rests for peaceful pacing
+  if (freq === 0) return; // Support rests
   if (!_audioCtx || !_masterGain || !_audioReady) return;
   const ctx = _audioCtx;
   const now = ctx.currentTime;
-  const duration = 0.9; // Slightly longer note tail for a spacious, peaceful vibe
+  const duration = 1.5; // Longer tail for music box ringing effect
   
   const osc = ctx.createOscillator();
   const gain = ctx.createGain();
   
-  osc.type = "sine"; // soft healing tone
+  osc.type = "sine"; 
   osc.frequency.setValueAtTime(freq, now);
   
+  // Music box envelope: fast attack, long exponential decay
   gain.gain.setValueAtTime(0, now);
-  gain.gain.linearRampToValueAtTime(0.06, now + 0.15); // soft ambient music level, slightly quieter for peace
+  gain.gain.linearRampToValueAtTime(0.08, now + 0.05); // quick, gentle attack
   gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
   
   osc.connect(gain);
@@ -93,7 +99,7 @@ function startMusic() {
   _musicTimer = window.setInterval(() => {
     _musicIndex = (_musicIndex + 1) % MELODY.length;
     playMusicNote(MELODY[_musicIndex]);
-  }, 750);
+  }, 400); // 400ms per note for a gentle, twinkling pace
 }
 
 function stopMusic() {

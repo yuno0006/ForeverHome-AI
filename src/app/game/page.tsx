@@ -20,19 +20,19 @@ export default function GamePage() {
   }, []);
 
   return (
-    <div className="relative flex min-h-screen flex-col-reverse md:flex-row items-center justify-center p-4 gap-6">
-      {/* Leaderboard on the left side corner on desktop, below the game on mobile */}
-      <div className="md:absolute md:left-8 md:top-1/2 md:-translate-y-1/2 w-full md:w-auto max-w-xs shrink-0 z-20 mt-6 md:mt-0">
-        <LeaderboardPanel />
-      </div>
-      
-      {/* Game track centered perfectly in the screen */}
-      <div className="w-full max-w-2xl z-10">
+    <div className="relative flex min-h-screen flex-col lg:flex-row items-center justify-center p-4 gap-6 max-w-7xl mx-auto">
+      {/* Game track centered perfectly in the screen (order-1 on mobile/tablet, order-2 on large screens) */}
+      <div className="w-full max-w-2xl z-10 order-1 lg:order-2">
         <WhiskerRunnerGame catName={randomCatName} />
       </div>
 
-      {/* Game Info Panel on the right side corner on desktop, below the game on mobile */}
-      <div className="md:absolute md:right-8 md:top-1/2 md:-translate-y-1/2 w-full md:w-auto max-w-xs shrink-0 z-20 mt-6 md:mt-0">
+      {/* Leaderboard on the left (order-3 on mobile/tablet, order-1 on large screens, floats absolutely on XL+) */}
+      <div className="w-full lg:w-64 max-w-xs shrink-0 z-20 order-3 lg:order-1 xl:absolute xl:left-8 xl:top-1/2 xl:-translate-y-1/2">
+        <LeaderboardPanel />
+      </div>
+
+      {/* Game Info Panel on the right (order-2 on mobile/tablet, order-3 on large screens, floats absolutely on XL+) */}
+      <div className="w-full lg:w-64 max-w-xs shrink-0 z-20 order-2 lg:order-3 xl:absolute xl:right-8 xl:top-1/2 xl:-translate-y-1/2">
         <Card className="border-2 border-amber-200 bg-cream/70 backdrop-blur-md shadow-xl text-[#5D4037]">
           <CardContent className="p-4 space-y-3">
             <h3 className="text-base font-extrabold flex items-center gap-1.5 border-b border-[#5D4037]/15 pb-2 text-[#5D4037]">

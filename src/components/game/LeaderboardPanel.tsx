@@ -172,54 +172,53 @@ export function LeaderboardPanel() {
 
   return (
     <div
-      className="w-full sm:w-[180px] shrink-0 rounded-xl border-2 border-amber-200 p-2 sm:p-3 shadow-sm"
+      className="w-full shrink-0 rounded-2xl border-2 border-amber-200 bg-cream/70 backdrop-blur-md p-3 sm:p-4 shadow-xl text-[#5D4037] hover:shadow-2xl transition-all duration-300"
       style={{
-        background:
-          "linear-gradient(135deg, #FFF8E1 0%, #FFECB3 50%, #FFE082 100%)",
+        background: "linear-gradient(135deg, rgba(255,248,225,0.85) 0%, rgba(255,236,179,0.7) 100%)",
       }}
     >
       {/* Header */}
-      <div className="mb-1 sm:mb-2 text-center">
-        <div className="text-lg sm:text-xl">🏆</div>
-        <div
-          className="text-[10px] sm:text-xs font-bold tracking-wide"
-          style={{ color: "#5D4037" }}
-        >
-          Leaderboard
+      <div className="mb-3 text-center relative">
+        <span className="absolute -top-5 left-1/2 -translate-x-1/2 text-2xl animate-bounce">👑</span>
+        <h3 className="text-sm font-extrabold tracking-wide mt-2 text-[#4E342E] flex items-center justify-center gap-1">
+          🐾 Top Runners
+        </h3>
+        <div className="text-[10px] text-[#8D6E63] font-semibold mt-0.5">Global High Scores</div>
+        <div className="flex items-center justify-center gap-1 mt-1.5 opacity-40">
+          <span>🐾</span>
+          <span className="text-[8px]">·</span>
+          <span>🐾</span>
+          <span className="text-[8px]">·</span>
+          <span>🐾</span>
         </div>
-        <div
-          className="mt-0.5 h-0.5 rounded-full"
-          style={{
-            background: "linear-gradient(90deg, transparent, #F9A825, transparent)",
-          }}
-        />
       </div>
 
-      {/* Rankings — compact horizontal on mobile, vertical on sm+ */}
-      <div className="flex flex-row flex-wrap gap-1 sm:flex-col sm:flex-nowrap sm:gap-0 sm:space-y-1">
+      {/* Rankings */}
+      <div className="flex flex-col gap-1.5">
         {displayEntries.slice(0, 8).map((entry, index) => {
           const isTop3 = index < 3;
           const isMe = (currentUid && entry.userId === currentUid) || (!currentUid && entry.userId === "guest");
           const medalColor = isTop3 ? MEDAL_COLORS[index] : undefined;
 
+          let cardClass = "flex items-center gap-2 rounded-xl px-2 py-1.5 transition-transform hover:scale-[1.02] duration-200 border border-transparent ";
+          
+          if (isMe) {
+            cardClass += "bg-rose-50/90 border-rose-300 shadow-sm ";
+          } else if (index === 0) {
+            cardClass += "bg-gradient-to-r from-yellow-100/80 to-amber-50/50 border-yellow-200/70 shadow-sm ";
+          } else if (index === 1) {
+            cardClass += "bg-gradient-to-r from-slate-100/80 to-zinc-50/50 border-slate-200/50 ";
+          } else if (index === 2) {
+            cardClass += "bg-gradient-to-r from-amber-100/60 to-orange-50/40 border-amber-200/40 ";
+          } else {
+            cardClass += "bg-white/40 hover:bg-white/60 ";
+          }
+
           return (
-            <div
-              key={entry.id}
-              className="flex items-center gap-1 sm:gap-1.5 rounded-lg px-1 sm:px-1.5 py-0.5 sm:py-1 transition-colors"
-              style={
-                isMe
-                  ? {
-                      background: "rgba(255, 107, 107, 0.12)",
-                      border: "1px solid rgba(255, 107, 107, 0.25)",
-                    }
-                  : isTop3
-                    ? { background: `${medalColor}15` }
-                    : { background: "transparent" }
-              }
-            >
-              {/* Rank */}
+            <div key={entry.id} className={cardClass}>
+              {/* Rank / Medal */}
               <span
-                className="flex h-4 w-4 sm:h-5 sm:w-5 shrink-0 items-center justify-center rounded-full text-[9px] sm:text-[10px] font-bold"
+                className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[10px] font-bold"
                 style={
                   isTop3
                     ? {
@@ -238,23 +237,20 @@ export function LeaderboardPanel() {
               {/* Name + score */}
               <div className="min-w-0 flex-1">
                 <div
-                  className="truncate text-[10px] sm:text-[11px] font-semibold leading-tight max-w-[80px] sm:max-w-none"
-                  style={{ color: isMe ? "#D94545" : "#4E342E" }}
+                  className="truncate text-[11px] font-bold leading-tight"
+                  style={{ color: isMe ? "#D32F2F" : "#4E342E" }}
                 >
                   {isMe ? "You" : entry.displayName || "Cat Lover"}
                 </div>
-                <div
-                  className="text-[9px] sm:text-[10px] leading-tight"
-                  style={{ color: "#8D6E63" }}
-                >
+                <div className="text-[9px] font-medium leading-tight text-[#8D6E63]">
                   {formatScore(entry.score)} pts
                 </div>
               </div>
 
-              {/* Crown for #1 */}
+              {/* Special decorations */}
               {index === 0 && (
-                <span className="text-[10px] sm:text-xs shrink-0" title="Top Cat!">
-                  👑
+                <span className="text-[10px] animate-pulse" title="Top Cat!">
+                  ✨
                 </span>
               )}
             </div>
@@ -263,14 +259,14 @@ export function LeaderboardPanel() {
       </div>
 
       {/* Footer with entry count */}
-      <div className="mt-1 sm:mt-2 flex flex-col gap-1 text-[10px] opacity-40" style={{ color: "#5D4037" }}>
-        <div className="flex items-center justify-between">
-          <span>🐾 · 🐾 · 🐾</span>
-          <span>{displayEntries.length} players</span>
+      <div className="mt-3 flex flex-col gap-1.5 border-t border-[#5D4037]/10 pt-2 text-[10px] text-[#8D6E63] font-medium">
+        <div className="flex items-center justify-between opacity-60">
+          <span>Total Players:</span>
+          <span className="font-extrabold">{displayEntries.length} 🐱</span>
         </div>
         {!currentUid && (
-          <div className="text-center italic mt-1 font-medium opacity-80" style={{ color: "#D94545" }}>
-            * Log in to save score globally
+          <div className="text-center italic mt-0.5 font-bold text-rose-600/90 leading-tight">
+            💡 Log in to save your score to the global leaderboards!
           </div>
         )}
       </div>
