@@ -1,6 +1,8 @@
 # 🐾 ForeverHome AI
 
 > **Built for [#HackTheKitty 2026](https://hackthekitty.com/) — World Cat Domination Day Hackathon**
+>
+> **📋 [Full Project Report →](docs/project-report.md)** — Executive summary, architecture, testing matrix, and submission checklist.
 
 **Preventing cat returns before they happen — through AI-powered compatibility assessment and post-adoption coaching.**
 
