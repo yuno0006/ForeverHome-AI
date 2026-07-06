@@ -1,5 +1,7 @@
 # ForeverHome AI — Security Review
 
+> **Deployment:** [forever-home-ai.vercel.app](https://forever-home-ai.vercel.app/) — Website + PWA
+
 ## Overview
 
 This document serves as the security architecture review and Aikido security scan report for ForeverHome AI, covering the OWASP Top 10 for web applications as relevant to our stack.

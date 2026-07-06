@@ -1,7 +1,8 @@
 # #HackTheKitty 2026 — Project Report
 
 **Project Name:** ForeverHome AI  
-**Reference ID:** 7WYRJRX3
+**Reference ID:** 7WYRJRX3  
+**Deployment:** [https://forever-home-ai.vercel.app/](https://forever-home-ai.vercel.app/) (Website + PWA)
 
 ---
 
@@ -16,7 +17,7 @@ With **7–20% of shelter cats returned within 6 months** — usually due to pre
 - **Safety**: A deterministic medical escalation layer with 26 emergency keywords intercepts urgent situations before any AI call, routing them to immediate human attention
 - **Shelter Side**: An insights dashboard helps staff track adoptions, identify concerning patterns, and prioritize cats needing attention
 
-The system was built in **151 TypeScript files** using Next.js 16, Firebase, and Google Gemini AI — with a **deterministic-first philosophy**: AI explains results but never makes the matching decision itself.
+The system was built in **151 TypeScript files** using Next.js 16, Firebase, and Google Gemini AI — with a **deterministic-first philosophy**: AI explains results but never makes the matching decision itself. The application is deployed at **[forever-home-ai.vercel.app](https://forever-home-ai.vercel.app/)** and available as both a responsive website and an installable Progressive Web App (PWA) with offline support.
 
 ---
 
@@ -117,7 +118,7 @@ Endless-runner platformer built in Canvas + TypeScript: custom cat sprite animat
 Compatibility reports feature text-to-speech via Web Speech API for accessibility. The entire app supports dark mode with a warm dark palette, ARIA labels, semantic HTML, and keyboard navigation.
 
 ### PWA Support
-Installable on mobile/home screen with offline support and custom manifest via `@ducanh2912/next-pwa`.
+ForeverHome AI is available as both a **responsive website** and an **installable Progressive Web App**. Add it to your home screen on iOS or Android for a native app-like experience with offline support, custom manifest, and service worker via `@ducanh2912/next-pwa`. No app store required — just visit [forever-home-ai.vercel.app](https://forever-home-ai.vercel.app/) and tap "Add to Home Screen."
 
 ---
 

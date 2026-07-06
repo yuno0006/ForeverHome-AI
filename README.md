@@ -2,6 +2,8 @@
 
 > **Built for [#HackTheKitty 2026](https://hackthekitty.com/) — World Cat Domination Day Hackathon**
 >
+> **🌐 [Live App →](https://forever-home-ai.vercel.app/)** — Available as a website and installable PWA
+>
 > **📋 [Full Project Report →](docs/project-report.md)** — Executive summary, architecture, testing matrix, and submission checklist.
 
 **Preventing cat returns before they happen — through AI-powered compatibility assessment and post-adoption coaching.**
@@ -306,12 +308,16 @@ Full details: [`docs/security.md`](docs/security.md)
 
 ### PWA Support
 
-Installable on mobile/home screen with offline support, custom manifest, and service worker via `@ducanh2912/next-pwa`.
+ForeverHome AI is available as both a **responsive website** and an **installable Progressive Web App**. Add it to your home screen on iOS or Android for a native app-like experience with offline support, custom manifest, and service worker via `@ducanh2912/next-pwa`. No app store required — just visit [forever-home-ai.vercel.app](https://forever-home-ai.vercel.app/) and tap "Add to Home Screen."
 
 ---
 
 ## 🚀 Getting Started
 
+### Try It Live
+**[forever-home-ai.vercel.app](https://forever-home-ai.vercel.app/)** — No setup required. The full demo works in guest mode without an account. Install as a PWA for offline access.
+
+### Run Locally
 ```bash
 git clone https://github.com/yuno0006/foreverhome-ai.git
 cd foreverhome-ai
@@ -349,17 +355,17 @@ npm test        # Run tests
 
 ## 🗺️ Judge Walkthrough (60 Seconds)
 
-**No account required** — the entire core flow works in demo mode:
+**No account required** — the entire core flow works in demo mode at **[forever-home-ai.vercel.app](https://forever-home-ai.vercel.app/)**. Also installable as a PWA on mobile.
 
 | Step | Route | What to See |
 |------|-------|------------|
-| 1 | `/` | Landing page — animated cat, stats, "Start Quiz" CTA |
-| 2 | `/cats` | Browse 9 cats with rich profiles (behavior, personality, backstory) |
-| 3 | `/assessment/barnaby` | 10-question compatibility quiz (scenario-based) |
+| 1 | [`/`](https://forever-home-ai.vercel.app/) | Landing page — animated cat, stats, "Start Quiz" CTA |
+| 2 | [`/cats`](https://forever-home-ai.vercel.app/cats) | Browse 9 cats with rich profiles (behavior, personality, backstory) |
+| 3 | [`/assessment/barnaby`](https://forever-home-ai.vercel.app/assessment/barnaby) | 10-question compatibility quiz (scenario-based) |
 | 4 | `/report/[matchId]` | Risk level badge, triggered rules, AI explanation, TTS narration |
-| 5 | `/coach/barnaby-adoption-1` | 9 Lives Protocol, daily check-in, Mr. Cat AI chat |
-| 6 | `/insights` | Shelter-side view — adoption patterns + concern analysis |
-| 7 | `/outcome` | With/without ForeverHome story comparison |
+| 5 | [`/coach/barnaby-adoption-1`](https://forever-home-ai.vercel.app/coach/barnaby-adoption-1) | 9 Lives Protocol, daily check-in, Mr. Cat AI chat |
+| 6 | [`/insights`](https://forever-home-ai.vercel.app/insights) | Shelter-side view — adoption patterns + concern analysis |
+| 7 | [`/outcome`](https://forever-home-ai.vercel.app/outcome) | With/without ForeverHome story comparison |
 
 **Authenticated flows** (use demo credentials on `/login`): Profile, Dashboard, Saved Cats, Shelter Console.
 

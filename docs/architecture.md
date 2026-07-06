@@ -1,5 +1,7 @@
 # ForeverHome AI — Architecture
 
+> **Deployment:** [forever-home-ai.vercel.app](https://forever-home-ai.vercel.app/) — Available as a website and installable PWA
+
 ## System Overview
 
 ForeverHome AI is a Next.js 16 (App Router) full-stack application that helps shelters prevent cat returns through pre-adoption compatibility assessment and post-adoption education.
