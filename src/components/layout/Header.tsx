@@ -57,23 +57,7 @@ export default function Header() {
       ...alwaysLinks,
       { href: "/about", label: "About", icon: Info },
     ];
-    // Wishlist and Dashboard are shown for any signed-in user who isn't
-    // specifically shelter staff, so a missing/legacy role value doesn't
-    // silently hide the Wishlist tab (previously required role === "adopter"
-    // exactly, which could fail if the Firestore doc was still synthesizing).
-    if (role === "shelter_staff") {
-      return [
-        ...alwaysLinks,
-        { href: "/shelter/dashboard", label: "Shelter Hub", icon: LayoutDashboard },
-        { href: "/about", label: "About", icon: Info },
-      ];
-    }
-    return [
-      ...alwaysLinks,
-      { href: "/saved", label: `Wishlist (${savedCount})`, icon: Bookmark },
-      { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-      { href: "/about", label: "About", icon: Info },
-    ];
+    return alwaysLinks;
   };
 
   const navLinks = getNavLinks();
@@ -161,6 +145,12 @@ export default function Header() {
                     <Link href="/profile" className="flex items-center w-full">
                       <User className="mr-2 h-4 w-4" />
                       Profile
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem className="rounded-xl cursor-pointer hover:bg-cocoa/5 font-semibold text-cocoa focus:bg-cocoa/5">
+                    <Link href={getDashboardHref()} className="flex items-center w-full">
+                      <LayoutDashboard className="mr-2 h-4 w-4" />
+                      {role === "shelter_staff" ? "Shelter Hub" : "Dashboard"}
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem className="rounded-xl cursor-pointer hover:bg-cocoa/5 font-semibold text-cocoa focus:bg-cocoa/5">

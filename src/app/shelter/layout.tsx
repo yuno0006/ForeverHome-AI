@@ -20,9 +20,9 @@ export default function ShelterLayout({
 }) {
   return (
     <AuthGuard requiredRole="shelter_staff">
-      <div className="flex min-h-[calc(100vh-4rem)]">
+      <div className="flex min-h-[calc(100vh-4rem)] relative z-10">
         <ShelterSidebar />
-        <main className="flex-1 p-4 lg:p-8 bg-warm-cream">{children}</main>
+        <main className="flex-1 p-4 lg:p-8 bg-transparent">{children}</main>
       </div>
     </AuthGuard>
   );
@@ -32,8 +32,8 @@ function ShelterSidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="hidden lg:flex flex-col w-60 border-r border-sunny/20 bg-white py-6 px-3">
-      <nav className="flex flex-col gap-1">
+    <aside className="hidden lg:flex flex-col w-60 border-r-2 border-cocoa/10 bg-cream/70 backdrop-blur-md py-6 px-3">
+      <nav className="flex flex-col gap-1.5">
         {sidebarLinks.map((link) => {
           const Icon = link.icon;
           const active = pathname === link.href;
@@ -41,10 +41,10 @@ function ShelterSidebar() {
             <Link
               key={link.href}
               href={link.href}
-              className={`flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-xl transition-all duration-200 cursor-pointer ${
+              className={`flex items-center gap-3 px-4 py-3 text-sm font-bold rounded-2xl transition-all duration-200 cursor-pointer ${
                 active
-                  ? "bg-sunny-light text-cat-dark"
-                  : "text-charcoal/70 hover:text-cat-dark hover:bg-sunny-light"
+                  ? "bg-cocoa text-cream shadow-[2px_2px_0px_0px_rgba(255,107,107,1)]"
+                  : "text-cocoa/70 hover:text-cocoa hover:bg-cocoa/5"
               }`}
             >
               <Icon className="size-5" />

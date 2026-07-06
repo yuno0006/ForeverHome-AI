@@ -25,12 +25,6 @@ interface Adoption {
   currentDay: number;
 }
 
-// Illustrative adoption progress — no real adoption/coach-linking data model
-// exists yet, so this stays a fixed demo entry until that's built.
-const demoAdoptions: Adoption[] = [
-  { id: "barnaby-adoption-1", catName: "Barnaby", currentDay: 3 },
-];
-
 const recommendationToRisk: Record<string, "high" | "moderate" | "low"> = {
   "not-recommended": "high",
   fair: "moderate",
@@ -52,6 +46,8 @@ function DashboardContent() {
 
   const [assessments, setAssessments] = useState<Assessment[]>([]);
   const [assessmentsLoading, setAssessmentsLoading] = useState(true);
+  const [activeAdoptions, setActiveAdoptions] = useState<Adoption[]>([]);
+  const [adoptionsLoading, setAdoptionsLoading] = useState(true);
 
   useEffect(() => {
     if (!user) return;
@@ -80,6 +76,47 @@ function DashboardContent() {
         setAssessments([]);
       })
       .finally(() => setAssessmentsLoading(false));
+  }, [user]);
+
+  useEffect(() => {
+    if (!user) return;
+    async function loadAdoptions() {
+      setAdoptionsLoading(true);
+      const USE_FIRESTORE = process.env.NEXT_PUBLIC_FIREBASE_API_KEY !== undefined;
+      if (USE_FIRESTORE) {
+        try {
+          const { collection, query, where, getDocs } = await import("firebase/firestore");
+          const { db } = await import("@/lib/firebase");
+          const q = query(collection(db, "activeAdoptions"), where("adopterUid", "==", user.uid));
+          const snap = await getDocs(q);
+          const list: Adoption[] = [];
+          snap.forEach((doc) => {
+            const data = doc.data();
+            list.push({
+              id: doc.id,
+              catName: data.catName || "Unknown Cat",
+              currentDay: data.currentDay || 1,
+            });
+          });
+          setActiveAdoptions(list);
+        } catch (err) {
+          console.error("Failed to load active adoptions:", err);
+        }
+      } else {
+        const stored = JSON.parse(sessionStorage.getItem("activeAdoptions") || "[]");
+        // Filter by adopterUid if available, else show all in local demo
+        const list = stored
+          .filter((item: any) => !item.adopterUid || item.adopterUid === user.uid)
+          .map((item: any) => ({
+            id: item.id,
+            catName: item.catName,
+            currentDay: item.currentDay || 1,
+          }));
+        setActiveAdoptions(list);
+      }
+      setAdoptionsLoading(false);
+    }
+    loadAdoptions();
   }, [user]);
 
   const hasAssessments = assessments.length > 0;
@@ -280,11 +317,15 @@ function DashboardContent() {
       )}
 
       {/* Active Adoptions */}
-      {demoAdoptions.length > 0 && (
+      {adoptionsLoading ? (
+        <div className="flex justify-center py-8">
+          <Loader2 className="h-6 w-6 animate-spin text-sunny" />
+        </div>
+      ) : activeAdoptions.length > 0 && (
         <section className="mb-8">
           <h2 className="text-xl font-bold text-cat-dark mb-4">Active Adoptions</h2>
           <div className="grid gap-4">
-            {demoAdoptions.map((adoption) => (
+            {activeAdoptions.map((adoption) => (
               <Card
                 key={adoption.id}
                 className="bg-white border-sunny/20 rounded-2xl hover:shadow-md transition-shadow"

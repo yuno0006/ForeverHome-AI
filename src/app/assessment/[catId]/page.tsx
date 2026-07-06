@@ -443,7 +443,7 @@ export default function AssessmentPage() {
   // Loading state
   if (authLoading || profileLoading || generatingQuestions) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-warm-cream flex-col gap-4">
+      <div className="flex min-h-screen items-center justify-center bg-transparent flex-col gap-4">
         <Loader2 className="size-8 animate-spin text-sunny" />
         {generatingQuestions && (
           <p className="text-cocoa font-bold">Generating personalized assessment for {cat?.name}...</p>
@@ -490,7 +490,7 @@ export default function AssessmentPage() {
     const someConcern = generalResults.filter((m) => m.result.level !== "low");
 
     return (
-      <div className="min-h-screen bg-warm-cream pb-24">
+      <div className="min-h-screen bg-transparent pb-24">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
           {/* Hero result banner */}
           <div className="text-center space-y-4">

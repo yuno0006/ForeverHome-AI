@@ -267,8 +267,13 @@ export function WhiskerRunnerGame({ catName, onClose }: WhiskerRunnerGameProps) 
   // without triggering a re-render on every single update.
   const stateRef = useRef<GameState>(createInitialState(getBestScore()));
   
-  // Random starting theme offset (0 to 7 seasons)
-  const themeOffsetRef = useRef(Math.floor(Math.random() * 8) * 1000);
+  const initialBestScore = getBestScore();
+  const [bestScore, setBestScore] = useState(initialBestScore);
+  
+  // Random starting theme offset: if bestScore < 8000, only pick seasons 0-6.
+  const themeOffsetRef = useRef(
+    Math.floor(Math.random() * (initialBestScore >= 8000 ? 8 : 7)) * 1000
+  );
 
   // Throttled(-ish) React state slice for the pieces of the UI that need to
   // re-render (score digits, status banner, etc.). Synced from `stateRef`
@@ -422,7 +427,11 @@ export function WhiskerRunnerGame({ catName, onClose }: WhiskerRunnerGameProps) 
   // (and the RAF loop's first frame after this reset) behaves exactly like
   // a freshly mounted game.
   function handlePlayAgain() {
-    themeOffsetRef.current = Math.floor(Math.random() * 8) * 1000;
+    const currentBest = getBestScore();
+    setBestScore(currentBest);
+    const range = currentBest >= 8000 ? 8 : 7;
+    themeOffsetRef.current = Math.floor(Math.random() * range) * 1000;
+
     stateRef.current = createInitialState(stateRef.current.bestScore);
     bestScoreRecordedRef.current = false;
     isNewHighScoreRef.current = false;
@@ -566,11 +575,14 @@ export function WhiskerRunnerGame({ catName, onClose }: WhiskerRunnerGameProps) 
 
   const obstacles = stateRef.current.obstacles;
 
-  // Automated 8-Phase Cycle: repeats every 8000 points.
-  // 8 seasons of 1000 pts each (700 pts stay, 300 pts transition).
-  const localScore = (tick.score + themeOffsetRef.current) % 8000;
+  // Automated Cycle: repeats every cycleLength points.
+  // 1000 pts per season (700 pts stay, 300 pts transition).
+  const isCityNightUnlocked = bestScore >= 8000;
+  const cycleLength = isCityNightUnlocked ? 8000 : 7000;
+
+  const localScore = (tick.score + themeOffsetRef.current) % cycleLength;
   const seasonIndex = Math.floor(localScore / 1000);
-  const nextSeasonIndex = (seasonIndex + 1) % 8;
+  const nextSeasonIndex = (seasonIndex + 1) % (cycleLength / 1000);
   const progressInSeason = localScore % 1000;
 
   let currentWeight = 1;
@@ -602,7 +614,7 @@ export function WhiskerRunnerGame({ catName, onClose }: WhiskerRunnerGameProps) 
   const sunScale = sunActiveW > 0 ? (morningW * 1.0 + eveningW * 1.15) / sunActiveW : 1.0;
 
   // Select thematic information for Game Over screen based on crashed season
-  const crashSeason = Math.floor(((tick.score + themeOffsetRef.current) % 8000) / 1000);
+  const crashSeason = Math.floor(((tick.score + themeOffsetRef.current) % cycleLength) / 1000);
   const seasonDetails = [
     { label: "Beach Breeze 🏖️", msg: "Splashed by a big wave!" },
     { label: "Mystic Night 👻", msg: "Spooked by glowing wisps!" },

@@ -152,7 +152,7 @@ export default function RegisterPage() {
   const isLoading = loading || googleLoading;
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-warm-cream px-4 py-12">
+    <div className="min-h-screen flex items-center justify-center bg-transparent px-4 py-12">
       <Card className="w-full max-w-md">
         <CardHeader className="flex flex-col items-center gap-4 pb-2">
           <Image

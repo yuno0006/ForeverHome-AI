@@ -18,19 +18,61 @@ const WhiskerRunnerGame = dynamic(
   { ssr: false }
 );
 
+import { useState, useEffect } from "react";
+import { Loader2 } from "lucide-react";
+import { getBestScore } from "@/lib/whiskerRunner/highScoreStorage";
+
 export default function GamePage() {
-  const { role, loading } = useAuth();
-  
+  const { user, role, loading } = useAuth();
+  const [hasAccess, setHasAccess] = useState<boolean | null>(null);
+  const [bestScore, setBestScore] = useState(0);
+
   const randomCatName = useMemo(() => {
     return demoCats[Math.floor(Math.random() * demoCats.length)].name;
   }, []);
 
-  if (loading) return null;
+  useEffect(() => {
+    if (loading) return;
 
-  // Currently, the prototype uses the 'adopter' role to simulate a user who has
-  // access to the adoption flow. In a fully wired backend, this would check an
-  // actual adoption record array.
-  const hasAccess = role === "adopter";
+    if (!user || role !== "adopter") {
+      setHasAccess(false);
+      return;
+    }
+
+    async function checkAdoptions() {
+      const USE_FIRESTORE = process.env.NEXT_PUBLIC_FIREBASE_API_KEY !== undefined;
+      if (USE_FIRESTORE) {
+        try {
+          const { collection, query, where, getDocs } = await import("firebase/firestore");
+          const { db } = await import("@/lib/firebase");
+          const q = query(
+            collection(db, "activeAdoptions"),
+            where("adopterUid", "==", user.uid)
+          );
+          const snap = await getDocs(q);
+          setHasAccess(!snap.empty);
+        } catch (err) {
+          console.error("Failed to check active adoptions for game:", err);
+          setHasAccess(false);
+        }
+      } else {
+        const stored = JSON.parse(sessionStorage.getItem("activeAdoptions") || "[]");
+        const userAdoptions = stored.filter((item: any) => !item.adopterUid || item.adopterUid === user.uid);
+        setHasAccess(userAdoptions.length > 0);
+      }
+    }
+
+    checkAdoptions();
+    setBestScore(getBestScore());
+  }, [user, role, loading]);
+
+  if (loading || hasAccess === null) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-cream">
+        <Loader2 className="h-8 w-8 animate-spin text-sunny" />
+      </div>
+    );
+  }
 
   if (!hasAccess) {
     return (
@@ -96,7 +138,9 @@ export default function GamePage() {
               </div>
 
               <div className="border-t border-[#5D4037]/10 pt-2 text-[10px] text-[#8D6E63] italic">
-                🌃 Reach 8,000 points to unlock the new City Night Lights theme!
+                {bestScore >= 8000
+                  ? "🎉 City Night Lights theme is UNLOCKED! Run into the city lights!"
+                  : "🌃 Reach 8,000 points to unlock the new City Night Lights theme!"}
               </div>
             </div>
           </CardContent>

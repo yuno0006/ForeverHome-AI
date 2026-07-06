@@ -1,12 +1,41 @@
 // Gemini AI integration for Adoption Counselor, General Assistant, and 14-Day Coach
-// Uses direct Gemini API calls with fast failover between models.
+// Uses TWO API keys with model-outer rotation + rate-limit caching.
 //
-// Model strategy: try each main tier in order. If a tier is rate-limited
-// (HTTP 429 — quota exhausted), try that tier's "lite" counterpart before
-// moving on. Any other failure (network, 5xx, etc.) skips straight to the
-// next main tier without wasting a call on the lite variant.
+// Strategy: for each model tier, try Key1 then Key2. If a (model, key) pair
+// returns 429, it's cached as exhausted for 90s. On 400/403 (bad key/bad
+// request), skip that key permanently for this request. All 5xx/timeout
+// results move to the next tier.
 
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+const GEMINI_KEY1 = process.env.GEMINI_API_KEY;
+const GEMINI_KEY2 = process.env.GEMINI_API_KEY_2;
+
+// ─── Rate-limit cache ───────────────────────────────────
+interface RateLimitEntry { exhaustedAt: number }
+const _RATE_LIMIT_CACHE = new Map<string, RateLimitEntry>();
+const RATE_LIMIT_TTL_MS = 90_000; // 90 seconds
+
+function pruneRateLimitCache() {
+  const now = Date.now();
+  for (const [k, v] of _RATE_LIMIT_CACHE) {
+    if (now - v.exhaustedAt > RATE_LIMIT_TTL_MS) _RATE_LIMIT_CACHE.delete(k);
+  }
+}
+
+function isRateLimited(model: string, key: string): boolean {
+  const entry = _RATE_LIMIT_CACHE.get(`${model}::${key}`);
+  if (!entry) return false;
+  if (Date.now() - entry.exhaustedAt > RATE_LIMIT_TTL_MS) {
+    _RATE_LIMIT_CACHE.delete(`${model}::${key}`);
+    return false;
+  }
+  return true;
+}
+
+function markRateLimited(model: string, key: string) {
+  _RATE_LIMIT_CACHE.set(`${model}::${key}`, { exhaustedAt: Date.now() });
+}
+
+// ─── Model tiers (model-outer: exhaust best model on all keys first) ──
 
 interface ModelTier {
   model: string;
@@ -14,14 +43,16 @@ interface ModelTier {
 }
 
 const MODEL_TIERS: ModelTier[] = [
-  { model: "gemini-3.5-flash", lite: "gemini-3.5-flash-lite" },
-  { model: "gemini-3-flash-preview", lite: "gemini-3-flash-lite-preview" },
-  { model: "gemini-2.5-flash", lite: "gemini-2.5-flash-lite" },
+  { model: "gemini-2.5-flash", lite: "gemini-2.0-flash" },
+  { model: "gemini-2.0-flash", lite: "gemini-2.0-flash-lite" },
+  { model: "gemini-1.5-flash" },
 ];
 
-function getModelUrl(model: string): string {
-  return `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${GEMINI_API_KEY}`;
+function getModelUrl(model: string, apiKey: string): string {
+  return `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
 }
+
+// ─── Core fetch ────────────────────────────────────────
 
 interface GeminiResponse {
   candidates?: {
@@ -46,13 +77,18 @@ function buildParts(prompt: string, image?: ImageInput) {
   return parts;
 }
 
-async function callModel(model: string, prompt: string, image?: ImageInput): Promise<{ text: string | null; status: number | null }> {
-  const TIMEOUT_MS = 8000;
+async function callModel(
+  model: string,
+  apiKey: string,
+  prompt: string,
+  image?: ImageInput
+): Promise<{ text: string | null; status: number | null }> {
+  const TIMEOUT_MS = 15000;
   try {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), TIMEOUT_MS);
 
-    const res = await fetch(getModelUrl(model), {
+    const res = await fetch(getModelUrl(model, apiKey), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -73,35 +109,73 @@ async function callModel(model: string, prompt: string, image?: ImageInput): Pro
       return { text, status: res.status };
     }
 
+    if (res.status === 429) {
+      markRateLimited(model, apiKey);
+    }
     return { text: null, status: res.status };
   } catch {
     return { text: null, status: null };
   }
 }
 
+// ─── Model-outer callAI (exhaust best model on all keys first) ──
+
+function getActiveKeys(): string[] {
+  const keys: string[] = [];
+  if (GEMINI_KEY1) keys.push(GEMINI_KEY1);
+  if (GEMINI_KEY2) keys.push(GEMINI_KEY2);
+  return keys;
+}
+
 async function callAI(prompt: string, image?: ImageInput): Promise<string | null> {
-  if (!GEMINI_API_KEY) return null;
+  pruneRateLimitCache();
+  const keys = getActiveKeys();
+  if (keys.length === 0) {
+    console.warn("[gemini] No API keys configured");
+    return null;
+  }
 
   for (const tier of MODEL_TIERS) {
-    const { text, status } = await callModel(tier.model, prompt, image);
-    if (text) return text;
+    // Try all keys for this model tier, skipping rate-limited combos
+    for (const key of keys) {
+      if (isRateLimited(tier.model, key)) continue;
 
-    // 400/403 means bad request or bad key — retrying other models won't help.
-    if (status === 400 || status === 403) return null;
+      const { text, status } = await callModel(tier.model, key, prompt, image);
+      if (text) return text;
 
-    // 429 = quota exhausted for this tier specifically. Try the lite
-    // counterpart before giving up on this tier entirely.
-    if (status === 429 && tier.lite) {
-      const liteResult = await callModel(tier.lite, prompt, image);
-      if (liteResult.text) return liteResult.text;
+      if (status === 400 || status === 403) continue;
+      // 429: already marked by callModel, try next key
+      // 5xx / timeout / network: try next key
     }
 
-    // Any other outcome (5xx, timeout, network error, no lite available) —
-    // move on to the next main tier.
+    // Lite fallback for this tier (only if tier has a lite variant)
+    if (tier.lite) {
+      for (const key of keys) {
+        if (isRateLimited(tier.lite, key)) continue;
+        const { text, status } = await callModel(tier.lite, key, prompt, image);
+        if (text) return text;
+        if (status === 400 || status === 403) continue;
+      }
+    }
+  }
+
+  // If ALL combos are exhausted, wait until the soonest expiry then retry once
+  let minExpiry = Infinity;
+  for (const [, v] of _RATE_LIMIT_CACHE) {
+    const remaining = v.exhaustedAt + RATE_LIMIT_TTL_MS - Date.now();
+    if (remaining < minExpiry) minExpiry = remaining;
+  }
+  if (minExpiry > 0 && minExpiry < RATE_LIMIT_TTL_MS) {
+    console.warn(`[gemini] All key/model combos rate-limited, waiting ${Math.ceil(minExpiry / 1000)}s...`);
+    await new Promise(r => setTimeout(r, minExpiry + 500));
+    pruneRateLimitCache();
+    return callAI(prompt, image);
   }
 
   return null;
 }
+
+
 
 export async function generateDynamicQuestions(
   catName: string,
