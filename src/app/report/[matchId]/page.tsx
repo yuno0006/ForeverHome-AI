@@ -543,15 +543,35 @@ export default function ReportPage() {
   // alternatives regardless of how this particular match turned out —
   // not just when the current match is risky. Guard against older/rebuilt
   // match records that may not have the full adopterAnswers shape.
+  // Shuffle cats within the same compatibility level so recommendations
+  // vary between reports instead of showing the same 3 every time.
   const rankedRecommendations = match.adopterAnswers
-    ? demoCats
-        .filter((c) => c.id !== cat.id && c.status === "available")
-        .map((c) => ({ cat: c, result: assessCompatibility(c, match.adopterAnswers) }))
-        .sort((a, b) => {
-          const rank = { low: 0, moderate: 1, high: 2 };
-          return rank[a.result.level] - rank[b.result.level];
-        })
-        .slice(0, 3)
+    ? (() => {
+        // Simple hash-based seed from matchId for stable-but-varied ordering
+        let seed = 0;
+        for (let i = 0; i < matchId.length; i++) {
+          seed = (seed * 31 + matchId.charCodeAt(i)) | 0;
+        }
+        const seededRandom = () => {
+          seed = (seed * 16807 + 0) % 2147483647;
+          return (seed - 1) / 2147483646;
+        };
+
+        const scored = demoCats
+          .filter((c) => c.id !== cat.id && c.status === "available")
+          .map((c) => ({ cat: c, result: assessCompatibility(c, match.adopterAnswers) }));
+
+        // Sort by level, then shuffle within same level
+        const rank = { low: 0, moderate: 1, high: 2 };
+        scored.sort((a, b) => {
+          const diff = rank[a.result.level] - rank[b.result.level];
+          if (diff !== 0) return diff;
+          // Same level → seeded shuffle
+          return seededRandom() - 0.5;
+        });
+
+        return scored.slice(0, 3);
+      })()
     : [];
 
   return (
@@ -655,8 +675,8 @@ export default function ReportPage() {
           </div>
         ) : (
           <>
-            {/* Concerns */}
-            <ConcernList concerns={match.result.concerns} />
+            {/* Concerns — heading adapts to match level */}
+            <ConcernList concerns={match.result.concerns} matchLevel={match.result.level} />
 
             {/* Strengths */}
             {match.result.strengths.length > 0 && (

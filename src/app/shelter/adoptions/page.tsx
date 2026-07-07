@@ -194,39 +194,39 @@ export default function ShelterAdoptionsPage() {
       <div className="absolute bottom-10 left-4 w-32 h-32 bg-gradient-to-br from-sage/10 to-lavender/10 rounded-full blur-2xl pointer-events-none -z-10" />
 
       {/* Header section */}
-      <div className="mb-10 relative flex flex-col lg:flex-row justify-between items-start lg:items-end gap-8">
+      <div className="mb-8 relative flex flex-col lg:flex-row justify-between items-start lg:items-end gap-6">
         <div>
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white border-2 border-cocoa/10 shadow-[2px_2px_0px_0px_rgba(42,29,20,0.1)] text-xs font-bold text-cocoa/60 mb-3">
-            <Heart className="w-3.5 h-3.5 text-coral animate-pulse" /> Shelter Management Portal
+          <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-white border-2 border-cocoa/10 shadow-[2px_2px_0px_0px_rgba(42,29,20,0.08)] text-[11px] font-bold text-cocoa/50 mb-2.5">
+            <Heart className="w-3 h-3 text-coral animate-pulse" /> Shelter Management Portal
           </div>
-          <h1 className="font-display text-4xl sm:text-5xl font-black text-cocoa tracking-tight leading-none">
+          <h1 className="font-display text-3xl sm:text-4xl font-black text-cocoa tracking-tight leading-tight">
             Adoptions Hub
           </h1>
-          <p className="mt-3 text-base text-cocoa/60 font-medium max-w-xl leading-relaxed">
+          <p className="mt-2 text-sm text-cocoa/50 font-medium max-w-lg leading-relaxed">
             Review pending adoption applications, assess compatibility, and track active 14-day transition journeys.
           </p>
         </div>
 
-        {/* Tabs styled as top-right buttons */}
+        {/* Tabs styled as compact pill buttons */}
         <div className="w-full lg:w-auto flex justify-end">
-          <TabsList className="bg-white/90 backdrop-blur-md p-1.5 rounded-full border-2 border-cocoa/10 shadow-[4px_4px_0px_0px_rgba(42,29,20,0.08)] inline-flex w-fit gap-2">
+          <TabsList className="bg-white/90 backdrop-blur-md p-1 rounded-full border-2 border-cocoa/10 shadow-[3px_3px_0px_0px_rgba(42,29,20,0.06)] inline-flex w-fit gap-1">
             <TabsTrigger
               value="pending"
-              className="group relative rounded-full py-2.5 px-5 font-black text-sm transition-all duration-300 ease-out gap-2 flex items-center justify-center cursor-pointer text-cocoa/60 hover:text-cocoa hover:bg-cocoa/5 hover:-translate-y-0.5 data-selected:bg-cocoa data-selected:text-cream data-selected:shadow-[4px_4px_0px_0px_rgba(255,107,107,1)] data-selected:-translate-y-0.5 active:translate-y-0 active:shadow-none"
+              className="group relative rounded-full py-1.5 px-4 font-black text-xs transition-all duration-300 ease-out gap-1.5 flex items-center justify-center cursor-pointer text-cocoa/60 hover:text-cocoa hover:bg-cocoa/5 hover:-translate-y-0.5 data-selected:bg-cocoa data-selected:text-cream data-selected:shadow-[3px_3px_0px_0px_rgba(255,107,107,1)] data-selected:-translate-y-0.5 active:translate-y-0 active:shadow-none"
             >
-              <ShieldAlert className="h-4 w-4 shrink-0 transition-all duration-300 group-hover:scale-110 group-data-selected:text-coral" />
+              <ShieldAlert className="h-3.5 w-3.5 shrink-0 transition-all duration-300 group-hover:scale-110 group-data-selected:text-coral" />
               <span>Applications</span>
               {pendingRequests.length > 0 && (
-                <Badge className="bg-heart text-white h-5 min-w-5 flex items-center justify-center text-[10px] font-black border border-white shadow-sm transition-transform duration-300 group-hover:scale-110 group-data-selected:animate-pulse">
+                <Badge className="bg-heart text-white h-4 min-w-4 flex items-center justify-center text-[9px] font-black border border-white shadow-sm transition-transform duration-300 group-hover:scale-110 group-data-selected:animate-pulse px-1">
                   {pendingRequests.length}
                 </Badge>
               )}
             </TabsTrigger>
             <TabsTrigger
               value="active"
-              className="group relative rounded-full py-2.5 px-5 font-black text-sm transition-all duration-300 ease-out gap-2 flex items-center justify-center cursor-pointer text-cocoa/60 hover:text-cocoa hover:bg-cocoa/5 hover:-translate-y-0.5 data-selected:bg-cocoa data-selected:text-cream data-selected:shadow-[4px_4px_0px_0px_rgba(255,107,107,1)] data-selected:-translate-y-0.5 active:translate-y-0 active:shadow-none"
+              className="group relative rounded-full py-1.5 px-4 font-black text-xs transition-all duration-300 ease-out gap-1.5 flex items-center justify-center cursor-pointer text-cocoa/60 hover:text-cocoa hover:bg-cocoa/5 hover:-translate-y-0.5 data-selected:bg-cocoa data-selected:text-cream data-selected:shadow-[3px_3px_0px_0px_rgba(255,107,107,1)] data-selected:-translate-y-0.5 active:translate-y-0 active:shadow-none"
             >
-              <Heart className="h-4 w-4 shrink-0 transition-all duration-300 group-hover:scale-110 group-hover:text-coral group-data-selected:text-coral group-data-selected:animate-pulse" />
+              <Heart className="h-3.5 w-3.5 shrink-0 transition-all duration-300 group-hover:scale-110 group-hover:text-coral group-data-selected:text-coral group-data-selected:animate-pulse" />
               <span>Active Journeys</span>
             </TabsTrigger>
           </TabsList>
@@ -239,19 +239,19 @@ export default function ShelterAdoptionsPage() {
         <TabsContent value="pending" className="outline-none">
           {loadingRequests ? (
             <Card className="bg-white/80 backdrop-blur-sm border-2 border-cocoa/10 rounded-2xl shadow-[4px_4px_0px_0px_rgba(42,29,20,1)]">
-              <CardContent className="py-16 text-center">
-                <Loader2 className="h-10 w-10 text-coral animate-spin mx-auto mb-4" />
-                <p className="text-sm text-cocoa/50 font-bold">Loading applications...</p>
+              <CardContent className="py-12 text-center">
+                <Loader2 className="h-8 w-8 text-coral animate-spin mx-auto mb-3" />
+                <p className="text-sm text-cocoa/40 font-bold">Loading applications...</p>
               </CardContent>
             </Card>
           ) : pendingRequests.length === 0 ? (
             <Card className="bg-white/80 backdrop-blur-sm border-2 border-cocoa/10 rounded-2xl shadow-[4px_4px_0px_0px_rgba(42,29,20,1)]">
-              <CardContent className="py-16 text-center max-w-md mx-auto space-y-4">
-                <div className="w-16 h-16 bg-sage/10 border-2 border-sage/20 rounded-2xl flex items-center justify-center mx-auto shadow-[3px_3px_0px_0px_rgba(95,199,155,0.2)]">
-                  <CheckCircle className="h-8 w-8 text-sage" />
+              <CardContent className="py-12 text-center max-w-md mx-auto space-y-3">
+                <div className="w-14 h-14 bg-sage/10 border-2 border-sage/20 rounded-xl flex items-center justify-center mx-auto shadow-[2px_2px_0px_0px_rgba(95,199,155,0.15)]">
+                  <CheckCircle className="h-7 w-7 text-sage" />
                 </div>
-                <h3 className="font-display text-2xl font-black text-cocoa">All Caught Up!</h3>
-                <p className="text-sm text-cocoa/60 font-medium leading-relaxed">
+                <h3 className="font-display text-xl font-black text-cocoa">All Caught Up!</h3>
+                <p className="text-sm text-cocoa/50 font-medium leading-relaxed">
                   There are no pending adoption applications to review right now. New submissions will pop up here!
                 </p>
               </CardContent>
@@ -277,12 +277,12 @@ export default function ShelterAdoptionsPage() {
                       transition={{ duration: 0.4, type: "spring", bounce: 0.2 }}
                     >
                       <Card
-                        className={`relative rounded-[2rem] transition-all duration-500 overflow-hidden border-2 ${
+                        className={`relative rounded-[1.25rem] transition-all duration-500 overflow-hidden border-2 ${
                           isApproving
                             ? "border-sage bg-sage-light/40 shadow-[0_0_25px_rgba(95,199,155,0.4)] scale-[0.98]"
                             : isRejecting
                             ? "border-coral bg-coral-light/40 shadow-[0_0_25px_rgba(255,107,107,0.4)] scale-[0.98]"
-                            : "bg-white border-cocoa/15 hover:shadow-[8px_8px_0px_0px_rgba(42,29,20,1)]"
+                            : "bg-white border-cocoa/15 hover:shadow-[6px_6px_0px_0px_rgba(42,29,20,1)]"
                         }`}
                       >
                         {/* Status overlays for Approve/Reject transitions */}
@@ -302,20 +302,20 @@ export default function ShelterAdoptionsPage() {
                             </div>
                           </div>
                         )}
-                  <CardContent className="p-8 sm:p-10">
-                    <div className="flex flex-col lg:flex-row lg:items-start gap-8 sm:gap-10">
+                  <CardContent className="p-6">
+                    <div className="flex flex-col lg:flex-row lg:items-start gap-6">
                       {/* Left: Info details */}
-                      <div className="flex items-start gap-6 flex-1 min-w-0">
-                        <div className="h-20 w-20 rounded-[1.5rem] bg-gradient-to-br from-coral/15 to-honey/15 flex items-center justify-center shrink-0 border-2 border-cocoa/10 shadow-sm">
-                          <Cat className="h-10 w-10 text-coral" />
+                      <div className="flex items-start gap-5 flex-1 min-w-0">
+                        <div className="h-16 w-16 rounded-[1.25rem] bg-gradient-to-br from-coral/15 to-honey/15 flex items-center justify-center shrink-0 border-2 border-cocoa/10 shadow-sm">
+                          <Cat className="h-8 w-8 text-coral" />
                         </div>
                         <div className="flex-1 min-w-0 space-y-1">
-                          <div className="flex items-center gap-2.5 flex-wrap">
-                            <h3 className="text-xl font-extrabold text-cocoa">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <h3 className="text-lg font-extrabold text-cocoa">
                               Adopting {request.catName}
                             </h3>
                             <Badge
-                              className={`text-[10px] font-bold tracking-wider uppercase px-2.5 py-0.5 rounded-full border-2 ${
+                              className={`text-[10px] font-bold tracking-wider uppercase px-2 py-0.5 rounded-full border ${
                                 request.compatibilityLevel === "high"
                                   ? "bg-sage/15 text-sage-deep border-sage/30"
                                   : request.compatibilityLevel === "moderate"
@@ -331,36 +331,36 @@ export default function ShelterAdoptionsPage() {
                             </Badge>
                           </div>
                           
-                          <p className="text-sm text-cocoa/70 font-semibold">
+                          <p className="text-sm text-cocoa/60 font-semibold">
                             Applicant: <span className="text-cocoa font-bold">{request.adopterName}</span>
                           </p>
 
-                          <div className="flex flex-wrap gap-x-6 gap-y-2 mt-4 text-sm text-cocoa/60 font-semibold">
-                            <span className="flex items-center gap-2 bg-cocoa/5 px-3 py-1.5 rounded-lg border border-cocoa/10">
-                              <Mail className="h-4 w-4 text-cocoa/50" />
+                          <div className="flex flex-wrap gap-x-4 gap-y-1.5 mt-3 text-xs text-cocoa/50 font-semibold">
+                            <span className="flex items-center gap-1.5 bg-cocoa/5 px-2.5 py-1 rounded-md border border-cocoa/10">
+                              <Mail className="h-3.5 w-3.5 text-cocoa/40" />
                               {request.adopterEmail}
                             </span>
                             {request.adopterPhone && (
-                              <span className="flex items-center gap-2 bg-cocoa/5 px-3 py-1.5 rounded-lg border border-cocoa/10">
-                                <Phone className="h-4 w-4 text-cocoa/50" />
+                              <span className="flex items-center gap-1.5 bg-cocoa/5 px-2.5 py-1 rounded-md border border-cocoa/10">
+                                <Phone className="h-3.5 w-3.5 text-cocoa/40" />
                                 {request.adopterPhone}
                               </span>
                             )}
-                            <span className="flex items-center gap-2 bg-cocoa/5 px-3 py-1.5 rounded-lg border border-cocoa/10">
-                              <Clock className="h-4 w-4 text-cocoa/50" />
+                            <span className="flex items-center gap-1.5 bg-cocoa/5 px-2.5 py-1 rounded-md border border-cocoa/10">
+                              <Clock className="h-3.5 w-3.5 text-cocoa/40" />
                               Applied {formatTimeAgo(request.createdAt)}
                             </span>
                           </div>
 
                           {request.aiExplanation && (
-                            <div className="mt-6 p-5 sm:p-6 rounded-2xl bg-gradient-to-br from-sunny/10 to-coral/5 border-2 border-sunny/20 shadow-[inset_0_2px_10px_rgba(0,0,0,0.02)]">
-                              <div className="flex items-center gap-3 mb-3">
-                                <div className="p-2 bg-sunny/20 rounded-xl shadow-sm border border-sunny/30">
-                                  <Activity className="w-5 h-5 text-honey" />
+                            <div className="mt-4 p-4 rounded-xl bg-gradient-to-br from-sunny/10 to-coral/5 border border-sunny/20 shadow-[inset_0_1px_6px_rgba(0,0,0,0.02)]">
+                              <div className="flex items-center gap-2 mb-2">
+                                <div className="p-1.5 bg-sunny/20 rounded-lg shadow-sm border border-sunny/30">
+                                  <Activity className="w-4 h-4 text-honey" />
                                 </div>
-                                <span className="text-xs font-black text-cocoa uppercase tracking-widest">AI Compatibility Report</span>
+                                <span className="text-[10px] font-black text-cocoa uppercase tracking-widest">AI Compatibility Report</span>
                               </div>
-                              <p className="text-[15px] text-cocoa/80 leading-relaxed font-medium">
+                              <p className="text-[13px] text-cocoa/75 leading-relaxed font-medium">
                                 {request.aiExplanation}
                               </p>
                             </div>
@@ -368,11 +368,11 @@ export default function ShelterAdoptionsPage() {
                         </div>
                       </div>
 
-                      {/* Right: Actions */}
-                      <div className="flex items-center gap-3 shrink-0 lg:flex-col sm:flex-row flex-col w-full lg:w-48 sm:w-auto lg:mt-0 mt-4">
+                      {/* Right: Actions — proper sized buttons */}
+                      <div className="flex lg:flex-col sm:flex-row flex-row gap-2.5 shrink-0 lg:w-44 sm:w-auto w-full">
                         <Button
-                          size="sm"
-                          className="w-full sm:w-auto bg-sage text-white hover:bg-sage-deep rounded-xl font-bold gap-2 px-5 py-5 shadow-[3px_3px_0px_0px_rgba(42,29,20,1)] hover:-translate-y-0.5 transition-all border-2 border-cocoa cursor-pointer"
+                          size="default"
+                          className="flex-1 lg:flex-initial bg-sage text-white hover:bg-sage-deep rounded-xl font-bold gap-2 px-4 py-2.5 shadow-[3px_3px_0px_0px_rgba(42,29,20,1)] hover:-translate-y-0.5 hover:shadow-[4px_4px_0px_0px_rgba(42,29,20,1)] transition-all border-2 border-cocoa cursor-pointer text-sm"
                           onClick={() => handleAction(request.id, "approve")}
                           disabled={actionLoading === request.id}
                         >
@@ -381,12 +381,12 @@ export default function ShelterAdoptionsPage() {
                           ) : (
                             <CheckCircle className="h-4 w-4" />
                           )}
-                          Approve Application
+                          Approve
                         </Button>
                         <Button
-                          size="sm"
+                          size="default"
                           variant="outline"
-                          className="w-full sm:w-auto border-2 border-cocoa text-cocoa/60 hover:text-coral hover:bg-coral/5 rounded-xl font-bold gap-2 px-5 py-5 shadow-[3px_3px_0px_0px_rgba(42,29,20,1)] hover:-translate-y-0.5 transition-all cursor-pointer"
+                          className="flex-1 lg:flex-initial border-2 border-cocoa/20 text-cocoa/60 hover:text-coral hover:border-coral/30 hover:bg-coral/5 rounded-xl font-bold gap-2 px-4 py-2.5 shadow-[3px_3px_0px_0px_rgba(42,29,20,0.08)] hover:shadow-[4px_4px_0px_0px_rgba(255,107,107,0.4)] hover:-translate-y-0.5 transition-all cursor-pointer text-sm"
                           onClick={() => handleAction(request.id, "reject")}
                           disabled={actionLoading === request.id}
                         >
@@ -410,18 +410,18 @@ export default function ShelterAdoptionsPage() {
         <TabsContent value="active" className="outline-none">
           {demoActiveAdoptions.length === 0 ? (
             <Card className="bg-white/80 backdrop-blur-sm border-2 border-cocoa/10 rounded-2xl shadow-[4px_4px_0px_0px_rgba(42,29,20,1)]">
-              <CardContent className="py-16 text-center max-w-md mx-auto space-y-4">
-                <div className="w-16 h-16 bg-coral/10 border-2 border-coral/20 rounded-2xl flex items-center justify-center mx-auto shadow-[3px_3px_0px_0px_rgba(255,107,107,0.2)]">
-                  <Heart className="h-8 w-8 text-coral animate-pulse" />
+              <CardContent className="py-12 text-center max-w-md mx-auto space-y-3">
+                <div className="w-14 h-14 bg-coral/10 border-2 border-coral/20 rounded-xl flex items-center justify-center mx-auto shadow-[2px_2px_0px_0px_rgba(255,107,107,0.15)]">
+                  <Heart className="h-7 w-7 text-coral animate-pulse" />
                 </div>
-                <h3 className="font-display text-2xl font-black text-cocoa">No Active Journeys</h3>
-                <p className="text-sm text-cocoa/60 font-medium leading-relaxed">
+                <h3 className="font-display text-xl font-black text-cocoa">No Active Journeys</h3>
+                <p className="text-sm text-cocoa/50 font-medium leading-relaxed">
                   When adoption applications are approved, the 14-day transition/onboarding journey tracking begins here!
                 </p>
               </CardContent>
             </Card>
           ) : (
-            <div className="grid gap-8">
+            <div className="grid gap-6">
               {demoActiveAdoptions.map((adoption) => {
                 // Calculate percentage progress through 14-day schedule
                 const percent = Math.min(100, Math.max(0, (adoption.currentDay / 14) * 100));
@@ -429,13 +429,13 @@ export default function ShelterAdoptionsPage() {
                 return (
                   <Card
                     key={adoption.id}
-                    className="bg-white border-2 border-cocoa/15 rounded-[2rem] hover:shadow-[8px_8px_0px_0px_rgba(42,29,20,1)] transition-all duration-300 overflow-hidden"
+                    className="bg-white border-2 border-cocoa/15 rounded-[1.25rem] hover:shadow-[6px_6px_0px_0px_rgba(42,29,20,1)] transition-all duration-300 overflow-hidden"
                   >
-                    <CardContent className="p-8 sm:p-10">
-                      <div className="flex flex-col md:flex-row gap-8 sm:gap-10">
+                    <CardContent className="p-6">
+                      <div className="flex flex-col md:flex-row gap-6">
                         {/* Left: Avatar / Name Info */}
-                        <div className="flex sm:flex-row flex-col gap-6 items-center md:items-start shrink-0 md:w-64">
-                          <div className="h-24 w-24 rounded-[1.5rem] bg-gradient-to-br from-sunny/20 to-coral/15 flex items-center justify-center shrink-0 border-2 border-cocoa/10 relative overflow-hidden shadow-sm">
+                        <div className="flex sm:flex-row flex-col gap-4 items-center md:items-start shrink-0 md:w-56">
+                          <div className="h-20 w-20 rounded-[1.25rem] bg-gradient-to-br from-sunny/20 to-coral/15 flex items-center justify-center shrink-0 border-2 border-cocoa/10 relative overflow-hidden shadow-sm">
                             {adoption.catPhoto ? (
                               // eslint-disable-next-line @next/next/no-img-element
                               <img
@@ -444,33 +444,33 @@ export default function ShelterAdoptionsPage() {
                                 className="h-full w-full object-cover"
                               />
                             ) : (
-                              <Cat className="h-10 w-10 text-coral" />
+                              <Cat className="h-8 w-8 text-coral" />
                             )}
                           </div>
                           
-                          <div className="text-center sm:text-left space-y-2 mt-2">
-                            <h3 className="text-2xl font-black text-cocoa tracking-tight leading-none">{adoption.catName}</h3>
-                            <p className="text-sm text-cocoa/70 font-bold">
+                          <div className="text-center sm:text-left space-y-1.5 mt-1">
+                            <h3 className="text-xl font-black text-cocoa tracking-tight leading-none">{adoption.catName}</h3>
+                            <p className="text-xs text-cocoa/60 font-bold">
                               Adopted by <span className="text-coral font-extrabold">{adoption.adopterName}</span>
                             </p>
-                            <Badge className="bg-honey/15 border-2 border-honey/20 text-honey-deep font-black text-[11px] tracking-wider uppercase px-3 py-1 rounded-xl flex items-center gap-1.5 mt-2 justify-center sm:justify-start shadow-sm">
-                              <Calendar className="h-3.5 w-3.5" />
+                            <Badge className="bg-honey/15 border border-honey/20 text-honey-deep font-black text-[10px] tracking-wider uppercase px-2.5 py-0.5 rounded-lg flex items-center gap-1 mt-1.5 justify-center sm:justify-start shadow-sm">
+                              <Calendar className="h-3 w-3" />
                               Day {adoption.currentDay} of 14
                             </Badge>
                           </div>
                         </div>
 
                         {/* Right: Journey Progress & Check-in */}
-                        <div className="flex-1 space-y-5">
+                        <div className="flex-1 space-y-4">
                           {/* 14-Day Timeline Progress Tracker */}
-                          <div className="space-y-2">
-                            <div className="flex justify-between items-center text-xs font-bold text-cocoa/60">
+                          <div className="space-y-1.5">
+                            <div className="flex justify-between items-center text-[11px] font-bold text-cocoa/50">
                               <span>9-Lives Journey Progress</span>
                               <span>{Math.round(percent)}% Complete</span>
                             </div>
                             
                             {/* Track Container */}
-                            <div className="relative h-4 bg-cocoa/5 rounded-full border-2 border-cocoa/10 p-0.5 overflow-visible">
+                            <div className="relative h-3.5 bg-cocoa/5 rounded-full border border-cocoa/10 p-0.5 overflow-visible">
                               {/* Glowing progress line */}
                               <div
                                 className="h-full bg-gradient-to-r from-coral to-honey rounded-full transition-all duration-500 ease-out"
@@ -479,17 +479,17 @@ export default function ShelterAdoptionsPage() {
                               
                               {/* Sliding Paw Icon */}
                               <div 
-                                className="absolute top-1/2 -translate-y-1/2 -ml-3.5 transition-all duration-500 ease-out"
+                                className="absolute top-1/2 -translate-y-1/2 -ml-3 transition-all duration-500 ease-out"
                                 style={{ left: `${percent}%` }}
                               >
-                                <div className="w-7 h-7 rounded-full bg-white border-2 border-cocoa shadow-sm flex items-center justify-center">
+                                <div className="w-6 h-6 rounded-full bg-white border-2 border-cocoa shadow-sm flex items-center justify-center text-xs">
                                   🐾
                                 </div>
                               </div>
                             </div>
 
                             {/* Milestones Label */}
-                            <div className="flex justify-between text-[10px] font-black text-cocoa/40 uppercase tracking-widest pt-1 px-1">
+                            <div className="flex justify-between text-[10px] font-black text-cocoa/35 uppercase tracking-widest pt-0.5 px-0.5">
                               <span>Day 1: Arrival</span>
                               <span>Day 7: Exploration</span>
                               <span>Day 14: Forever Home</span>
@@ -497,26 +497,26 @@ export default function ShelterAdoptionsPage() {
                           </div>
 
                           {/* Last Check-in Text */}
-                          <div className="p-5 rounded-2xl bg-cream border-2 border-cocoa/10 shadow-[inset_0_2px_10px_rgba(0,0,0,0.02)]">
-                            <div className="flex items-center gap-2.5 text-xs font-black text-cocoa/60 uppercase tracking-wider mb-2">
-                              <Activity className="h-4 w-4 text-coral animate-pulse" />
+                          <div className="p-4 rounded-xl bg-cream border border-cocoa/10 shadow-[inset_0_1px_6px_rgba(0,0,0,0.02)]">
+                            <div className="flex items-center gap-2 text-[10px] font-black text-cocoa/50 uppercase tracking-wider mb-1.5">
+                              <Activity className="h-3.5 w-3.5 text-coral animate-pulse" />
                               <span>Latest Check-in Update</span>
                             </div>
-                            <p className="text-[15px] font-medium text-cocoa/80 italic leading-relaxed">
+                            <p className="text-[13px] font-medium text-cocoa/75 italic leading-relaxed">
                               &ldquo;{adoption.lastCheckIn || "No updates submitted yet"}&rdquo;
                             </p>
                           </div>
 
                           {/* Action Button */}
-                          <div className="flex justify-end pt-2">
+                          <div className="flex justify-end pt-1">
                             <Link href={`/coach/${adoption.id}`}>
                               <Button
                                 variant="outline"
-                                size="default"
-                                className="border-2 border-cocoa text-cocoa font-black rounded-xl hover:bg-honey/15 shadow-[3px_3px_0px_0px_rgba(42,29,20,1)] hover:-translate-y-0.5 transition-all gap-2 px-6 py-5 cursor-pointer"
+                                size="sm"
+                                className="border-2 border-cocoa text-cocoa font-black rounded-lg hover:bg-honey/15 shadow-[2px_2px_0px_0px_rgba(42,29,20,1)] hover:-translate-y-0.5 transition-all gap-1.5 px-4 py-2 h-auto text-xs cursor-pointer"
                               >
-                                <Eye className="h-5 w-5" />
-                                View Full Journey & Coach Logs
+                                <Eye className="h-4 w-4" />
+                                View Full Journey &amp; Coach Logs
                               </Button>
                             </Link>
                           </div>

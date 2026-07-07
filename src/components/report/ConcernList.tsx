@@ -1,18 +1,38 @@
-import { Concern } from "@/types/match";
+import { Concern, CompatibilityResult } from "@/types/match";
 import { AlertCircle } from "lucide-react";
 
 interface ConcernListProps {
   concerns: Concern[];
+  matchLevel: CompatibilityResult["level"];
 }
 
-export default function ConcernList({ concerns }: ConcernListProps) {
+const headingByLevel: Record<CompatibilityResult["level"], string> = {
+  low: "Why this was flagged",
+  moderate: "Areas of consideration",
+  high: "Things to keep in mind",
+};
+
+export default function ConcernList({ concerns, matchLevel }: ConcernListProps) {
   if (concerns.length === 0) return null;
+
+  const isHighMatch = matchLevel === "low"; // "low" risk = best match
+  const isMidMatch = matchLevel === "moderate";
 
   return (
     <div className="space-y-3">
       <h3 className="font-semibold text-cat-dark text-lg">
-        Why this was flagged
+        {headingByLevel[matchLevel]}
       </h3>
+      {matchLevel === "low" && (
+        <p className="text-xs text-charcoal/50 -mt-1">
+          Minor notes for a great match — not dealbreakers, just awareness points.
+        </p>
+      )}
+      {matchLevel === "moderate" && (
+        <p className="text-xs text-charcoal/50 -mt-1">
+          Manageable factors that can be addressed with awareness and preparation.
+        </p>
+      )}
       <div className="space-y-2">
         {concerns.map((concern, i) => (
           <div
