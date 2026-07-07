@@ -43,6 +43,9 @@ next-env.d.ts
 # scratch/generated component export, not part of the app
 /nextjs-dashboard-page-component (1)/
 
+# scratch/test scripts
+/scratch/
+
 # local debug output
 tsc_errors.txt
 
