@@ -12,12 +12,12 @@ export default function ShelterInsightsPage() {
   return (
     <div className="max-w-6xl mx-auto">
       {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-cat-dark">Shelter Insights</h1>
-        <p className="mt-1 text-charcoal/50">
+      <div className="mb-10">
+        <h1 className="font-display text-4xl sm:text-5xl font-black text-cocoa tracking-tight leading-none">Shelter Insights</h1>
+        <p className="mt-3 text-base text-cocoa/60 font-medium max-w-xl leading-relaxed">
           Track adoptions, spot patterns, and know which cats need attention — at a glance.
         </p>
-        <p className="mt-2 text-xs text-charcoal/40">
+        <p className="mt-2 text-sm text-cocoa/40 font-bold uppercase tracking-wider">
           Demo data shown below. Connect Firestore to see live shelter metrics.
         </p>
       </div>
@@ -55,15 +55,15 @@ export default function ShelterInsightsPage() {
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: idx * 0.06 }}
-            className="bg-white rounded-2xl p-5 border border-sunny/20 shadow-sm"
+            className="bg-white rounded-[2rem] p-6 sm:p-8 border-2 border-cocoa/10 shadow-[6px_6px_0px_0px_rgba(42,29,20,0.05)] hover:shadow-[8px_8px_0px_0px_rgba(42,29,20,1)] hover:-translate-y-1 transition-all duration-300"
           >
-            <div className="flex items-center gap-3">
-              <div className={`w-10 h-10 rounded-xl ${stat.bg} flex items-center justify-center shrink-0`}>
+            <div className="flex flex-col gap-4">
+              <div className={`w-14 h-14 rounded-[1rem] ${stat.bg} flex items-center justify-center shrink-0 shadow-inner`}>
                 {stat.icon}
               </div>
-              <div>
-                <p className="text-2xl font-bold text-cat-dark">{stat.value}</p>
-                <p className="text-xs text-charcoal/50">{stat.label}</p>
+              <div className="space-y-1">
+                <p className="font-display text-4xl font-black text-cocoa leading-none">{stat.value}</p>
+                <p className="text-sm font-bold text-cocoa/60">{stat.label}</p>
               </div>
             </div>
           </motion.div>
@@ -71,28 +71,28 @@ export default function ShelterInsightsPage() {
       </div>
 
       {/* Detail Panels */}
-      <div className="grid lg:grid-cols-2 gap-6">
-        <div className="bg-white rounded-2xl p-6 border border-sunny/20 shadow-sm">
-          <div className="flex items-center gap-3 mb-5">
-            <div className="w-10 h-10 rounded-xl bg-heart flex items-center justify-center shrink-0">
-              <AlertTriangle className="w-5 h-5 text-white" />
+      <div className="grid lg:grid-cols-2 gap-8 mt-10">
+        <div className="bg-white rounded-[2rem] p-8 border-2 border-cocoa/10 shadow-[6px_6px_0px_0px_rgba(42,29,20,0.05)]">
+          <div className="flex items-center gap-4 mb-6">
+            <div className="w-12 h-12 rounded-[1rem] bg-coral/20 flex items-center justify-center shrink-0">
+              <AlertTriangle className="w-6 h-6 text-coral-deep" />
             </div>
             <div>
-              <h3 className="font-bold text-lg text-cat-dark">Cats Needing Attention</h3>
-              <p className="text-xs text-charcoal/50">Who to check in on today</p>
+              <h3 className="font-display text-2xl font-black text-cocoa leading-tight">Cats Needing Attention</h3>
+              <p className="text-sm font-bold text-cocoa/50">Who to check in on today</p>
             </div>
           </div>
           <CatsNeedingAttention cats={insights.catsNeedingAttention} />
         </div>
 
-        <div className="bg-white rounded-2xl p-6 border border-sunny/20 shadow-sm">
-          <div className="flex items-center gap-3 mb-5">
-            <div className="w-10 h-10 rounded-xl bg-sunny flex items-center justify-center shrink-0">
-              <TrendingUp className="w-5 h-5 text-cat-dark" />
+        <div className="bg-white rounded-[2rem] p-8 border-2 border-cocoa/10 shadow-[6px_6px_0px_0px_rgba(42,29,20,0.05)]">
+          <div className="flex items-center gap-4 mb-6">
+            <div className="w-12 h-12 rounded-[1rem] bg-sunny/20 flex items-center justify-center shrink-0">
+              <TrendingUp className="w-6 h-6 text-sunny-deep" />
             </div>
             <div>
-              <h3 className="font-bold text-lg text-cat-dark">Common Compatibility Concerns</h3>
-              <p className="text-xs text-charcoal/50">Last 30 days — patterns to learn from</p>
+              <h3 className="font-display text-2xl font-black text-cocoa leading-tight">Common Compatibility Concerns</h3>
+              <p className="text-sm font-bold text-cocoa/50">Last 30 days — patterns to learn from</p>
             </div>
           </div>
           <CommonConcernsList concerns={insights.commonConcerns} />

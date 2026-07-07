@@ -160,40 +160,44 @@ export default function ShelterAdoptionsPage() {
       <div className="absolute bottom-10 left-4 w-32 h-32 bg-gradient-to-br from-sage/10 to-lavender/10 rounded-full blur-2xl pointer-events-none -z-10" />
 
       {/* Header section */}
-      <div className="mb-10 relative">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white border-2 border-cocoa/10 shadow-[2px_2px_0px_0px_rgba(42,29,20,0.1)] text-xs font-bold text-cocoa/60 mb-3">
-          <Heart className="w-3..5 h-3.5 text-coral animate-pulse" /> Shelter Management Portal
+      <div className="mb-10 relative flex flex-col lg:flex-row justify-between items-start lg:items-end gap-8">
+        <div>
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white border-2 border-cocoa/10 shadow-[2px_2px_0px_0px_rgba(42,29,20,0.1)] text-xs font-bold text-cocoa/60 mb-3">
+            <Heart className="w-3.5 h-3.5 text-coral animate-pulse" /> Shelter Management Portal
+          </div>
+          <h1 className="font-display text-4xl sm:text-5xl font-black text-cocoa tracking-tight leading-none">
+            Adoptions Hub
+          </h1>
+          <p className="mt-3 text-base text-cocoa/60 font-medium max-w-xl leading-relaxed">
+            Review pending adoption applications, assess compatibility, and track active 14-day transition journeys.
+          </p>
         </div>
-        <h1 className="font-display text-4xl sm:text-5xl font-black text-cocoa tracking-tight leading-none">
-          Adoptions Hub
-        </h1>
-        <p className="mt-2 text-base text-cocoa/60 font-medium max-w-xl">
-          Review pending adoption applications, assess compatibility, and track active 14-day transition journeys.
-        </p>
-      </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="bg-white/80 backdrop-blur-sm p-1.5 rounded-2xl border-2 border-cocoa/10 shadow-[3px_3px_0px_0px_rgba(42,29,20,0.08)] flex w-full max-w-md">
-          <TabsTrigger
-            value="pending"
-            className="flex-1 rounded-xl py-3 font-bold text-sm transition-all data-[state=active]:bg-cocoa data-[state=active]:text-cream data-[state=active]:shadow-[2px_2px_0px_0px_rgba(255,107,107,1)] gap-2 flex items-center justify-center cursor-pointer"
-          >
-            <ShieldAlert className="h-4 w-4 shrink-0" />
-            <span>Applications</span>
-            {pendingRequests.length > 0 && (
-              <Badge className="bg-heart text-white h-5 min-w-5 flex items-center justify-center text-[10px] font-black border border-white">
-                {pendingRequests.length}
-              </Badge>
-            )}
-          </TabsTrigger>
-          <TabsTrigger
-            value="active"
-            className="flex-1 rounded-xl py-3 font-bold text-sm transition-all data-[state=active]:bg-cocoa data-[state=active]:text-cream data-[state=active]:shadow-[2px_2px_0px_0px_rgba(255,107,107,1)] gap-2 flex items-center justify-center cursor-pointer"
-          >
-            <Heart className="h-4 w-4 shrink-0" />
-            <span>Active Journeys</span>
-          </TabsTrigger>
-        </TabsList>
+        {/* Tabs styled as top-right buttons */}
+        <div className="w-full lg:w-auto">
+          <TabsList className="bg-white/90 backdrop-blur-md p-2 rounded-2xl border-2 border-cocoa/10 shadow-[4px_4px_0px_0px_rgba(42,29,20,0.08)] flex w-full lg:w-auto min-w-[340px] gap-1">
+            <TabsTrigger
+              value="pending"
+              className="flex-1 rounded-xl py-3.5 font-black text-sm transition-all duration-300 data-[state=active]:bg-cocoa data-[state=active]:text-cream data-[state=active]:shadow-[2px_2px_0px_0px_rgba(255,107,107,1)] data-[state=active]:-translate-y-0.5 gap-2 flex items-center justify-center cursor-pointer hover:bg-cocoa/5"
+            >
+              <ShieldAlert className="h-4 w-4 shrink-0" />
+              <span>Applications</span>
+              {pendingRequests.length > 0 && (
+                <Badge className="bg-heart text-white h-5 min-w-5 flex items-center justify-center text-[10px] font-black border border-white shadow-sm">
+                  {pendingRequests.length}
+                </Badge>
+              )}
+            </TabsTrigger>
+            <TabsTrigger
+              value="active"
+              className="flex-1 rounded-xl py-3.5 font-black text-sm transition-all duration-300 data-[state=active]:bg-cocoa data-[state=active]:text-cream data-[state=active]:shadow-[2px_2px_0px_0px_rgba(255,107,107,1)] data-[state=active]:-translate-y-0.5 gap-2 flex items-center justify-center cursor-pointer hover:bg-cocoa/5"
+            >
+              <Heart className="h-4 w-4 shrink-0" />
+              <span>Active Journeys</span>
+            </TabsTrigger>
+          </TabsList>
+        </div>
+      </div>
 
         {/* ================================================================ */}
         {/* PENDING APPLICATIONS TAB                                         */}
@@ -219,18 +223,18 @@ export default function ShelterAdoptionsPage() {
               </CardContent>
             </Card>
           ) : (
-            <div className="grid gap-6">
+            <div className="grid gap-8">
               {pendingRequests.map((request) => (
                 <Card
                   key={request.id}
-                  className="bg-white border-2 border-cocoa/15 rounded-2xl hover:shadow-[6px_6px_0px_0px_rgba(42,29,20,1)] transition-all duration-200 overflow-hidden"
+                  className="bg-white border-2 border-cocoa/15 rounded-[2rem] hover:shadow-[8px_8px_0px_0px_rgba(42,29,20,1)] transition-all duration-300 overflow-hidden"
                 >
-                  <CardContent className="p-6">
-                    <div className="flex flex-col lg:flex-row lg:items-center gap-6">
+                  <CardContent className="p-8 sm:p-10">
+                    <div className="flex flex-col lg:flex-row lg:items-start gap-8 sm:gap-10">
                       {/* Left: Info details */}
-                      <div className="flex items-start gap-4 flex-1 min-w-0">
-                        <div className="h-14 w-14 rounded-2xl bg-gradient-to-br from-coral/10 to-honey/10 flex items-center justify-center shrink-0 border-2 border-cocoa/10">
-                          <Cat className="h-7 w-7 text-coral" />
+                      <div className="flex items-start gap-6 flex-1 min-w-0">
+                        <div className="h-20 w-20 rounded-[1.5rem] bg-gradient-to-br from-coral/15 to-honey/15 flex items-center justify-center shrink-0 border-2 border-cocoa/10 shadow-sm">
+                          <Cat className="h-10 w-10 text-coral" />
                         </div>
                         <div className="flex-1 min-w-0 space-y-1">
                           <div className="flex items-center gap-2.5 flex-wrap">
@@ -258,31 +262,33 @@ export default function ShelterAdoptionsPage() {
                             Applicant: <span className="text-cocoa font-bold">{request.adopterName}</span>
                           </p>
 
-                          <div className="flex flex-wrap gap-x-5 gap-y-1.5 mt-2.5 text-xs text-cocoa/50 font-medium">
-                            <span className="flex items-center gap-1.5">
-                              <Mail className="h-3.5 w-3.5 text-cocoa/40" />
+                          <div className="flex flex-wrap gap-x-6 gap-y-2 mt-4 text-sm text-cocoa/60 font-semibold">
+                            <span className="flex items-center gap-2 bg-cocoa/5 px-3 py-1.5 rounded-lg border border-cocoa/10">
+                              <Mail className="h-4 w-4 text-cocoa/50" />
                               {request.adopterEmail}
                             </span>
                             {request.adopterPhone && (
-                              <span className="flex items-center gap-1.5">
-                                <Phone className="h-3.5 w-3.5 text-cocoa/40" />
+                              <span className="flex items-center gap-2 bg-cocoa/5 px-3 py-1.5 rounded-lg border border-cocoa/10">
+                                <Phone className="h-4 w-4 text-cocoa/50" />
                                 {request.adopterPhone}
                               </span>
                             )}
-                            <span className="flex items-center gap-1.5">
-                              <Clock className="h-3.5 w-3.5 text-cocoa/40" />
+                            <span className="flex items-center gap-2 bg-cocoa/5 px-3 py-1.5 rounded-lg border border-cocoa/10">
+                              <Clock className="h-4 w-4 text-cocoa/50" />
                               Applied {formatTimeAgo(request.createdAt)}
                             </span>
                           </div>
 
                           {request.aiExplanation && (
-                            <div className="mt-4 p-3.5 rounded-xl bg-sunny/10 border border-sunny/20">
-                              <div className="flex items-center gap-1.5 mb-1.5">
-                                <Activity className="w-4 h-4 text-sunny" />
-                                <span className="text-[11px] font-bold text-cat-dark uppercase tracking-wider">AI Compatibility Summary</span>
+                            <div className="mt-6 p-5 sm:p-6 rounded-2xl bg-gradient-to-br from-sunny/10 to-coral/5 border-2 border-sunny/20 shadow-[inset_0_2px_10px_rgba(0,0,0,0.02)]">
+                              <div className="flex items-center gap-3 mb-3">
+                                <div className="p-2 bg-sunny/20 rounded-xl shadow-sm border border-sunny/30">
+                                  <Activity className="w-5 h-5 text-honey" />
+                                </div>
+                                <span className="text-xs font-black text-cocoa uppercase tracking-widest">AI Compatibility Report</span>
                               </div>
-                              <p className="text-sm text-charcoal/80 leading-relaxed italic">
-                                &ldquo;{request.aiExplanation}&rdquo;
+                              <p className="text-[15px] text-cocoa/80 leading-relaxed font-medium">
+                                {request.aiExplanation}
                               </p>
                             </div>
                           )}
@@ -290,7 +296,7 @@ export default function ShelterAdoptionsPage() {
                       </div>
 
                       {/* Right: Actions */}
-                      <div className="flex items-center gap-3 shrink-0 lg:flex-row sm:flex-row flex-col w-full sm:w-auto">
+                      <div className="flex items-center gap-3 shrink-0 lg:flex-col sm:flex-row flex-col w-full lg:w-48 sm:w-auto lg:mt-0 mt-4">
                         <Button
                           size="sm"
                           className="w-full sm:w-auto bg-sage text-white hover:bg-sage-deep rounded-xl font-bold gap-2 px-5 py-5 shadow-[3px_3px_0px_0px_rgba(42,29,20,1)] hover:-translate-y-0.5 transition-all border-2 border-cocoa cursor-pointer"
@@ -340,7 +346,7 @@ export default function ShelterAdoptionsPage() {
               </CardContent>
             </Card>
           ) : (
-            <div className="grid gap-6">
+            <div className="grid gap-8">
               {demoActiveAdoptions.map((adoption) => {
                 // Calculate percentage progress through 14-day schedule
                 const percent = Math.min(100, Math.max(0, (adoption.currentDay / 14) * 100));
@@ -348,13 +354,13 @@ export default function ShelterAdoptionsPage() {
                 return (
                   <Card
                     key={adoption.id}
-                    className="bg-white border-2 border-cocoa/15 rounded-3xl hover:shadow-[6px_6px_0px_0px_rgba(42,29,20,1)] transition-all duration-200 overflow-hidden"
+                    className="bg-white border-2 border-cocoa/15 rounded-[2rem] hover:shadow-[8px_8px_0px_0px_rgba(42,29,20,1)] transition-all duration-300 overflow-hidden"
                   >
-                    <CardContent className="p-6">
-                      <div className="flex flex-col md:flex-row gap-6">
+                    <CardContent className="p-8 sm:p-10">
+                      <div className="flex flex-col md:flex-row gap-8 sm:gap-10">
                         {/* Left: Avatar / Name Info */}
-                        <div className="flex sm:flex-row flex-col gap-4 items-center md:items-start shrink-0">
-                          <div className="h-20 w-20 rounded-2xl bg-gradient-to-br from-sunny/20 to-coral/15 flex items-center justify-center shrink-0 border-2 border-cocoa/10 relative overflow-hidden">
+                        <div className="flex sm:flex-row flex-col gap-6 items-center md:items-start shrink-0 md:w-64">
+                          <div className="h-24 w-24 rounded-[1.5rem] bg-gradient-to-br from-sunny/20 to-coral/15 flex items-center justify-center shrink-0 border-2 border-cocoa/10 relative overflow-hidden shadow-sm">
                             {adoption.catPhoto ? (
                               // eslint-disable-next-line @next/next/no-img-element
                               <img
@@ -363,17 +369,17 @@ export default function ShelterAdoptionsPage() {
                                 className="h-full w-full object-cover"
                               />
                             ) : (
-                              <Cat className="h-9 w-9 text-coral" />
+                              <Cat className="h-10 w-10 text-coral" />
                             )}
                           </div>
                           
-                          <div className="text-center sm:text-left space-y-1">
-                            <h3 className="text-xl font-extrabold text-cocoa tracking-tight">{adoption.catName}</h3>
-                            <p className="text-xs text-cocoa/60 font-bold">
+                          <div className="text-center sm:text-left space-y-2 mt-2">
+                            <h3 className="text-2xl font-black text-cocoa tracking-tight leading-none">{adoption.catName}</h3>
+                            <p className="text-sm text-cocoa/70 font-bold">
                               Adopted by <span className="text-coral font-extrabold">{adoption.adopterName}</span>
                             </p>
-                            <Badge className="bg-honey/15 border-2 border-honey/20 text-honey font-bold text-[10px] tracking-wider uppercase px-2 py-0.5 rounded-lg flex items-center gap-1 mt-1 justify-center sm:justify-start">
-                              <Calendar className="h-3 w-3" />
+                            <Badge className="bg-honey/15 border-2 border-honey/20 text-honey-deep font-black text-[11px] tracking-wider uppercase px-3 py-1 rounded-xl flex items-center gap-1.5 mt-2 justify-center sm:justify-start shadow-sm">
+                              <Calendar className="h-3.5 w-3.5" />
                               Day {adoption.currentDay} of 14
                             </Badge>
                           </div>
@@ -416,25 +422,25 @@ export default function ShelterAdoptionsPage() {
                           </div>
 
                           {/* Last Check-in Text */}
-                          <div className="p-4 rounded-2xl bg-cream border-2 border-cocoa/10 shadow-[3px_3px_0px_0px_rgba(42,29,20,0.05)]">
-                            <div className="flex items-center gap-2 text-xs font-black text-cocoa/60 uppercase tracking-wider mb-1.5">
+                          <div className="p-5 rounded-2xl bg-cream border-2 border-cocoa/10 shadow-[inset_0_2px_10px_rgba(0,0,0,0.02)]">
+                            <div className="flex items-center gap-2.5 text-xs font-black text-cocoa/60 uppercase tracking-wider mb-2">
                               <Activity className="h-4 w-4 text-coral animate-pulse" />
                               <span>Latest Check-in Update</span>
                             </div>
-                            <p className="text-sm font-medium text-cocoa/80 italic">
+                            <p className="text-[15px] font-medium text-cocoa/80 italic leading-relaxed">
                               &ldquo;{adoption.lastCheckIn || "No updates submitted yet"}&rdquo;
                             </p>
                           </div>
 
                           {/* Action Button */}
-                          <div className="flex justify-end pt-1">
+                          <div className="flex justify-end pt-2">
                             <Link href={`/coach/${adoption.id}`}>
                               <Button
                                 variant="outline"
-                                size="sm"
-                                className="border-2 border-cocoa text-cocoa font-bold rounded-xl hover:bg-honey/15 shadow-[2px_2px_0px_0px_rgba(42,29,20,1)] hover:-translate-y-0.5 transition-all gap-1.5 cursor-pointer"
+                                size="default"
+                                className="border-2 border-cocoa text-cocoa font-black rounded-xl hover:bg-honey/15 shadow-[3px_3px_0px_0px_rgba(42,29,20,1)] hover:-translate-y-0.5 transition-all gap-2 px-6 py-5 cursor-pointer"
                               >
-                                <Eye className="h-4 w-4" />
+                                <Eye className="h-5 w-5" />
                                 View Full Journey & Coach Logs
                               </Button>
                             </Link>

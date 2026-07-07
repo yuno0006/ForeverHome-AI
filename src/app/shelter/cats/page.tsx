@@ -27,20 +27,20 @@ function StatusBadge({ status }: { status: string }) {
 
 function EmptyState({ onSeed, seeding }: { onSeed: () => void; seeding: boolean }) {
   return (
-    <Card className="rounded-2xl">
-      <CardContent className="flex flex-col items-center justify-center py-16 text-center">
-        <div className="p-4 rounded-full bg-sunny-light mb-4">
-          <Archive className="size-8 text-sunny" />
+    <Card className="rounded-[2rem] border-2 border-cocoa/10 shadow-[6px_6px_0px_0px_rgba(42,29,20,0.05)] bg-white overflow-hidden">
+      <CardContent className="flex flex-col items-center justify-center py-20 text-center px-4">
+        <div className="w-20 h-20 bg-coral/10 border-2 border-coral/20 rounded-[1.5rem] flex items-center justify-center mb-6 shadow-sm rotate-3">
+          <Archive className="size-10 text-coral" />
         </div>
-        <h3 className="text-lg font-semibold text-cat-dark mb-1">No cats yet</h3>
-        <p className="text-sm text-charcoal/60 mb-4 max-w-sm">
+        <h3 className="font-display text-3xl font-black text-cocoa mb-3">No cats yet</h3>
+        <p className="text-base text-cocoa/60 font-medium mb-8 max-w-md leading-relaxed">
           Add your first cat profile, or load our 9 demo cats to explore the
           shelter tools right away.
         </p>
-        <div className="flex flex-wrap items-center justify-center gap-3">
+        <div className="flex flex-wrap items-center justify-center gap-4">
           <Link href="/shelter/cats/new">
-            <Button className="cursor-pointer bg-sunny hover:bg-sunny/80 text-cat-dark">
-              <Plus className="size-4 mr-1" />
+            <Button className="cursor-pointer bg-sage text-white hover:bg-sage-deep px-6 py-5 rounded-xl font-bold shadow-[3px_3px_0px_0px_rgba(42,29,20,1)] hover:-translate-y-0.5 transition-all border-2 border-cocoa">
+              <Plus className="size-5 mr-2" />
               Add Cat
             </Button>
           </Link>
@@ -48,12 +48,12 @@ function EmptyState({ onSeed, seeding }: { onSeed: () => void; seeding: boolean 
             variant="outline"
             onClick={onSeed}
             disabled={seeding}
-            className="cursor-pointer border-sunny/30 text-cat-dark hover:bg-sunny-light"
+            className="cursor-pointer border-2 border-cocoa text-cocoa hover:bg-sunny/10 px-6 py-5 rounded-xl font-bold shadow-[3px_3px_0px_0px_rgba(42,29,20,1)] hover:-translate-y-0.5 transition-all"
           >
             {seeding ? (
-              <Loader2 className="size-4 mr-1 animate-spin" />
+              <Loader2 className="size-5 mr-2 animate-spin" />
             ) : (
-              <Sparkles className="size-4 mr-1" />
+              <Sparkles className="size-5 mr-2 text-sunny-deep" />
             )}
             Load Demo Cats
           </Button>
@@ -166,11 +166,14 @@ export default function ShelterCatsPage() {
 
   return (
     <div className="max-w-5xl mx-auto space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-cat-dark">Cat Management</h1>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+        <div>
+          <h1 className="font-display text-4xl sm:text-5xl font-black text-cocoa tracking-tight leading-none">Cat Management</h1>
+          <p className="text-base text-cocoa/60 font-medium mt-3">Manage profiles and adoption statuses.</p>
+        </div>
         <Link href="/shelter/cats/new">
-          <Button className="cursor-pointer bg-sunny hover:bg-sunny/80 text-cat-dark">
-            <Plus className="size-4 mr-1" />
+          <Button className="cursor-pointer bg-sage text-white hover:bg-sage-deep px-6 py-5 rounded-xl font-bold shadow-[3px_3px_0px_0px_rgba(42,29,20,1)] hover:-translate-y-0.5 transition-all border-2 border-cocoa">
+            <Plus className="size-5 mr-2" />
             Add Cat
           </Button>
         </Link>
@@ -181,59 +184,61 @@ export default function ShelterCatsPage() {
       ) : cats.length === 0 ? (
         <EmptyState onSeed={handleSeedDemoCats} seeding={seeding} />
       ) : (
-        <div className="grid gap-4">
+        <div className="grid gap-6">
           {cats.map((cat) => (
-            <Card key={cat.id} className="rounded-2xl">
-              <CardContent className="flex items-center gap-4 py-4">
-                <img
-                  src={cat.photo}
-                  alt={cat.name}
-                  className="w-20 h-20 rounded-xl object-cover"
-                />
+            <Card key={cat.id} className="rounded-[2rem] border-2 border-cocoa/15 bg-white hover:shadow-[6px_6px_0px_0px_rgba(42,29,20,1)] transition-all duration-300 overflow-hidden group">
+              <CardContent className="flex flex-col sm:flex-row sm:items-center gap-6 p-6 sm:p-8">
+                <div className="h-24 w-24 rounded-[1.5rem] border-2 border-cocoa/10 overflow-hidden shrink-0 shadow-sm relative">
+                  <img
+                    src={cat.photo}
+                    alt={cat.name}
+                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                  />
+                </div>
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <h3 className="text-sm font-semibold text-cat-dark">{cat.name}</h3>
+                  <div className="flex items-center gap-3 flex-wrap mb-1">
+                    <h3 className="font-display text-2xl font-black text-cocoa tracking-tight">{cat.name}</h3>
                     <StatusBadge status={cat.status} />
                   </div>
-                  <p className="text-xs text-charcoal/60 mt-0.5">
+                  <p className="text-sm font-bold text-cocoa/60">
                     {cat.age} {cat.age === 1 ? "year" : "years"} old &middot; {cat.sex} &middot; {cat.lifeStage}
                   </p>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-3 pt-4 sm:pt-0">
                   {cat.status === "available" && (
                     <Button
-                      variant="ghost"
-                      size="icon-sm"
-                      className="cursor-pointer text-green-600 hover:text-green-700 hover:bg-green-50"
+                      variant="outline"
+                      className="cursor-pointer border-2 border-cocoa text-sage-deep hover:bg-sage/15 rounded-xl font-bold shadow-[2px_2px_0px_0px_rgba(42,29,20,1)] hover:-translate-y-0.5 transition-all"
                       onClick={() => handleMarkAdopted(cat)}
                       title="Mark as Adopted"
                     >
-                      <Heart className="size-4" />
+                      <Heart className="size-4 mr-2" />
+                      Adopted
                     </Button>
                   )}
                   {cat.status === "adopted" && (
                     <Link href={`/coach/${cat.id}-adoption-1`}>
                       <Button
-                        variant="ghost"
-                        size="icon-sm"
-                        className="cursor-pointer text-sunny hover:text-sunny/80"
+                        variant="outline"
+                        className="cursor-pointer border-2 border-cocoa text-sunny-deep hover:bg-sunny/15 rounded-xl font-bold shadow-[2px_2px_0px_0px_rgba(42,29,20,1)] hover:-translate-y-0.5 transition-all"
                         title="Open Coach"
                       >
-                        <Sparkles className="size-4" />
+                        <Sparkles className="size-4 mr-2" />
+                        Coach
                       </Button>
                     </Link>
                   )}
                   <Button
-                    variant="ghost"
-                    size="icon-sm"
-                    className="cursor-pointer text-charcoal/60 hover:text-cat-dark"
+                    variant="outline"
+                    size="icon"
+                    className="cursor-pointer border-2 border-cocoa text-cocoa hover:bg-cocoa/5 rounded-xl font-bold shadow-[2px_2px_0px_0px_rgba(42,29,20,1)] hover:-translate-y-0.5 transition-all w-10 h-10"
                   >
                     <Pencil className="size-4" />
                   </Button>
                   <Button
-                    variant="ghost"
-                    size="icon-sm"
-                    className="cursor-pointer text-charcoal/60 hover:text-heart"
+                    variant="outline"
+                    size="icon"
+                    className="cursor-pointer border-2 border-cocoa text-coral hover:bg-coral/10 rounded-xl font-bold shadow-[2px_2px_0px_0px_rgba(42,29,20,1)] hover:-translate-y-0.5 transition-all w-10 h-10"
                     onClick={() => handleArchive(cat.id)}
                   >
                     <Archive className="size-4" />

@@ -60,21 +60,23 @@ export default function StaffManagementPage() {
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-cat-dark">Staff Management</h1>
-        <p className="mt-1 text-charcoal/50">Invite and manage your shelter team</p>
+      <div className="mb-10">
+        <h1 className="font-display text-4xl sm:text-5xl font-black text-cocoa tracking-tight leading-none">Staff Management</h1>
+        <p className="mt-3 text-base text-cocoa/60 font-medium max-w-xl leading-relaxed">Invite and manage your shelter team, assign roles, and handle access control.</p>
       </div>
 
       {/* Invite Section */}
-      <Card className="bg-white border-sunny/20 rounded-2xl mb-6">
-        <CardHeader>
-          <CardTitle className="text-cat-dark flex items-center gap-2">
-            <Plus className="h-5 w-5 text-sunny" />
+      <Card className="bg-white border-2 border-cocoa/10 shadow-[6px_6px_0px_0px_rgba(42,29,20,0.05)] rounded-[2rem] mb-10 overflow-hidden">
+        <CardHeader className="bg-sunny/10 border-b-2 border-cocoa/10 px-8 py-6">
+          <CardTitle className="font-display text-2xl font-black text-cocoa flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-sunny flex items-center justify-center">
+              <Plus className="h-6 w-6 text-sunny-deep" />
+            </div>
             Invite New Staff
           </CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="flex flex-col sm:flex-row gap-3">
+        <CardContent className="p-8">
+          <div className="flex flex-col md:flex-row gap-4">
             <div className="flex-1">
               <Label htmlFor="inviteEmail" className="sr-only">Email</Label>
               <Input
@@ -83,22 +85,22 @@ export default function StaffManagementPage() {
                 placeholder="colleague@shelter.org"
                 value={inviteEmail}
                 onChange={(e) => setInviteEmail(e.target.value)}
-                className="border-sunny/20 rounded-xl"
+                className="border-2 border-cocoa/10 rounded-xl px-4 py-6 text-base shadow-inner focus-visible:ring-sunny-deep focus-visible:border-sunny-deep"
               />
             </div>
             <select
               value={inviteRole}
               onChange={(e) => setInviteRole(e.target.value as "staff" | "admin")}
-              className="rounded-xl border border-sunny/20 bg-white px-3 py-2 text-sm text-cat-dark focus:outline-none focus:ring-2 focus:ring-sunny"
+              className="rounded-xl border-2 border-cocoa/10 bg-white px-4 py-3 text-base font-bold text-cocoa shadow-inner focus:outline-none focus:ring-2 focus:ring-sunny-deep cursor-pointer"
             >
-              <option value="staff">Staff</option>
-              <option value="admin">Admin</option>
+              <option value="staff">Staff Member</option>
+              <option value="admin">Administrator</option>
             </select>
             <Button
               onClick={handleSendInvite}
-              className="bg-sunny hover:bg-sunny/90 text-cat-dark font-semibold rounded-xl"
+              className="bg-cocoa hover:bg-cocoa/90 text-cream px-8 py-6 rounded-xl font-bold shadow-[3px_3px_0px_0px_rgba(42,29,20,1)] hover:-translate-y-0.5 transition-all text-base"
             >
-              <Mail className="h-4 w-4 mr-2" />
+              <Mail className="h-5 w-5 mr-2" />
               Send Invite
             </Button>
           </div>
@@ -106,46 +108,48 @@ export default function StaffManagementPage() {
       </Card>
 
       {/* Staff List */}
-      <Card className="bg-white border-sunny/20 rounded-2xl mb-6">
-        <CardHeader>
-          <CardTitle className="text-cat-dark">Current Staff</CardTitle>
+      <Card className="bg-white border-2 border-cocoa/10 shadow-[6px_6px_0px_0px_rgba(42,29,20,0.05)] rounded-[2rem] mb-10 overflow-hidden">
+        <CardHeader className="bg-cream/50 border-b-2 border-cocoa/10 px-8 py-6">
+          <CardTitle className="font-display text-2xl font-black text-cocoa">Current Staff</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-0">
           {staff.length === 0 ? (
-            <div className="text-center py-8">
-              <User className="h-12 w-12 text-charcoal/20 mx-auto mb-3" />
-              <p className="text-charcoal/50">No staff members yet</p>
-              <p className="text-sm text-charcoal/30">Invite your first team member above</p>
+            <div className="text-center py-16">
+              <div className="w-20 h-20 bg-cocoa/5 rounded-[1.5rem] flex items-center justify-center mx-auto mb-4 border-2 border-cocoa/10">
+                <User className="h-10 w-10 text-cocoa/30" />
+              </div>
+              <p className="font-display text-2xl font-black text-cocoa">No staff members yet</p>
+              <p className="text-sm font-bold text-cocoa/50 mt-2">Invite your first team member above</p>
             </div>
           ) : (
-            <div className="space-y-3">
+            <div className="divide-y-2 divide-cocoa/5">
               {staff.map((member) => (
                 <div
                   key={member.id}
-                  className="flex items-center justify-between p-4 rounded-xl border border-sunny/10 bg-warm-cream/30 hover:bg-warm-cream/50 transition-colors"
+                  className="flex flex-col sm:flex-row sm:items-center justify-between p-8 hover:bg-cream/30 transition-colors gap-4"
                 >
-                  <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-full bg-sunny-light flex items-center justify-center">
-                      <User className="h-5 w-5 text-cat-dark" />
+                  <div className="flex items-center gap-4">
+                    <div className="h-14 w-14 rounded-2xl bg-gradient-to-br from-lavender/20 to-sage/20 border-2 border-cocoa/10 flex items-center justify-center shadow-sm shrink-0">
+                      <span className="font-display text-xl font-black text-cocoa">{member.name[0]}</span>
                     </div>
                     <div>
-                      <p className="font-semibold text-cat-dark">{member.name}</p>
-                      <p className="text-sm text-charcoal/50">{member.email}</p>
+                      <p className="font-display text-xl font-black text-cocoa">{member.name}</p>
+                      <p className="text-sm font-bold text-cocoa/60">{member.email}</p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <Badge className={member.role === "admin" ? "bg-heart/10 text-heart" : "bg-sunny/20 text-cat-dark"}>
-                      <Shield className="h-3 w-3 mr-1" />
+                  <div className="flex items-center gap-4">
+                    <Badge className={`px-3 py-1 font-black text-[10px] uppercase tracking-wider rounded-lg border-2 ${member.role === "admin" ? "bg-coral/15 text-coral-deep border-coral/30" : "bg-sunny/20 text-sunny-deep border-sunny/30"}`}>
+                      <Shield className="h-3.5 w-3.5 mr-1.5" />
                       {member.role}
                     </Badge>
-                    <span className="text-xs text-charcoal/40 hidden sm:inline">
+                    <span className="text-sm font-bold text-cocoa/40 hidden md:inline">
                       Joined {member.joinedDate}
                     </span>
                     <Button
-                      variant="ghost"
-                      size="sm"
+                      variant="outline"
+                      size="icon"
                       onClick={() => handleRemoveStaff(member)}
-                      className="text-heart/60 hover:text-heart hover:bg-heart/10 rounded-lg"
+                      className="border-2 border-cocoa/10 text-coral hover:bg-coral/10 hover:border-coral/30 rounded-xl transition-all shadow-sm w-10 h-10"
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
@@ -159,28 +163,30 @@ export default function StaffManagementPage() {
 
       {/* Pending Invitations */}
       {pendingInvites.length > 0 && (
-        <Card className="bg-white border-sunny/20 rounded-2xl">
-          <CardHeader>
-            <CardTitle className="text-cat-dark flex items-center gap-2">
-              <Clock className="h-5 w-5 text-charcoal/40" />
+        <Card className="bg-white border-2 border-cocoa/10 shadow-[6px_6px_0px_0px_rgba(42,29,20,0.05)] rounded-[2rem] overflow-hidden">
+          <CardHeader className="bg-cream/50 border-b-2 border-cocoa/10 px-8 py-6">
+            <CardTitle className="font-display text-2xl font-black text-cocoa flex items-center gap-3">
+              <Clock className="h-6 w-6 text-cocoa/40" />
               Pending Invitations
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
+          <CardContent className="p-0">
+            <div className="divide-y-2 divide-cocoa/5">
               {pendingInvites.map((invite) => (
                 <div
                   key={invite.id}
-                  className="flex items-center justify-between p-4 rounded-xl border border-dashed border-sunny/30 bg-sunny-light/30"
+                  className="flex items-center justify-between px-8 py-6 bg-white hover:bg-cream/30 transition-colors"
                 >
-                  <div className="flex items-center gap-3">
-                    <Mail className="h-5 w-5 text-charcoal/40" />
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-xl bg-cocoa/5 border-2 border-cocoa/10 flex items-center justify-center shrink-0">
+                      <Mail className="h-5 w-5 text-cocoa/40" />
+                    </div>
                     <div>
-                      <p className="font-medium text-cat-dark">{invite.email}</p>
-                      <p className="text-xs text-charcoal/40">Sent {invite.sentDate}</p>
+                      <p className="font-bold text-cocoa text-lg">{invite.email}</p>
+                      <p className="text-sm font-bold text-cocoa/40">Sent {invite.sentDate}</p>
                     </div>
                   </div>
-                  <Badge className="bg-sunny/20 text-cat-dark">
+                  <Badge className="px-3 py-1 font-black text-[10px] uppercase tracking-wider rounded-lg border-2 bg-cocoa/5 text-cocoa/60 border-cocoa/10">
                     {invite.role}
                   </Badge>
                 </div>

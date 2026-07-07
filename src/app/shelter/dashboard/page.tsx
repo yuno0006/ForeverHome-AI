@@ -56,28 +56,29 @@ export default function ShelterDashboardPage() {
 
   return (
     <div className="max-w-5xl mx-auto space-y-8">
-      <div>
-        <h1 className="text-2xl font-bold text-cat-dark">
-          Welcome back, {userDoc?.displayName || "Staff"}
+      <div className="mb-10">
+        <h1 className="font-display text-4xl sm:text-5xl font-black text-cocoa tracking-tight leading-none">
+          Welcome back,<br />
+          <span className="text-gradient-warm italic">{userDoc?.displayName || "Staff"}</span>
         </h1>
-        <p className="text-sm text-charcoal/60 mt-1">
+        <p className="text-base text-cocoa/60 font-medium mt-3">
           Here&apos;s what&apos;s happening at your shelter today.
         </p>
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {summaryCards.map((card) => {
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        {summaryCards.map((card, idx) => {
           const Icon = card.icon;
           return (
-            <Card key={card.label} className="rounded-2xl">
-              <CardContent className="flex items-center gap-4 pt-4">
-                <div className={`p-2.5 rounded-xl bg-sunny-light`}>
-                  <Icon className={`size-5 ${card.color}`} />
+            <Card key={card.label} className="rounded-[2rem] border-2 border-cocoa/10 shadow-[6px_6px_0px_0px_rgba(42,29,20,0.05)] hover:shadow-[8px_8px_0px_0px_rgba(42,29,20,1)] transition-all duration-300 overflow-hidden bg-white hover:-translate-y-1">
+              <CardContent className="flex flex-col gap-4 p-6 sm:p-8">
+                <div className={`p-4 rounded-[1.5rem] self-start shadow-inner ${idx === 0 ? "bg-sunny/20" : idx === 1 ? "bg-coral/20" : idx === 2 ? "bg-orange-500/20" : "bg-lavender/20"}`}>
+                  <Icon className={`size-7 ${idx === 0 ? "text-sunny-deep" : idx === 1 ? "text-coral-deep" : idx === 2 ? "text-orange-600" : "text-lavender-deep"}`} />
                 </div>
-                <div>
-                  <p className="text-2xl font-bold text-cat-dark">{card.count}</p>
-                  <p className="text-xs text-charcoal/60">{card.label}</p>
+                <div className="space-y-1 mt-2">
+                  <p className="font-display text-4xl font-black text-cocoa leading-none">{card.count}</p>
+                  <p className="text-sm font-bold text-cocoa/60">{card.label}</p>
                 </div>
               </CardContent>
             </Card>
@@ -86,33 +87,34 @@ export default function ShelterDashboardPage() {
       </div>
 
       {/* Recent Activity */}
-      <Card className="rounded-2xl">
-        <CardHeader>
-          <CardTitle className="text-lg font-semibold text-cat-dark">
+      <Card className="rounded-[2rem] border-2 border-cocoa/10 shadow-[6px_6px_0px_0px_rgba(42,29,20,0.05)] bg-white overflow-hidden mt-10">
+        <CardHeader className="bg-cream/50 border-b-2 border-cocoa/10 px-8 py-6">
+          <CardTitle className="font-display text-2xl font-black text-cocoa">
             Recent Activity
           </CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {recentActivity.map((item) => (
+        <CardContent className="p-0">
+          <div className="divide-y-2 divide-cocoa/5">
+            {recentActivity.map((item, i) => (
               <div
                 key={item.id}
-                className="flex items-start gap-3 pb-3 border-b border-sunny/10 last:border-0 last:pb-0"
+                className="flex items-center gap-6 px-8 py-6 hover:bg-cream/30 transition-colors"
               >
-                <div className="w-2 h-2 rounded-full bg-sunny mt-2 shrink-0" />
+                <div className="w-12 h-12 rounded-[1rem] bg-gradient-to-br from-sunny/20 to-coral/10 border-2 border-cocoa/10 flex items-center justify-center shrink-0">
+                  <span className="font-black text-cocoa/50 text-xs">0{i+1}</span>
+                </div>
                 <div className="flex-1">
-                  <p className="text-sm text-cat-dark">{item.text}</p>
-                  <p className="text-xs text-charcoal/50 mt-0.5">{item.time}</p>
+                  <p className="text-base font-semibold text-cocoa">{item.text}</p>
+                  <p className="text-sm font-bold text-cocoa/50 mt-1">{item.time}</p>
                 </div>
                 {item.link && (
                   <Link href={item.link}>
                     <Button
-                      variant="ghost"
-                      size="sm"
-                      className="text-xs text-heart hover:text-heart/80 hover:bg-heart/5 -mt-1"
+                      variant="outline"
+                      className="border-2 border-cocoa text-cocoa font-bold rounded-xl hover:bg-honey/15 shadow-[2px_2px_0px_0px_rgba(42,29,20,1)] hover:-translate-y-0.5 transition-all"
                     >
                       Review
-                      <ArrowRight className="h-3 w-3 ml-1" />
+                      <ArrowRight className="h-4 w-4 ml-2" />
                     </Button>
                   </Link>
                 )}
