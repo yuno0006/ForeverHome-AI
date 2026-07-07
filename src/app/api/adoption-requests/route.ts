@@ -28,6 +28,7 @@ interface AdoptionRequestRecord {
   adopterEmail: string;
   adopterPhone: string | null;
   compatibilityLevel: "low" | "moderate" | "high";
+  aiExplanation?: string;
   status: "pending" | "approved" | "rejected";
   createdAt: string;
   approvedAt?: string;
@@ -46,6 +47,7 @@ const demoRequests: AdoptionRequestRecord[] = [
     adopterEmail: "sarah@example.com",
     adopterPhone: "(555) 123-4567",
     compatibilityLevel: "high",
+    aiExplanation: "Sarah is a highly compatible match for Barnaby! Her quiet apartment environment and previous experience with shy cats perfectly align with Barnaby's need for a calm, patient home. She understands his decompression timeline and her flexible work-from-home schedule will help him settle in beautifully.",
     status: "pending",
     createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
   },
@@ -59,6 +61,7 @@ const demoRequests: AdoptionRequestRecord[] = [
     adopterEmail: "james@example.com",
     adopterPhone: "(555) 987-6543",
     compatibilityLevel: "moderate",
+    aiExplanation: "James is a moderate match for Luna. While he has plenty of energy and time to dedicate to play—which Luna loves—he currently lives in a bustling household with frequent guests. Luna might need a slow introduction to the active environment, but James's enthusiasm and willingness to learn are strong protective factors.",
     status: "pending",
     createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
   },

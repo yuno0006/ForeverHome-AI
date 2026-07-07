@@ -6,6 +6,117 @@
 
 ForeverHome AI is a Next.js 16 (App Router) full-stack application that helps shelters prevent cat returns through pre-adoption compatibility assessment and post-adoption education.
 
+## Complete User Journey (End-to-End Flow)
+
+```
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                         FOREVERHOME AI — FULL USER FLOW                      │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+ STEP 1: ONBOARDING                           STEP 2: GENERAL QUIZ (11 Qs)
+┌─────────────────────┐                    ┌──────────────────────────────────┐
+│  /register → /login  │                    │  /assessment/new                 │
+│  Firebase Auth       │                    │                                  │
+│         ↓            │                    │  6 Lifestyle Pre-Questions:      │
+│  /onboarding         │                    │  • Living space, work schedule  │
+│  • Role: Adopter     │                    │  • Household activity, children  │
+│  • 12 lifestyle      │                    │  • Cat personality preference   │
+│    fields captured   │                    │  • Dealbreakers, reason to adopt│
+│         ↓            │                    │          ↓                       │
+│  Firestore:          │                    │  5 Scenario Questions:           │
+│  users/{uid}/        │                    │  • Patience, commitment, budget  │
+│  adopterProfile/{uid}│                    │  • Multi-pet, behavior knowledge │
+│  users/{uid}         │                    │          ↓                       │
+│  (onboardingComplete)│                    │  Deterministic engine scores it  │
+└─────────┬───────────┘                    │  Firestore: assessments/{id}     │
+          │                                └────────────────┬─────────────────┘
+          │                                                 │
+          ▼                                                 ▼
+ STEP 3: BROWSE CATS                STEP 4: CAT-SPECIFIC ASSESSMENT (5 Qs)
+┌─────────────────────┐          ┌──────────────────────────────────────────┐
+│  /cats              │          │  /assessment/[catId]                     │
+│  • Full cat profiles│          │                                          │
+│    with 7 behavior  │          │  5 Pre-Questions (same lifestyle):       │
+│    dimensions       │─────────▶│  • Living space, schedule, activity      │
+│  • Photo gallery    │          │  • Personality preference, dealbreakers  │
+│  • Backstory        │          │          ↓                               │
+│  • AI Quick Match   │          │  AI reads: Cat Profile + Adopter Profile │
+│  • Wishlist →       │          │  POST /api/generate-questions            │
+│    Firestore saved  │          │  → 4 dynamic scenario questions          │
+└─────────────────────┘          │          ↓                               │
+                                 │  Deterministic engine scores it          │
+                                 │  Firestore: assessments/{id}             │
+                                 └────────────────┬─────────────────────────┘
+                                                  │
+                                                  ▼
+ STEP 5: AI COMPATIBILITY REPORT               STEP 6: ADOPTION REQUEST
+┌──────────────────────────────────┐        ┌────────────────────────────┐
+│  /report/[matchId]               │        │  From Report →              │
+│                                  │        │  "Start Adoption Process"   │
+│  AI reads ALL data:              │        │          ↓                  │
+│  ┌────────────────────────────┐  │        │  POST /api/adoption-request │
+│  │ 1. Cat Profile             │  │        │  → Firestore:              │
+│  │    (breed, behavior,       │  │        │    adoptionRequests/{id}    │
+│  │     medical, personality,  │  │        │          ↓                  │
+│  │     backstory, ideal home) │  │        │  Shelter phone/email/       │
+│  │ 2. Adopter Profile         │  │        │  address shown immediately  │
+│  │    (12 lifestyle fields)   │  │        │                             │
+│  │ 3. Quiz 11 Answers         │──▶       └─────────────┬───────────────┘
+│  │    (from Step 2)           │  │                      │
+│  │ 4. Scenario 5 Answers      │  │                      ▼
+│  │    (from Step 4)           │  │
+│  └────────────────────────────┘  │   STEP 7: SHELTER REVIEW
+│          ↓                       │  ┌────────────────────────────────┐
+│  POST /api/counselor → AI        │  │  /shelter/adoptions             │
+│  produces:                       │  │                                │
+│  • riskLevel (low/mod/high)      │  │  Shelter sees:                 │
+│  • concerns, strengths           │  │  • AI explanation of match     │
+│  • protectiveFactors             │  │  • Compatibility badge         │
+│  • 4-5 paragraph explanation     │  │  • Adopter contact details     │
+│  • ALTERNATIVE cat               │  │        ↓                       │
+│    recommendations               │  │  ACCEPT → activeAdoptions      │
+│  (+ TTS narration available)     │  │  REJECT → request removed      │
+└──────────────────────────────────┘  └────────────────┬───────────────┘
+                                                       │
+                                                       ▼
+ STEP 8: 14-DAY AI COACH                         STEP 9: GAME
+┌──────────────────────────────────────┐      ┌──────────────────┐
+│  /coach/[adoptionId]                 │      │  /game           │
+│                                      │      │  Whisker Runner  │
+│  Every message, AI receives:         │      │  (adopters only) │
+│  ┌────────────────────────────────┐  │      └──────────────────┘
+│  │ 1. Cat Profile + Behavior data │  │
+│  │ 2. Adopter Profile (onboarding)│  │
+│  │ 3. Current adoption day (1-14) │  │
+│  │ 4. Recent check-in history     │  │
+│  │    (eating, litter, play, mood)│  │
+│  │ 5. Quiz 11 + Scenario 5 data   │  │
+│  └────────────────────────────────┘  │
+│          ↓                           │
+│  POST /api/coach → Chat AI (Mr.Cat)  │
+│  Daily check-ins saved to:           │
+│  users/{uid}/coachChats/{adoptionId} │
+│                                      │
+│  9 Lives Protocol™ (days 1-9):       │
+│  Ghost → Hunger Strike → Zoomies →   │
+│  Litterbox → Furniture → Belly Trap  │
+│  → Window Watcher → Scent Swap →     │
+│  Commander Ascends                   │
+│  Days 10-14: Maintenance Mode        │
+│                                      │
+│  Smart Escalation → shelter staff    │
+└──────────────────────────────────────┘
+```
+
+### Key Data Flow Summary
+
+| Step | AI Input Data | API Call | Output |
+|------|-------------|----------|--------|
+| 2. General Quiz (11) | N/A (deterministic engine) | — | Assessment score → Firestore |
+| 4. Cat-Specific (5) | Cat Profile + Adopter Profile | `POST /api/generate-questions` | 4 dynamic scenario Qs |
+| 5. Report | Cat Profile + Adopter Profile + Quiz 11 + Scenario 5 | `POST /api/counselor` | riskLevel, explanation, alt cats |
+| 8. Coach | Cat Profile + Adopter Profile + Quiz 11 + Scenario 5 + Check-in history + adoption day | `POST /api/coach` | Context-aware guidance |
+
 ## Architecture Diagram
 
 ```
@@ -14,8 +125,8 @@ ForeverHome AI is a Next.js 16 (App Router) full-stack application that helps sh
 │        Next.js 16 App Router + React 19 + Tailwind CSS v4      │
 │                                                                │
 │  ┌────────────┐  ┌────────────────┐  ┌─────────────────────┐  │
-│  │ Cat Browse  │  │  10-Question   │  │  Compatibility      │  │
-│  │ (9 profiles)│─▶│  Assessment    │─▶│  Report + AI        │  │
+  │  │ Cat Browse  │  │ 11-Question    │  │  Compatibility      │  │
+  │  │ (9 profiles)│─▶│  Assessment    │─▶│  Report + AI        │  │
 │  │             │  │  Quiz          │  │  + TTS + Alt Cats   │  │
 │  └────────────┘  └────────────────┘  └─────────────────────┘  │
 │                                                    │          │
@@ -42,7 +153,7 @@ ForeverHome AI is a Next.js 16 (App Router) full-stack application that helps sh
 │                                                                │
 │  ┌──────────────────────┐  ┌───────────────────────────────┐ │
 │  │ Gemini AI (v1beta)    │  │ Firebase Auth + Firestore     │ │
-│  │ • 3-tier model chain  │  │ • 10 collections RBAC        │ │
+│  │ • Parallel race, 2 keys│  │ • 12 collections RBAC       │ │
 │  │ • Rate-limit fallback │  │ • jose JWKS verification     │ │
 │  │ • 8s timeout per call │  │ • aiLogs (write-only)        │ │
 │  │ • Image input support │  │ • UID-enforced isolation     │ │
@@ -99,25 +210,32 @@ All Gemini API calls happen in Next.js API routes (`src/app/api/`), never in the
 - `POST /api/coach` — 14-Day coach conversations
 - `POST /api/assistant` — General site assistant (Mr. Cat)
 
-**Model Failover Chain (Two-Key Model-Outer Rotation)**:
+**Model Failover Chain (Parallel Race — 2 API Keys)**:
 
-Listing AI (counselor, questions, general assistant) — 6 attempts:
-```
-Key1 × gemini-3.5-flash     → Key2 × gemini-3.5-flash
-  → Key1 × gemini-3-flash-preview → Key2 × gemini-3-flash-preview
-  → Key1 × gemini-2.5-flash  → Key2 × gemini-2.5-flash
-  → fallback: Chat AI models (if listing all fail)
-  → deterministic fallback response
-```
+All models × all keys fire simultaneously. First to respond with valid data wins — no waiting for slower models.
 
-Chat AI (14-day coach) — 4 attempts:
+Listing AI (counselor, questions, general assistant) — all 6 combos race at once:
 ```
-Key1 × gemini-3.1-flash-lite → Key2 × gemini-3.1-flash-lite
-  → Key1 × gemini-2.5-flash  → Key2 × gemini-2.5-flash
-  → deterministic fallback response
+gemini-3.5-flash × Key1 ──┐
+gemini-3.5-flash × Key2 ──┤
+gemini-3-flash-preview × K1┤─── FIRST TO RESPOND WINS ──▶  response
+gemini-3-flash-preview × K2┤
+gemini-2.5-flash × Key1 ──┤
+gemini-2.5-flash × Key2 ──┘
+  → Fallback: Chat AI models (if listing all fail)
+  → Deterministic fallback response
 ```
 
-Rate-limit cache (90s TTL): any (model, key) combo returning HTTP 429 is skipped.
+Chat AI (14-day coach) — all 4 combos race at once:
+```
+gemini-3.1-flash-lite × Key1 ──┐
+gemini-3.1-flash-lite × Key2 ──┤─── FIRST TO RESPOND WINS ──▶  response
+gemini-2.5-flash × Key1 ───────┤
+gemini-2.5-flash × Key2 ───────┘
+  → Deterministic fallback response
+```
+
+Rate-limit cache (90s TTL): any (model, key) combo returning HTTP 429 is skipped in the race.
 
 ### 3. Deterministic Medical Safety Layer
 
@@ -140,10 +258,12 @@ All AI interactions are logged to a write-only Firestore `aiLogs` collection:
 
 ### Assessment Flow
 ```
-User → Browse Cats → Select Cat → 5 Lifestyle Questions
-  → 5 Scenario Questions → Compatibility Engine (client-side)
+User → Browse Cats → Select Cat → 5 Lifestyle Pre-Questions
+  → 5 Scenario Questions → AI reads: Cat Profile + Adopter Profile
+  → 4 Dynamic AI-Generated Scenarios (cat-specific)
+  → Compatibility Engine (deterministic, client-side)
   → Compatibility Report (risk level + triggered rules + mitigations)
-  → Optional: AI Counselor Explanation (server-side API)
+  → AI Counselor Explanation (server-side, reads quiz 11 + scenario 5 data)
   → Alternative Cat Recommendations (if moderate/high risk)
 ```
 
@@ -299,7 +419,7 @@ src/
 │   │   ├── adoption-request/route.ts # Adoption request submission
 │   │   └── saved/route.ts            # Wishlist CRUD (GET/POST/DELETE)
 │   ├── cats/                         # Cat browsing + profiles
-│   ├── assessment/[catId]/           # 10-question compatibility quiz
+│   ├── assessment/[catId]/           # 11-question (6 + 5) compatibility quiz
 │   ├── report/[matchId]/             # Compatibility report + AI + TTS
 │   ├── coach/                        # 14-Day AI Coach
 │   │   ├── page.tsx                  # Coach index (no adoption)
@@ -335,7 +455,7 @@ src/
 ├── lib/
 │   ├── compatibilityEngine.ts        # 10-rule deterministic engine
 │   ├── medicalEscalation.ts          # 26 emergency keywords
-│   ├── gemini.ts                     # Gemini API (3-tier failover, image input)
+│   ├── gemini.ts                     # Gemini API (parallel race, 2 keys, image input)
 │   ├── aiLoggingService.ts           # Write-only AI log
 │   ├── verifyAuthToken.ts            # Firebase ID token verification (jose/JWKS)
 │   ├── firebase.ts                   # Firebase config + initialization

@@ -16,7 +16,7 @@ Complete field-level reference for all Firestore collections and TypeScript type
 | Adoptions | `adoptions/{adoptionId}` | Shelter: r/w; Owner: r |
 | Wishlists | `users/{uid}/savedCats` | Owner: r/w |
 | Check-ins | `checkIns/{checkInId}` | Owner: r/w |
-| AI Logs | `aiLogs/{logId}` | Owner: r/w |
+| AI Logs | `aiLogs/{logId}` | Owner: create only (write-only) |
 | Leaderboard | `leaderboard/{userId}` | Auth: r |
 | Shelter Insights | `shelters/{shelterId}/insights` | Shelter staff: r |
 

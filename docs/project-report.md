@@ -12,7 +12,7 @@ ForeverHome AI serves as an intelligent matching system designed to minimize ado
 
 With **7–20% of shelter cats returned within 6 months** — usually due to preventable mismatches rather than behavioral problems — ForeverHome AI addresses this at every stage of the adoption journey:
 
-- **Pre-Adoption**: A dynamic Cat-Specific AI Assessment tests adopters with exactly 4 scenario questions tailored to the specific cat they are applying for. The deterministic engine then flags risk areas (noise sensitivity, energy mismatch, medical needs) and automatically recommends better-matched alternatives. Every cat profile page includes an AI Quick Match widget for instant compatibility previews.
+- **Pre-Adoption**: A General Quiz (11 questions: 6 lifestyle + 5 scenario) establishes the adopter's baseline. Then a Cat-Specific Assessment (5 questions tailored to the selected cat) tests compatibility. The AI reads all this data — cat profile + adopter profile + quiz 11 answers + scenario 5 answers — to generate a full compatibility report with risk analysis and alternative cat recommendations. Every cat profile page includes an AI Quick Match widget for instant compatibility previews.
 - **Post-Adoption**: A gamified 14-day curriculum called the **9 Lives Protocol™** guides adopters through common challenges (hiding, not eating, zoomies), while an **AI Coach (Mr. Cat)** provides cat-specific contextual advice — injected with that specific cat's behavioral profile and the adopter's complete check-in history.
 - **Safety First**: A deterministic medical escalation layer with 26 emergency keywords intercepts urgent situations before any AI call, routing them to immediate human attention. We deliberately chose **not to build shelter-adopter chat** — shelters lack the staffing for real-time messaging, so AI handles 90% of questions instantly and Smart Escalation surfaces only the 10% needing human review.
 - **Shelter Side**: An insights dashboard, cat inventory management, adoption request tracking, and concern analytics help shelter staff operate efficiently.
@@ -181,8 +181,8 @@ We follow a **deterministic-first, AI-for-explanation** philosophy. AI never mak
 | Screen | AI Role | API Endpoint | What AI Receives |
 |--------|---------|-------------|------------------|
 | **Cat Profile** | AI Quick Match widget generates compatibility preview | `POST /api/counselor` | 4 adopter answers + cat breed/name |
-| **Assessment → Report** | AI Counselor explains triggered rules, risk level, and mitigation steps in narrative prose | `POST /api/counselor` | Full compatibility result (risk level, all concerns, all strengths) + cat profile + adopter profile |
-| **Coach Chat** | AI Coach (Mr. Cat) provides behavioral advice contextualized to this specific cat and adopter | `POST /api/coach` | Cat behavioral profile (all 13 fields) + complete check-in history + current adoption day + message + optional photo |
+| **Assessment → Report** | AI Counselor explains triggered rules, risk level, and mitigation steps in narrative prose | `POST /api/counselor` | Full cat profile + adopter profile (12 fields) + quiz 11 answers + scenario 5 answers |
+| **Coach Chat** | AI Coach (Mr. Cat) provides behavioral advice contextualized to this specific cat and adopter | `POST /api/coach` | Cat behavioral profile + adopter profile + quiz 11 + scenario 5 + complete check-in history + current adoption day + message + optional photo |
 | **General Help** | General AI assistant for site-wide questions | `POST /api/assistant` | User message |
 | **Medical Emergency** | **AI is bypassed entirely** — deterministic keyword match returns immediate emergency response | N/A (intercepted) | 26 emergency keywords scanned pre-AI |
 
@@ -191,12 +191,16 @@ We follow a **deterministic-first, AI-for-explanation** philosophy. AI never mak
 - Shelters can challenge and adjust deterministic rules; they cannot audit a black-box neural network
 - Same inputs always produce the same compatibility result — critical for shelter trust and legal defensibility
 - AI hallucination on medical questions is unacceptable — the deterministic safety layer catches emergencies first
+- AI reads **all available data** for the report: cat profile + adopter profile + quiz 11 answers + scenario 5 answers — making explanations deeply personalized
 
-**AI Failover:**
+**AI Failover (Parallel Race):**
 ```
-gemini-3.5-flash → gemini-3-flash-preview → gemini-2.5-flash
-With lite variants at each tier. HTTP 429 → 90s rate-limit cooldown.
-All tiers exhausted → deterministic fallback response (no AI needed).
+ALL models × ALL keys fire simultaneously — first to respond wins.
+
+Listing AI (6 parallel): gemini-3.5-flash × 2 keys + gemini-3-flash-preview × 2 keys + gemini-2.5-flash × 2 keys
+Chat AI (4 parallel):    gemini-3.1-flash-lite × 2 keys + gemini-2.5-flash × 2 keys
+HTTP 429 → 90s rate-limit cooldown (skipped in race).
+All models exhausted → deterministic fallback response (no AI needed).
 ```
 
 ---
@@ -247,8 +251,8 @@ Whisker Runner is strategic, not filler:
 | **Styling** | Tailwind CSS | v4 | Utility-first CSS with custom design tokens |
 | **Components** | shadcn/ui | 4.11.1 | Accessible, composable UI primitives |
 | **Auth** | Firebase Authentication | 12.15.0 | Email/password + Google sign-in |
-| **Database** | Cloud Firestore | 12.15.0 | 10 collections with RBAC |
-| **AI** | Google Gemini API (v1beta) | — | 3-tier model failover chain |
+| **Database** | Cloud Firestore | 12.15.0 | 12 collections with RBAC |
+| **AI** | Google Gemini API (v1beta) | — | Parallel race across 2 API keys |
 | **Token Verification** | jose | 6.2.3 | JWKS validation (no Admin SDK) |
 | **Animation** | Framer Motion | 12.42.2 | Page transitions, modals, drawers |
 | **PWA** | @ducanh2912/next-pwa | 10.2.9 | Offline support, installable |
@@ -272,8 +276,8 @@ Whisker Runner is strategic, not filler:
 │        Next.js 16 App Router + React 19 + Tailwind CSS v4      │
 │                                                                │
 │  ┌────────────┐  ┌────────────────┐  ┌─────────────────────┐  │
-│  │ Cat Browse  │  │  4-Question    │  │  Compatibility      │  │
-│  │ (9 profiles)│─▶│  Dynamic       │─▶│  Report + AI        │  │
+│  │ Cat Browse  │  │  11-Question   │  │  Compatibility      │  │
+│  │ (9 profiles)│─▶│  Assessment    │─▶│  Report + AI        │  │
 │  │             │  │  Assessment    │  │  + TTS + Alt Cats   │  │
 │  └────────────┘  └────────────────┘  └─────────────────────┘  │
 │                                                    │          │
@@ -300,7 +304,7 @@ Whisker Runner is strategic, not filler:
 │                                                                │
 │  ┌──────────────────────┐  ┌───────────────────────────────┐ │
 │  │ Gemini AI (v1beta)    │  │ Firebase Auth + Firestore     │ │
-│  │ • 3-tier model chain  │  │ • 10 collections RBAC        │ │
+│  │ • Parallel race, 2 keys│  │ • 12 collections RBAC       │ │
 │  │ • Rate-limit fallback │  │ • jose JWKS verification     │ │
 │  │ • 8s timeout per call │  │ • aiLogs (write-only)        │ │
 │  │ • Image input support │  │ • UID-enforced isolation     │ │
@@ -340,7 +344,7 @@ Whisker Runner is strategic, not filler:
 
 2. **Server-side AI only** — All Gemini API calls happen in Next.js API routes (`src/app/api/`). API keys are never exposed to the browser. The client sends messages to the route, which calls Gemini server-side and returns the response.
 
-3. **Cascading model failover** — 3-tier Gemini model chain with automatic degradation on HTTP 429 rate limits. Rate-limit cache (90-second cooldown) prevents wasted requests on depleted quotas.
+3. **Parallel race model strategy** — All models × all keys fire simultaneously; first valid response wins. Rate-limit cache (90-second cooldown) prevents wasted requests on depleted quotas.
 
 4. **Deterministic safety layer** — Medical keywords intercepted before any AI call. Defense-in-depth ensures even if AI hallucinates, emergencies are caught deterministically.
 
@@ -354,9 +358,11 @@ Whisker Runner is strategic, not filler:
 
 ```
 User → Browse Cats → Select Cat
-  → 4 Dynamic Cat-Specific AI Scenarios → Compatibility Engine (client-side)
+  → General Quiz (11 questions: 6 lifestyle + 5 scenario)
+  → AI reads: Cat Profile + Adopter Profile → 4 Dynamic Cat-Specific Scenarios
+  → Compatibility Engine (client-side, deterministic)
+  → AI Counselor: reads Cat Profile + Adopter Profile + Quiz 11 + Scenario 5
   → Compatibility Report (risk level + triggered rules + mitigations)
-  → Optional: AI Counselor Explanation (server-side API)
   → Alternative Cat Recommendations (if moderate/high risk)
 ```
 
@@ -372,16 +378,25 @@ Adopter → Daily Check-in (4 toggles + note)
   → Escalation: SmartEscalationModal → POST /api/escalation
 ```
 
-### Gemini Model Failover Chain
+### Gemini Model Strategy — Parallel Race
 
 ```
-gemini-3.5-flash → (429? → gemini-3.5-flash-lite)
-→ gemini-3-flash-preview → (429? → gemini-3-flash-lite-preview)
-→ gemini-2.5-flash → (429? → gemini-2.5-flash-lite)
-→ deterministic fallback response
+ALL models × ALL keys fire at the same time — first valid response wins.
+
+Listing AI (counselor, questions):
+  gemini-3.5-flash ──────────────┐
+  gemini-3-flash-preview ────────┤───🏆 WINNER (fastest response)
+  gemini-2.5-flash ──────────────┘
+
+Chat AI (14-day coach):
+  gemini-3.1-flash-lite ─────────┐
+  gemini-2.5-flash ──────────────┤───🏆 WINNER (fastest response)
+
+HTTP 429 → 90s rate-limit cache per (model × key) combo (skipped in race)
+→ deterministic fallback response if ALL fail
 ```
 
-### Firestore Collections (10 total, RBAC enforced)
+### Firestore Collections (12 total, RBAC enforced)
 
 | Collection | Access | Purpose |
 |-----------|--------|---------|
@@ -498,11 +513,11 @@ If we had another week:
 
 ## 10. Acknowledgments
 
-- **Google Gemini API** — for powering the AI coach and counselor with 3-tier failover reliability
+- **Google Gemini API** — for powering the AI coach and counselor with parallel race reliability
 - **Firebase** — for authentication, Firestore database, and security rules
 - **shadcn/ui** — for the clean, accessible component primitives
 - **fast-check** — for property-based testing that caught real edge cases
-- **Aikido Security** — for the automated vulnerability scan that identified 8 findings (all now remediated)
+- **Aikido Security** — for the automated vulnerability scan that identified 9 findings (all now remediated)
 - **Vercel** — for Next.js hosting and edge deployment
 - **Framer Motion** — for smooth, production-quality animations
 - **jose** — for lightweight Firebase token verification without the Admin SDK

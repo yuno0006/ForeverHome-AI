@@ -32,6 +32,7 @@ interface AdoptionRequest {
   adopterEmail: string;
   adopterPhone: string | null;
   compatibilityLevel: "low" | "moderate" | "high";
+  aiExplanation?: string;
   status: "pending" | "approved" | "rejected";
   createdAt: string;
   approvedAt?: string;
@@ -273,6 +274,18 @@ export default function ShelterAdoptionsPage() {
                               Applied {formatTimeAgo(request.createdAt)}
                             </span>
                           </div>
+
+                          {request.aiExplanation && (
+                            <div className="mt-4 p-3.5 rounded-xl bg-sunny/10 border border-sunny/20">
+                              <div className="flex items-center gap-1.5 mb-1.5">
+                                <Activity className="w-4 h-4 text-sunny" />
+                                <span className="text-[11px] font-bold text-cat-dark uppercase tracking-wider">AI Compatibility Summary</span>
+                              </div>
+                              <p className="text-sm text-charcoal/80 leading-relaxed italic">
+                                &ldquo;{request.aiExplanation}&rdquo;
+                              </p>
+                            </div>
+                          )}
                         </div>
                       </div>
 

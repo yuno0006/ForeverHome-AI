@@ -292,15 +292,19 @@ describe('Gemini API Timeout Handling', () => {
     expect(true).toBe(true)
   })
 
-  it('should iterate through all model tiers on failure', () => {
+  it('should race all model×key combos in parallel', () => {
     /**
-     * Verify that the system tries multiple model tiers before failing.
-     * MODEL_TIERS = ["gemini-3.5-flash", "gemini-3-flash-preview", "gemini-2.5-flash"]
+     * Verify that the system fires all model×key combos simultaneously.
+     * Parallel race: first to respond with valid data wins.
+     * LISTING_MODELS: ["gemini-3.5-flash", "gemini-3-flash-preview", "gemini-2.5-flash"]
+     * CHAT_MODELS: ["gemini-3.1-flash-lite", "gemini-2.5-flash"]
      */
-    const MODEL_TIERS = ['gemini-3.5-flash', 'gemini-3-flash-preview', 'gemini-2.5-flash']
+    const LISTING_MODELS = ['gemini-3.5-flash', 'gemini-3-flash-preview', 'gemini-2.5-flash']
+    const CHAT_MODELS = ['gemini-3.1-flash-lite', 'gemini-2.5-flash']
 
-    expect(MODEL_TIERS.length).toBe(3)
-    expect(MODEL_TIERS[0]).toBe('gemini-3.5-flash')
+    expect(LISTING_MODELS.length).toBe(3)
+    expect(CHAT_MODELS.length).toBe(2)
+    expect(LISTING_MODELS[0]).toBe('gemini-3.5-flash')
   })
 
   it('should return null after all models exhausted', () => {

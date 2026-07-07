@@ -874,11 +874,13 @@ describe('Requirement 11.5: Network Error Displays User-Friendly Message with Re
       expect(TIMEOUT_MS).toBeLessThanOrEqual(10000) // Not too long
     })
 
-    it('should try multiple model tiers before failing', () => {
-      // MODEL_TIERS from gemini.ts
-      const MODEL_TIERS = ['gemini-3.5-flash', 'gemini-3-flash-preview', 'gemini-2.5-flash']
+    it('should race all model×key combos in parallel', () => {
+      // LISTING_MODELS from gemini.ts (parallel race: first to respond wins)
+      const LISTING_MODELS = ['gemini-3.5-flash', 'gemini-3-flash-preview', 'gemini-2.5-flash']
+      const CHAT_MODELS = ['gemini-3.1-flash-lite', 'gemini-2.5-flash']
 
-      expect(MODEL_TIERS.length).toBeGreaterThanOrEqual(2)
+      expect(LISTING_MODELS.length).toBeGreaterThanOrEqual(3)
+      expect(CHAT_MODELS.length).toBeGreaterThanOrEqual(2)
     })
 
     it('should provide fallback response when all models fail', () => {

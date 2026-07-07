@@ -85,7 +85,7 @@ This project was scanned using [Aikido Security](https://www.aikido.dev/) automa
 
 ### Firestore RBAC (`firestore.rules`)
 
-10 collections with granular access control:
+12 collections with granular access control:
 
 | Collection | Read | Write | Notes |
 |-----------|------|-------|-------|
@@ -109,7 +109,7 @@ This project was scanned using [Aikido Security](https://www.aikido.dev/) automa
 - All AI calls happen server-side in Next.js API route handlers
 - Keys are stored in server-side environment variables only (`GEMINI_API_KEY`)
 - Rate-limit caching prevents wasted requests on depleted quotas (HTTP 429 → 90s cooldown)
-- Model failover chain: gemini-3.5-flash → gemini-3-flash-preview → gemini-2.5-flash (with lite variants)
+- Model race strategy: ALL models fire simultaneously → first to respond wins (gemini-3.5-flash, gemini-3-flash-preview, gemini-2.5-flash with lite variants for chat)
 
 ---
 

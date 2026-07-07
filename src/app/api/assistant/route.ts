@@ -6,6 +6,8 @@ import {
 } from "@/lib/gemini";
 import { logAIInteractionAsync } from "@/lib/aiLoggingService";
 
+export const maxDuration = 60;
+
 /**
  * POST /api/assistant
  *

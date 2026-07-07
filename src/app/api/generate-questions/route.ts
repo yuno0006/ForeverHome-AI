@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { generateDynamicQuestions } from "@/lib/gemini";
 import { getCatById } from "@/data/demoCats";
 
+export const maxDuration = 60;
+
 export async function POST(req: Request) {
   try {
     const { catId, adopterProfileStr, mode } = await req.json();

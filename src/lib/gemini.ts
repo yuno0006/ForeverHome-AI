@@ -1,10 +1,11 @@
 // Gemini AI integration for Adoption Counselor, General Assistant, and 14-Day Coach.
-// Uses TWO API keys with model-outer rotation + rate-limit caching (90s TTL).
+// Uses TWO API keys with PARALLEL RACE strategy + rate-limit caching (90s TTL).
 //
-// Strategy: exhaust the best model on all keys, then move to the next model.
-// Two separate chains:
-//   Listing AI  (counselor, questions, general assistant): 3 models × 2 keys = 6 attempts
-//   Chat AI     (14-day coach): 2 models × 2 keys = 4 attempts
+// Strategy: ALL models × ALL keys fire simultaneously. First to respond with valid
+// data wins. This means the fastest model (regardless of name) always serves the user.
+// Two separate pools:
+//   Listing AI  (counselor, questions, general assistant): 3 models × 2 keys = 6 parallel
+//   Chat AI     (14-day coach): 2 models × 2 keys = 4 parallel
 
 const GEMINI_KEY1 = process.env.GEMINI_API_KEY;
 const GEMINI_KEY2 = process.env.GEMINI_API_KEY_2;
@@ -39,7 +40,7 @@ function markRateLimited(model: string, key: string) {
 // ─── Model chains ───────────────────────────────────────
 
 // Listing AI: heavy tasks (counselor, questions, general assistant)
-// Model-outer: exhaust best model on both keys, then fall back.
+// PARALLEL RACE: all models + all keys fire simultaneously, first to respond wins.
 const LISTING_MODELS = [
   "gemini-3.5-flash",
   "gemini-3-flash-preview",
@@ -47,7 +48,7 @@ const LISTING_MODELS = [
 ];
 
 // Chat AI: lighter tasks (14-day coach)
-// Model-outer: exhaust best lite model on both keys, then fall back.
+// PARALLEL RACE: all models + all keys fire simultaneously, first to respond wins.
 const CHAT_MODELS = [
   "gemini-3.1-flash-lite",
   "gemini-2.5-flash",
@@ -88,7 +89,7 @@ async function callModel(
   prompt: string,
   image?: ImageInput
 ): Promise<{ text: string | null; status: number | null }> {
-  const TIMEOUT_MS = 15000;
+  const TIMEOUT_MS = 50000; // Increased to 50s to match Vercel limits
   try {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), TIMEOUT_MS);
@@ -123,7 +124,7 @@ async function callModel(
   }
 }
 
-// ─── callAI (model-outer: exhaust best model on all keys first) ──
+// ─── callAI (parallel race: all models × all keys fire simultaneously) ──
 
 function getActiveKeys(): string[] {
   const keys: string[] = [];
@@ -146,19 +147,18 @@ async function callAI(
     return null;
   }
 
-  // Try primary models first
   const models = purpose === "chat" ? CHAT_MODELS : LISTING_MODELS;
-  const result = await tryModels(models, keys, prompt, image);
+  const result = await raceModels(models, keys, prompt, image);
   if (result !== null) return result;
 
   // Fallback: if listing models all failed, try chat models as last resort
   if (purpose === "listing") {
     console.warn("[gemini] All listing models exhausted, falling back to chat models...");
-    const fallback = await tryModels(CHAT_MODELS, keys, prompt, image);
+    const fallback = await raceModels(CHAT_MODELS, keys, prompt, image);
     if (fallback !== null) return fallback;
   }
 
-  // If ALL combos are exhausted, wait until the soonest expiry then retry once
+  // If ALL combos failed, wait until the soonest rate-limit expiry then retry once
   let minExpiry = Infinity;
   for (const [, v] of _RATE_LIMIT_CACHE) {
     const remaining = v.exhaustedAt + RATE_LIMIT_TTL_MS - Date.now();
@@ -175,38 +175,48 @@ async function callAI(
   return null;
 }
 
-async function tryModels(
+async function raceModels(
   models: string[],
   keys: string[],
   prompt: string,
   image?: ImageInput,
 ): Promise<string | null> {
+  // Build a list of all non-rate-limited (model, key) combos
+  const combos: { model: string; key: string }[] = [];
   for (const model of models) {
     for (const key of keys) {
       if (isRateLimited(model, key)) {
         console.warn(`[gemini] Skipping ${model} (rate-limited)`);
         continue;
       }
-
-      const { text, status } = await callModel(model, key, prompt, image);
-      if (text) {
-        console.log(`[gemini] Success: ${model}`);
-        return text;
-      }
-
-      if (status === 400) {
-        console.warn(`[gemini] ${model} returned 400 (unsupported model or bad request), skipping`);
-        continue;
-      }
-      if (status === 403) {
-        console.warn(`[gemini] ${model} returned 403 (forbidden), skipping`);
-        continue;
-      }
-      // 429: already marked by callModel, logged there
-      // 5xx / timeout / network: try next key
+      combos.push({ model, key });
     }
   }
-  return null;
+
+  if (combos.length === 0) return null;
+
+  console.log(`[gemini] Racing ${combos.length} model×key combo(s)...`);
+  const startTime = Date.now();
+
+  // Fire all combos simultaneously — first to respond with data wins
+  const race = Promise.race(
+    combos.map(async ({ model, key }) => {
+      const { text, status } = await callModel(model, key, prompt, image);
+      if (text) {
+        const elapsed = Date.now() - startTime;
+        console.log(`[gemini] 🏆 Winner: ${model} (${elapsed}ms)`);
+        return { text, winner: true };
+      }
+      if (status === 429) {
+        // Already marked by callModel
+      }
+      // 400/403/5xx/timeout: just ignore, other combos may still win
+      return { text: null, winner: false };
+    })
+  );
+
+  const result = await race;
+  return result.text;
 }
 
 

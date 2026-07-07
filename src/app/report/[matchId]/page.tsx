@@ -116,11 +116,8 @@ export default function ReportPage() {
     setTtsSupported(typeof window !== "undefined" && "speechSynthesis" in window);
   }, []);
   
-  // Auto-speak explanation when it loads
-  useEffect(() => {
-    if (!explanation || loadingExplanation || !ttsSupported) return;
-    speakExplanation(explanation);
-  }, [explanation, loadingExplanation]);
+  // Auto-speak explanation when it loads (removed by user request to default to mute)
+  // User can click the Listen button manually if they want audio.
   
   const speakExplanation = (text: string) => {
     if (!ttsSupported) return;

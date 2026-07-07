@@ -3,6 +3,8 @@ import { generateCounselorExplanation } from "@/lib/gemini";
 import { getFallbackExplanation } from "@/lib/fallbackExplanations";
 import { logAIInteractionAsync } from "@/lib/aiLoggingService";
 
+export const maxDuration = 60;
+
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
@@ -100,7 +102,8 @@ export async function POST(req: NextRequest) {
     });
 
     return NextResponse.json({
-      aiResult: aiResponse,
+      aiResult: source === "gemini" ? aiResponse : undefined,
+      explanation: source === "fallback" ? aiResponse.explanation : undefined,
       source,
       disclaimer:
         source === "fallback"
