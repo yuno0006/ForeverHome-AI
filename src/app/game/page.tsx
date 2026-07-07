@@ -23,8 +23,6 @@ import { Loader2 } from "lucide-react";
 import { getBestScore } from "@/lib/whiskerRunner/highScoreStorage";
 
 export default function GamePage() {
-  const { user, role, loading } = useAuth();
-  const [hasAccess, setHasAccess] = useState<boolean | null>(null);
   const [upcomingSeason, setUpcomingSeason] = useState<{
     current: string;
     next: string;
@@ -34,71 +32,6 @@ export default function GamePage() {
   const randomCatName = useMemo(() => {
     return demoCats[Math.floor(Math.random() * demoCats.length)].name;
   }, []);
-
-  useEffect(() => {
-    if (loading) return;
-
-    if (!user || role !== "adopter") {
-      setHasAccess(false);
-      return;
-    }
-
-    const uid = user.uid;
-
-    async function checkAdoptions() {
-      const USE_FIRESTORE = process.env.NEXT_PUBLIC_FIREBASE_API_KEY !== undefined;
-      if (USE_FIRESTORE) {
-        try {
-          const { collection, query, where, getDocs } = await import("firebase/firestore");
-          const { db } = await import("@/lib/firebase");
-          const q = query(
-            collection(db, "activeAdoptions"),
-            where("adopterUid", "==", uid)
-          );
-          const snap = await getDocs(q);
-          setHasAccess(!snap.empty);
-        } catch (err) {
-          console.error("Failed to check active adoptions for game:", err);
-          setHasAccess(false);
-        }
-      } else {
-        const stored = JSON.parse(sessionStorage.getItem("activeAdoptions") || "[]");
-        const userAdoptions = stored.filter((item: any) => !item.adopterUid || item.adopterUid === uid);
-        setHasAccess(userAdoptions.length > 0);
-      }
-    }
-
-    checkAdoptions();
-  }, [user, role, loading]);
-
-  if (loading || hasAccess === null) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-cream">
-        <Loader2 className="h-8 w-8 animate-spin text-sunny" />
-      </div>
-    );
-  }
-
-  if (!hasAccess) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-cream p-4">
-        <div className="max-w-md w-full bg-white rounded-3xl p-8 text-center shadow-[4px_4px_0px_0px_rgba(42,29,20,1)] border-2 border-cocoa/15">
-          <div className="w-16 h-16 bg-coral/10 rounded-full flex items-center justify-center mx-auto mb-4 border-2 border-coral/20">
-            <Cat className="w-8 h-8 text-coral" />
-          </div>
-          <h2 className="text-2xl font-bold text-cocoa mb-3">Exclusive Adopter Reward!</h2>
-          <p className="text-cocoa/70 mb-6 leading-relaxed">
-            The Whisker Runner game is a special perk unlocked only for users who have completed the adoption process. Find your perfect feline friend to unlock this game!
-          </p>
-          <Link href="/cats">
-            <Button className="w-full bg-coral hover:bg-coral/90 text-white rounded-xl py-6 text-lg font-bold shadow-[2px_2px_0px_0px_rgba(42,29,20,1)] hover:-translate-y-0.5 hover:shadow-[4px_4px_0px_0px_rgba(42,29,20,1)] transition-all active:translate-y-0 active:shadow-none">
-              Find a Cat to Adopt
-            </Button>
-          </Link>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="relative flex min-h-screen flex-col lg:flex-row items-center justify-center p-4 gap-6 max-w-7xl mx-auto">
