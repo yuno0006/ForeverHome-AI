@@ -65,7 +65,7 @@ export default function CoachPage() {
   const [todayPlay, setTodayPlay] = useState<boolean | null>(null);
   const [noEatWarning, setNoEatWarning] = useState(false);
   
-  const chatEndRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
 
   // Calculate current day and progress
   const currentDay = checkIns.length > 0 ? Math.max(...checkIns.map((c) => c.day)) + 1 : 1;
@@ -77,7 +77,12 @@ export default function CoachPage() {
   const noEatDays = lastTwoCheckIns.filter(c => !c.ate).length;
 
   useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (messagesContainerRef.current) {
+      messagesContainerRef.current.scrollTo({
+        top: messagesContainerRef.current.scrollHeight,
+        behavior: "smooth"
+      });
+    }
   }, [messages]);
 
   // Check if today's check-in was already completed
@@ -693,7 +698,6 @@ export default function CoachPage() {
           )}
         </div>
 
-        {/* Right Column: AI Chat */}
         <div className="flex flex-col">
           <SmartEscalationModal
             catName={cat.name}
@@ -702,7 +706,7 @@ export default function CoachPage() {
             shelterId="paws-haven"
             adopterName="Adopter"
           />
-          <Card className="border border-white/60 bg-white/90 backdrop-blur-md shadow-2xl shadow-cocoa/10 flex flex-col h-[600px] rounded-3xl overflow-hidden">
+          <Card className="border border-white/60 bg-white/90 backdrop-blur-md shadow-2xl shadow-cocoa/10 flex flex-col h-[500px] lg:h-[calc(100vh-160px)] lg:max-h-[700px] rounded-3xl overflow-hidden">
             <CardHeader className="pb-2 shrink-0 bg-white/50 backdrop-blur-xl border-b border-white/50">
               <div className="flex items-center gap-3">
                 <CatAvatar size={36} />
@@ -718,7 +722,7 @@ export default function CoachPage() {
             </CardHeader>
 
             {/* Messages */}
-            <div className="flex-1 overflow-y-auto px-4 py-3 space-y-4 pb-4">
+            <div ref={messagesContainerRef} className="flex-1 overflow-y-auto px-4 py-3 space-y-4 pb-4">
               {messages.length === 0 && (
                 <div className="text-center py-8">
                   <p className="text-sm text-charcoal font-bold mb-4">
@@ -780,7 +784,6 @@ export default function CoachPage() {
                   </div>
                 </div>
               )}
-              <div ref={chatEndRef} />
             </div>
 
             {/* Input (floating inside card) */}

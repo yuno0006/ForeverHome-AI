@@ -103,6 +103,9 @@ export default function ReportPage() {
   // Whisker Runner mini-game
   const [gameOpen, setGameOpen] = useState(false);
 
+  // Shelter contact popup
+  const [showShelterContact, setShowShelterContact] = useState(false);
+
   // TTS state
   const [speaking, setSpeaking] = useState(false);
   const [ttsSupported, setTtsSupported] = useState(false);
@@ -689,7 +692,79 @@ export default function ReportPage() {
               </div>
             </CardContent>
           </Card>
+        ) : match.result.level === "high" ? (
+          /* ── HIGH RISK: Not Recommended ── */
+          <div className="space-y-4 pt-2">
+            {/* Don't be sad message */}
+            <div className="bg-amber-50 border border-amber-200 rounded-2xl p-5 text-center">
+              <p className="text-amber-800 font-semibold text-lg mb-2">
+                Every cat deserves the right home — and that's okay!
+              </p>
+              <p className="text-amber-700 text-sm">
+                {cat.name} needs a specific kind of environment to thrive. There are plenty of other wonderful cats who would be a perfect match for your lifestyle.
+              </p>
+            </div>
+
+            {/* Shelter Contact Popup */}
+            {showShelterContact ? (
+              <Card className="border-2 border-heart/30 bg-red-50/30">
+                <CardContent className="p-5 space-y-3">
+                  <div className="flex items-center gap-2">
+                    <Phone className="h-5 w-5 text-heart" />
+                    <h3 className="font-bold text-cat-dark text-lg">{shelter?.name || "Shelter"}</h3>
+                  </div>
+                  {shelter && (
+                    <>
+                      <div className="space-y-2 text-sm text-charcoal/80">
+                        <p className="flex items-center gap-2"><MapPin className="h-4 w-4 text-charcoal/50" /> {shelter.address}, {shelter.location.city}, {shelter.location.state}</p>
+                        <p className="flex items-center gap-2"><Phone className="h-4 w-4 text-charcoal/50" /> <a href={`tel:${shelter.phone}`} className="text-cocoa underline hover:text-heart">{shelter.phone}</a></p>
+                        <p className="flex items-center gap-2"><Mail className="h-4 w-4 text-charcoal/50" /> <a href={`mailto:${shelter.email}`} className="text-cocoa underline hover:text-heart">{shelter.email}</a></p>
+                        <p className="flex items-center gap-2"><Clock className="h-4 w-4 text-charcoal/50" /> {shelter.hours}</p>
+                      </div>
+                      <p className="text-xs text-charcoal/50 pt-1">
+                        Reach out directly — shelter staff can discuss {cat.name}'s needs and help match you with a cat who's the right fit.
+                      </p>
+                    </>
+                  )}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowShelterContact(false)}
+                    className="text-xs"
+                  >
+                    Hide details
+                  </Button>
+                </CardContent>
+              </Card>
+            ) : (
+              <Button
+                onClick={() => setShowShelterContact(true)}
+                className="w-full bg-heart hover:bg-heart/90 text-white font-bold py-5 rounded-full shadow-[3px_3px_0px_0px_rgba(239,68,68,0.3)] hover:shadow-[4px_4px_0px_0px_rgba(239,68,68,0.4)] hover:-translate-y-0.5 transition-all gap-2"
+              >
+                <Phone className="h-4 w-4" /> Contact Shelter
+              </Button>
+            )}
+
+            {/* Action buttons */}
+            <div className="flex flex-col sm:flex-row gap-3">
+              <Button
+                variant="outline"
+                onClick={() => router.push("/cats")}
+                className="flex-1 rounded-full border-2 border-cocoa/20 bg-white text-cocoa hover:bg-cocoa/5 font-bold py-5 shadow-[3px_3px_0px_0px_rgba(42,29,20,0.1)] transition-all"
+              >
+                <Cat className="h-4 w-4 mr-2" /> Try Other Cats
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => setGameOpen(true)}
+                className="flex-1 rounded-full border-2 border-sage/40 bg-white text-sage-deep hover:bg-sage/10 font-bold py-5 shadow-[3px_3px_0px_0px_rgba(42,29,20,0.1)] transition-all"
+              >
+                <Gamepad2 className="h-4 w-4 mr-2" /> Play: Whisker Runner
+              </Button>
+            </div>
+          </div>
         ) : (
+          /* ── LOW / MODERATE: Show adoption ── */
           <div className="flex flex-col sm:flex-row gap-3 pt-2">
             <Button
               variant="outline"

@@ -4,8 +4,12 @@
 // Strategy: ALL models × ALL keys fire simultaneously. First to respond with valid
 // data wins. This means the fastest model (regardless of name) always serves the user.
 // Two separate pools:
-//   Listing AI  (counselor, questions, general assistant): 3 models × 2 keys = 6 parallel
-//   Chat AI     (14-day coach): 2 models × 2 keys = 4 parallel
+//   Listing AI  (questions, general assistant):  4 models × 2 keys = 8 parallel RACE
+//   Chat AI     (14-day coach):                   2 models × 2 keys = 4 parallel RACE
+//
+// EXCEPTION: The Adoption Counselor (compatibility report) uses SEQUENTIAL fallback.
+// Models are tried one-by-one in order — the first to return valid JSON wins.
+// This avoids burning free-tier credits unnecessarily on parallel calls.
 
 function getGeminiKeys(): string[] {
   const keys: string[] = [];
@@ -231,6 +235,47 @@ async function raceModels(
   return result.text;
 }
 
+/**
+ * Sequential fallback: try each model one-at-a-time (still racing both keys per model).
+ * Used by the counselor to avoid burning credits on unnecessary parallel calls.
+ * First model to return valid text wins — no further models are tried.
+ */
+async function sequentialModels(
+  models: string[],
+  keys: string[],
+  prompt: string,
+  image?: ImageInput,
+): Promise<string | null> {
+  for (const model of models) {
+    if (isRateLimited(model, keys[0]) && isRateLimited(model, keys[1] || "")) continue;
+
+    // For this one model, race both keys
+    const validCombos = keys.filter(k => !isRateLimited(model, k));
+    if (validCombos.length === 0) continue;
+
+    console.log(`[gemini] Trying ${model} (sequential, ${validCombos.length} key(s))...`);
+    const startTime = Date.now();
+    const race = Promise.race(
+      validCombos.map(async (key) => {
+        const { text, status } = await callModel(model, key, prompt, image);
+        if (text) return { text, winner: true };
+        if (status === 429) { /* already marked */ }
+        return { text: null, winner: false };
+      })
+    );
+    const result = await race;
+    if (result.text) {
+      console.log(`[gemini] 🏆 Winner (sequential): ${model} (${Date.now() - startTime}ms)`);
+      return result.text;
+    }
+    console.warn(`[gemini] ${model} failed, trying next model...`);
+  }
+  return null;
+}
+
+
+
+
 
 
 export async function generateDynamicQuestions(
@@ -320,7 +365,11 @@ INSTRUCTIONS:
 
 DO NOT output any text before or after the JSON.`;
 
-  const result = await callAI(prompt);
+  // Counselor uses SEQUENTIAL fallback: try one model at a time.
+  // This avoids burning free credits on parallel calls for a one-time report.
+  const keys = getActiveKeys();
+  if (keys.length === 0) return fallbackCounselorResponse(catName);
+  const result = await sequentialModels(LISTING_MODELS, keys, prompt);
   if (!result) return fallbackCounselorResponse(catName);
 
   try {

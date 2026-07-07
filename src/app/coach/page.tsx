@@ -45,14 +45,19 @@ export default function GeneralAssistantPage() {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const chatEndRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const [guestMessageCount, setGuestMessageCount] = useState(0);
   const [showLoginGate, setShowLoginGate] = useState(false);
 
   useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (messagesContainerRef.current) {
+      messagesContainerRef.current.scrollTo({
+        top: messagesContainerRef.current.scrollHeight,
+        behavior: "smooth"
+      });
+    }
   }, [messages]);
 
   // Load guest message count
@@ -241,7 +246,7 @@ export default function GeneralAssistantPage() {
       )}
 
       {/* --- Messages area --- */}
-      <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-4 space-y-4 pb-24">
+      <div ref={messagesContainerRef} className="flex-1 overflow-y-auto px-4 sm:px-6 py-4 space-y-4 pb-24">
         {isChatEmpty && (
           <div className="flex flex-col items-center justify-center py-12 text-center">
             {/* Welcome card */}
@@ -331,7 +336,6 @@ export default function GeneralAssistantPage() {
             </div>
           </div>
         )}
-        <div ref={chatEndRef} />
       </div>
 
       {/* --- Image preview strip --- */}
