@@ -4,8 +4,8 @@
 // Strategy: ALL models × ALL keys fire simultaneously. First to respond with valid
 // data wins. This means the fastest model (regardless of name) always serves the user.
 // Two separate pools:
-//   Listing AI  (questions, general assistant):  4 models × 2 keys = 8 parallel RACE (Promise.any)
-//   Chat AI     (14-day coach):                   2 models × 2 keys = 4 parallel RACE (Promise.any)
+//   Listing AI  (questions, general assistant):  5 models × 2 keys = 10 parallel RACE (Promise.any)
+//   Chat AI     (14-day coach):                   3 models × 2 keys = 6 parallel RACE (Promise.any)
 //
 // EXCEPTION: The Adoption Counselor (compatibility report) uses SEQUENTIAL fallback.
 // Models are tried one-by-one — the first to return valid JSON wins. Each model
@@ -69,6 +69,7 @@ const LISTING_MODELS = [
   "gemini-3.5-flash",
   "gemini-3-flash-preview",
   "gemini-2.5-flash",
+  "gemini-2.5-flash-lite",
 ];
 
 // Chat AI: lighter tasks (14-day coach)
@@ -76,6 +77,7 @@ const LISTING_MODELS = [
 const CHAT_MODELS = [
   "gemini-3.1-flash-lite",
   "gemini-2.5-flash",
+  "gemini-2.5-flash-lite",
 ];
 
 // ─── Core fetch ─────────────────────────────────────────
