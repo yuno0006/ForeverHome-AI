@@ -154,7 +154,7 @@ export default function ShelterAdoptionsPage() {
   }
 
   return (
-    <div className="max-w-5xl mx-auto px-4 py-8 relative z-10">
+    <Tabs defaultValue="pending" className="max-w-5xl mx-auto px-4 py-8 relative z-10">
       {/* Decorative Floating Elements */}
       <div className="absolute top-4 right-10 w-24 h-24 bg-gradient-to-br from-coral/10 to-honey/10 rounded-full blur-xl pointer-events-none -z-10 animate-pulse" />
       <div className="absolute bottom-10 left-4 w-32 h-32 bg-gradient-to-br from-sage/10 to-lavender/10 rounded-full blur-2xl pointer-events-none -z-10" />
@@ -454,7 +454,6 @@ export default function ShelterAdoptionsPage() {
             </div>
           )}
         </TabsContent>
-      </Tabs>
-    </div>
+    </Tabs>
   );
 }
