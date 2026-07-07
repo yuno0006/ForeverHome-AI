@@ -199,6 +199,7 @@ export default function AssessmentPage() {
     isGeneralMode ? scenarioQuestions.slice(0, 5) : scenarioQuestions
   );
   const [generatingQuestions, setGeneratingQuestions] = useState(false);
+  const [questionsAreAI, setQuestionsAreAI] = useState(false);
 
   // Lifestyle pre-questions state
   const [lifestyleAnswers, setLifestyleAnswers] = useState({
