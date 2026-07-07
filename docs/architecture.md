@@ -99,13 +99,25 @@ All Gemini API calls happen in Next.js API routes (`src/app/api/`), never in the
 - `POST /api/coach` — 14-Day coach conversations
 - `POST /api/assistant` — General site assistant (Mr. Cat)
 
-**Model Failover Chain**:
+**Model Failover Chain (Two-Key Model-Outer Rotation)**:
+
+Listing AI (counselor, questions, general assistant) — 6 attempts:
 ```
-gemini-3.5-flash → (429? → gemini-3.5-flash-lite)
-→ gemini-3-flash-preview → (429? → gemini-3-flash-lite-preview)
-→ gemini-2.5-flash → (429? → gemini-2.5-flash-lite)
-→ deterministic fallback response
+Key1 × gemini-3.5-flash     → Key2 × gemini-3.5-flash
+  → Key1 × gemini-3-flash-preview → Key2 × gemini-3-flash-preview
+  → Key1 × gemini-2.5-flash  → Key2 × gemini-2.5-flash
+  → fallback: Chat AI models (if listing all fail)
+  → deterministic fallback response
 ```
+
+Chat AI (14-day coach) — 4 attempts:
+```
+Key1 × gemini-3.1-flash-lite → Key2 × gemini-3.1-flash-lite
+  → Key1 × gemini-2.5-flash  → Key2 × gemini-2.5-flash
+  → deterministic fallback response
+```
+
+Rate-limit cache (90s TTL): any (model, key) combo returning HTTP 429 is skipped.
 
 ### 3. Deterministic Medical Safety Layer
 
@@ -153,6 +165,81 @@ Compatibility Report → "Start Adoption Process"
   → Shelter phone/email/address displayed immediately
   → Shelter staff reviews in /shelter/adoptions dashboard
 ```
+
+### AI ↔ User ↔ Shelter Data Flow
+
+```
+                         ┌─────────────────────────┐
+                         │       THE ADOPTER        │
+                         │  (Browser / PWA Client)  │
+                         └───────────┬─────────────┘
+                                     │
+          ┌──────────────────────────┼──────────────────────────┐
+          │                          │                          │
+          ▼                          ▼                          ▼
+┌─────────────────┐    ┌─────────────────────────┐    ┌─────────────────┐
+│  COMPATIBILITY  │    │      AI COACH           │    │   ADOPTION      │
+│  ASSESSMENT     │    │   (14-Day Support)       │    │   REQUEST       │
+├─────────────────┤    ├─────────────────────────┤    ├─────────────────┤
+│                 │    │                         │    │                 │
+│ 1. Browse Cats  │    │ 1. Daily Check-ins      │    │ 1. View Report  │
+│ 2. Take Quiz    │    │    (eating, litter,      │    │ 2. Fill Form    │
+│ 3. Deterministic│    │     behavior, mood)      │    │ 3. Submit →     │
+│    Engine Runs  │    │                         │    │    Firestore    │
+│    (No AI)      │    │ 2. Chat with AI Coach   │    │                 │
+│                 │    │    (text + photo)        │    │                 │
+│ 4. AI Counselor │    │                         │    │                 │
+│    Explains     │    │ 3. Smart Escalation     │    │                 │
+│    Results      │    │    (if needed)           │    │                 │
+│                 │    │                         │    │                 │
+└────────┬────────┘    └────────────┬────────────┘    └────────┬────────┘
+         │                          │                          │
+         ▼                          ▼                          ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│                        NEXT.JS API ROUTES                           │
+│                        (Server-Side Only)                            │
+│                                                                      │
+│  POST /api/generate-questions  →  Gemini: Listing AI chain          │
+│  POST /api/counselor           →  Gemini: Listing AI chain          │
+│  POST /api/coach              →  Medical Scan → Gemini: Chat AI     │
+│  POST /api/assistant          →  Gemini: Listing AI chain           │
+│  POST /api/escalation         →  Firestore (write-only)             │
+│  POST /api/adoption-request   →  Firestore (write-only)             │
+│                                                                      │
+│  ⚡ MEDICAL SAFETY LAYER: 26 keywords → emergency response, NO AI    │
+│  🔒 AUTH: Firebase ID token verified via jose JWKS                   │
+└───────────────────────────────┬─────────────────────────────────────┘
+                                │
+                    ┌───────────┴───────────┐
+                    ▼                       ▼
+          ┌─────────────────┐     ┌─────────────────────┐
+          │   GEMINI AI     │     │    FIRESTORE DB      │
+          │   (v1beta API)  │     │                      │
+          ├─────────────────┤     ├──────────────────────┤
+          │ 2 API keys      │     │ aiLogs (write-only)  │
+          │ Model-outer     │     │ assessments          │
+          │ Rate-limit 90s  │     │ escalations          │
+          │ 15s timeout     │     │ adoptionRequests     │
+          └────────┬────────┘     │ activeAdoptions      │
+                   │              │ users/{uid}/...       │
+                   │              └───────────┬───────────┘
+                   │                          │
+                   ▼                          ▼
+          ┌─────────────────────────────────────────────────┐
+          │                  SHELTER STAFF                   │
+          │              (/shelter dashboard)                │
+          ├──────────────────────────────────────────────────┤
+          │                                                   │
+          │  • Adoption Requests queue → approve/reject       │
+          │  • Escalation tickets → review + respond          │
+          │  • Cat inventory → add/edit/remove profiles       │
+          │  • Insights dashboard → concern patterns, stats   │
+          │  • Assessment reports → view compatibility data   │
+          │                                                   │
+          └───────────────────────────────────────────────────┘
+```
+
+**Key principle**: AI explains, never decides. The matching engine is deterministic. The shelter only sees human-reviewed data (adoption requests, escalations, insights). AI logs are write-only — shelters cannot read them.
 
 ## Database Schema
 

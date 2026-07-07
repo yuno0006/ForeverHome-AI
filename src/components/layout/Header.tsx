@@ -141,25 +141,25 @@ export default function Header() {
                   </span>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56 rounded-2xl border-2 border-cocoa/15 shadow-[4px_4px_0px_0px_rgba(42,29,20,1)] p-2 bg-cream">
-                  <DropdownMenuItem className="rounded-xl cursor-pointer hover:bg-cocoa/5 font-semibold text-cocoa focus:bg-cocoa/5">
+                  <DropdownMenuItem asChild className="rounded-xl cursor-pointer hover:bg-cocoa/5 font-semibold text-cocoa focus:bg-cocoa/5">
                     <Link href="/profile" className="flex items-center w-full">
                       <User className="mr-2 h-4 w-4" />
                       Profile
                     </Link>
                   </DropdownMenuItem>
-                  <DropdownMenuItem className="rounded-xl cursor-pointer hover:bg-cocoa/5 font-semibold text-cocoa focus:bg-cocoa/5">
+                  <DropdownMenuItem asChild className="rounded-xl cursor-pointer hover:bg-cocoa/5 font-semibold text-cocoa focus:bg-cocoa/5">
                     <Link href={getDashboardHref()} className="flex items-center w-full">
                       <LayoutDashboard className="mr-2 h-4 w-4" />
                       {role === "shelter_staff" ? "Shelter Hub" : "Dashboard"}
                     </Link>
                   </DropdownMenuItem>
-                  <DropdownMenuItem className="rounded-xl cursor-pointer hover:bg-cocoa/5 font-semibold text-cocoa focus:bg-cocoa/5">
-                    <Link href="/wishlist" className="flex items-center w-full">
+                  <DropdownMenuItem asChild className="rounded-xl cursor-pointer hover:bg-cocoa/5 font-semibold text-cocoa focus:bg-cocoa/5">
+                    <Link href="/saved" className="flex items-center w-full">
                       <Bookmark className="mr-2 h-4 w-4" />
                       Wishlist
                     </Link>
                   </DropdownMenuItem>
-                  <DropdownMenuItem className="rounded-xl cursor-pointer hover:bg-cocoa/5 font-semibold text-cocoa focus:bg-cocoa/5">
+                  <DropdownMenuItem asChild className="rounded-xl cursor-pointer hover:bg-cocoa/5 font-semibold text-cocoa focus:bg-cocoa/5">
                     <Link href="/about" className="flex items-center w-full">
                       <Info className="mr-2 h-4 w-4" />
                       About
@@ -211,13 +211,45 @@ export default function Header() {
                 </Link>
               ))}
               {user && (
-                <button
-                  onClick={() => { setMobileOpen(false); logout(); }}
-                  className="flex items-center gap-3 p-3.5 rounded-2xl font-bold text-coral hover:bg-coral/10 transition-all w-full text-left"
-                >
-                  <LogOut className="w-5 h-5" />
-                  Sign out
-                </button>
+                <>
+                  <Link
+                    href="/profile"
+                    onClick={() => setMobileOpen(false)}
+                    className={`flex items-center gap-3 p-3.5 rounded-2xl font-bold transition-all ${
+                      isActive("/profile") ? "bg-cocoa text-cream" : "text-cocoa/70 hover:bg-cocoa/5"
+                    }`}
+                  >
+                    <User className="w-5 h-5" />
+                    Profile
+                  </Link>
+                  <Link
+                    href={getDashboardHref()}
+                    onClick={() => setMobileOpen(false)}
+                    className={`flex items-center gap-3 p-3.5 rounded-2xl font-bold transition-all ${
+                      isActive(getDashboardHref()) ? "bg-cocoa text-cream" : "text-cocoa/70 hover:bg-cocoa/5"
+                    }`}
+                  >
+                    <LayoutDashboard className="w-5 h-5" />
+                    {role === "shelter_staff" ? "Shelter Hub" : "Dashboard"}
+                  </Link>
+                  <Link
+                    href="/saved"
+                    onClick={() => setMobileOpen(false)}
+                    className={`flex items-center gap-3 p-3.5 rounded-2xl font-bold transition-all ${
+                      isActive("/saved") ? "bg-cocoa text-cream" : "text-cocoa/70 hover:bg-cocoa/5"
+                    }`}
+                  >
+                    <Bookmark className="w-5 h-5" />
+                    Wishlist
+                  </Link>
+                  <button
+                    onClick={() => { setMobileOpen(false); logout(); }}
+                    className="flex items-center gap-3 p-3.5 rounded-2xl font-bold text-coral hover:bg-coral/10 transition-all w-full text-left"
+                  >
+                    <LogOut className="w-5 h-5" />
+                    Sign out
+                  </button>
+                </>
               )}
             </div>
           </motion.div>

@@ -41,6 +41,7 @@ const cspHeader = `
   font-src 'self' data:;
   connect-src ${connectSrc};
   frame-src ${frameSrc};
+  manifest-src 'self' https://vercel.com https://*.vercel.com https://*.vercel.app;
   object-src 'none';
   base-uri 'self';
   form-action 'self';

@@ -146,19 +146,16 @@ async function callAI(
     return null;
   }
 
+  // Try primary models first
   const models = purpose === "chat" ? CHAT_MODELS : LISTING_MODELS;
+  const result = await tryModels(models, keys, prompt, image);
+  if (result !== null) return result;
 
-  for (const model of models) {
-    for (const key of keys) {
-      if (isRateLimited(model, key)) continue;
-
-      const { text, status } = await callModel(model, key, prompt, image);
-      if (text) return text;
-
-      if (status === 400 || status === 403) continue;
-      // 429: already marked by callModel, try next key
-      // 5xx / timeout / network: try next key
-    }
+  // Fallback: if listing models all failed, try chat models as last resort
+  if (purpose === "listing") {
+    console.warn("[gemini] All listing models exhausted, falling back to chat models...");
+    const fallback = await tryModels(CHAT_MODELS, keys, prompt, image);
+    if (fallback !== null) return fallback;
   }
 
   // If ALL combos are exhausted, wait until the soonest expiry then retry once
@@ -174,6 +171,41 @@ async function callAI(
     return callAI(prompt, image, purpose);
   }
 
+  console.error(`[gemini] All models exhausted (purpose=${purpose}), no response available`);
+  return null;
+}
+
+async function tryModels(
+  models: string[],
+  keys: string[],
+  prompt: string,
+  image?: ImageInput,
+): Promise<string | null> {
+  for (const model of models) {
+    for (const key of keys) {
+      if (isRateLimited(model, key)) {
+        console.warn(`[gemini] Skipping ${model} (rate-limited)`);
+        continue;
+      }
+
+      const { text, status } = await callModel(model, key, prompt, image);
+      if (text) {
+        console.log(`[gemini] Success: ${model}`);
+        return text;
+      }
+
+      if (status === 400) {
+        console.warn(`[gemini] ${model} returned 400 (unsupported model or bad request), skipping`);
+        continue;
+      }
+      if (status === 403) {
+        console.warn(`[gemini] ${model} returned 403 (forbidden), skipping`);
+        continue;
+      }
+      // 429: already marked by callModel, logged there
+      // 5xx / timeout / network: try next key
+    }
+  }
   return null;
 }
 
