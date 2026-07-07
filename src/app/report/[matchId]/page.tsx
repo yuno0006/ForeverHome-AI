@@ -84,7 +84,6 @@ export default function ReportPage() {
   const matchId = params.matchId as string;
   const [match, setMatch] = useState<Match | null>(null);
   const [matchLoading, setMatchLoading] = useState(true);
-  const [adopterProfile, setAdopterProfile] = useState<AdopterProfile | null>(null);
   const [explanation, setExplanation] = useState<string>("");
   const [loadingExplanation, setLoadingExplanation] = useState(true); // start true — wait for AI
   const [explanationIsAI, setExplanationIsAI] = useState(false);
@@ -192,33 +191,60 @@ export default function ReportPage() {
     loadMatch();
   }, [matchId]);
 
-  // Fetch adopter profile for richer AI context
+  // Fetch adopter profile + AI explanation — SINGLE effect, ONE API call.
+  // Merged from two separate effects to eliminate double-call race condition.
   useEffect(() => {
-    async function loadProfile() {
-      if (!match || !match.adopterProfileId) {
-        setAdopterProfile(null);
-        return;
-      }
-      try {
-        const profile = await fetchAdopterProfile(match.adopterProfileId);
-        if (profile) setAdopterProfile(profile);
-      } catch {
-        // Non-critical — AI explanation works without it
-      }
-    }
-    loadProfile();
-  }, [match]);
+    let cancelled = false;
 
-  // Fetch AI explanation when match data is loaded
-  useEffect(() => {
-    async function fetchExplanation() {
+    async function loadAndExplain() {
       if (!match) return;
-      
+
       const cat = getCatById(match.catId);
       if (!cat) return;
 
+      // 1. Fetch adopter profile first (if available)
+      let profile: AdopterProfile | null = null;
+      if (match.adopterProfileId) {
+        try {
+          profile = await fetchAdopterProfile(match.adopterProfileId);
+        } catch { /* non-critical */ }
+      }
+
+      if (cancelled) return;
+
+      // 2. Call AI counselor ONCE with the best data available
       setLoadingExplanation(true);
       try {
+        const adopterData = profile
+          ? {
+              name: profile.name,
+              homeType: profile.homeType,
+              hasChildren: profile.hasChildren,
+              childrenAges: profile.childrenAges,
+              hasExistingPets: profile.hasExistingPets,
+              existingPets: profile.existingPets,
+              hasGarden: profile.hasGarden,
+              workHours: profile.workHours,
+              travelFrequency: profile.travelFrequency,
+              householdNoise: profile.householdNoise,
+              catExperience: profile.catExperience,
+              personalityPreference: profile.personalityPreference,
+              agePreference: profile.agePreference,
+              specialNeedsOpenness: profile.specialNeedsOpenness,
+              indoorOnlyPreference: profile.indoorOnlyPreference,
+            }
+          : match.adopterAnswers
+            ? {
+                homeType: match.adopterAnswers.homeType,
+                householdNoise: match.adopterAnswers.householdNoise,
+                hoursAway: match.adopterAnswers.hoursAway,
+                travelFrequency: match.adopterAnswers.travelFrequency,
+                previousCatExperience: match.adopterAnswers.previousCatExperience,
+                hasChildren: match.adopterAnswers.children.length > 0,
+                existingPets: match.adopterAnswers.existingPets,
+              }
+            : null;
+
         const res = await fetch("/api/counselor", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -237,45 +263,19 @@ export default function ReportPage() {
               backstory: cat.backstory,
               idealHome: cat.idealHome,
             },
-            adopter: adopterProfile
-              ? {
-                  name: adopterProfile.name,
-                  homeType: adopterProfile.homeType,
-                  hasChildren: adopterProfile.hasChildren,
-                  childrenAges: adopterProfile.childrenAges,
-                  hasExistingPets: adopterProfile.hasExistingPets,
-                  existingPets: adopterProfile.existingPets,
-                  hasGarden: adopterProfile.hasGarden,
-                  workHours: adopterProfile.workHours,
-                  travelFrequency: adopterProfile.travelFrequency,
-                  householdNoise: adopterProfile.householdNoise,
-                  catExperience: adopterProfile.catExperience,
-                  personalityPreference: adopterProfile.personalityPreference,
-                  agePreference: adopterProfile.agePreference,
-                  specialNeedsOpenness: adopterProfile.specialNeedsOpenness,
-                  indoorOnlyPreference: adopterProfile.indoorOnlyPreference,
-                }
-              : match.adopterAnswers
-                ? {
-                    homeType: match.adopterAnswers.homeType,
-                    householdNoise: match.adopterAnswers.householdNoise,
-                    hoursAway: match.adopterAnswers.hoursAway,
-                    travelFrequency: match.adopterAnswers.travelFrequency,
-                    previousCatExperience: match.adopterAnswers.previousCatExperience,
-                    hasChildren: match.adopterAnswers.children.length > 0,
-                    existingPets: match.adopterAnswers.existingPets,
-                  }
-                : null,
+            adopter: adopterData,
             scenarioQA: match.scenarioQA,
           }),
         });
 
+        if (cancelled) return;
+
         const data = await res.json();
-        
+
         setExplanationSource(data.source || "fallback");
 
         if (data.aiResult) {
-          // AI provided the full result, overwrite the deterministic one!
+          // AI succeeded — use its result as the single source of truth
           setExplanationIsAI(true);
           const newResult = {
             ...match.result,
@@ -287,19 +287,26 @@ export default function ReportPage() {
           setAiProtectiveFactors(data.aiResult.protectiveFactors || []);
           setExplanation(data.aiResult.explanation || getFallbackExplanation(newResult));
         } else {
-          setExplanationIsAI(data.source === "gemini");
+          // AI failed — keep rule-based result as the truth, show fallback explanation
+          setExplanationIsAI(false);
           setExplanation(data.explanation || getFallbackExplanation(match.result));
         }
       } catch (error) {
         console.error("Failed to fetch AI explanation:", error);
-        setExplanation(getFallbackExplanation(match.result));
+        if (!cancelled) {
+          setExplanation(getFallbackExplanation(match.result));
+        }
       } finally {
-        setLoadingExplanation(false);
+        if (!cancelled) {
+          setLoadingExplanation(false);
+        }
       }
     }
 
-    fetchExplanation();
-  }, [match, adopterProfile]);
+    loadAndExplain();
+
+    return () => { cancelled = true; };
+  }, [match]);
 
   const handleSubmitAdoptionRequest = async () => {
     if (!match) return;
