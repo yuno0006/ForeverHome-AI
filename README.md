@@ -2,7 +2,7 @@
 
 > **Built for [#HackTheKitty 2026](https://hackthekitty.com/) — World Cat Domination Day Hackathon**
 >
-> **🌐 [Live App →](https://forever-home-ai.vercel.app/)** — Website + installable PWA
+> **Reference ID:** `7WYRJRX3` &nbsp;|&nbsp; **🌐 [Live App →](https://forever-home-ai.vercel.app/)** — Website + installable PWA
 
 **Preventing cat returns before they happen — through AI-powered compatibility assessment and post-adoption coaching.**
 
@@ -135,6 +135,7 @@ npm run build    # Production build
 | [**API Reference**](docs/api.md) | Endpoint schemas, request/response examples, error codes |
 | [**Data Model**](docs/data-model.md) | Complete TypeScript types + Firestore field reference |
 | [**Security**](docs/security.md) | OWASP Top 10 coverage, Aikido scan report, RBAC rules |
+| [**Kiro IDE Usage**](.kiro/README.md) | AI-assisted development stats, design decisions, session memories, project rules |
 
 ---
 

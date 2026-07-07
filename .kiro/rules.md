@@ -80,16 +80,25 @@ design:
 
 ```yaml
 ai:
-  model_chain:
-    counselor: "gemini-3.5-flash → gemini-3-flash-preview → gemini-2.5-flash"
-    coach: "gemini-3.5-flash → gemini-3-flash-preview → gemini-2.5-flash"
-    assistant: "gemini-3.5-flash → gemini-3-flash-preview → gemini-2.5-flash"
-  strategy: "model-outer (exhaust best model on all keys, then fall back)"
-  rate_limiting: "Per-model+key 429 cache (90s TTL), skip exhausted combos"
+  strategy: "PARALLEL RACE — all model×key combos fire simultaneously, first to respond wins"
+  listing_ai:  # 6 combos race at once (counselor, questions, assistant)
+    - "gemini-3.5-flash × Key1"
+    - "gemini-3.5-flash × Key2"
+    - "gemini-3-flash-preview × Key1"
+    - "gemini-3-flash-preview × Key2"
+    - "gemini-2.5-flash × Key1"
+    - "gemini-2.5-flash × Key2"
+  chat_ai:  # 4 combos race at once (14-day coach)
+    - "gemini-3.1-flash-lite × Key1"
+    - "gemini-3.1-flash-lite × Key2"
+    - "gemini-2.5-flash × Key1"
+    - "gemini-2.5-flash × Key2"
+  api_endpoint: "v1beta"
+  rate_limiting: "Per-model+key 429 cache (90s TTL), skip exhausted combos in race"
   safety:
     pre_scan: "26 medical emergency keywords → deterministic redirect"
     guardrails: "Never diagnose, never prescribe, always escalate to vet"
-  no: ["Free-quota models (2.0-flash, 2.5-pro)", "unfiltered AI output"]
+  no: ["Free-quota models", "unfiltered AI output", "sequential fallback"]
 ```
 
 ## 6. Testing Rules

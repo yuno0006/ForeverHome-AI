@@ -16,10 +16,10 @@ Kiro maintained these key pieces of context across development sessions, enablin
 ## Session 2: Gemini AI Integration
 
 **Memory ID: `gemini-rotation`**
-- Two API keys, model-outer rotation strategy
+- Two API keys, parallel race strategy (all model×key combos fire simultaneously)
 - API base: `https://generativelanguage.googleapis.com/v1beta/models/`
-- Listing AI chain (6 attempts): Key1×flash, Key2×flash, Key1×preview, Key2×preview, Key1×2.5-flash, Key2×2.5-flash
-- Chat AI chain (4 attempts): Key1×flash-lite, Key2×flash-lite, Key1×2.5-flash-lite, Key2×2.5-flash-lite
+- Listing AI: 6 combos race at once (gemini-3.5-flash, gemini-3-flash-preview, gemini-2.5-flash × Key1, Key2)
+- Chat AI: 4 combos race at once (gemini-3.1-flash-lite, gemini-2.5-flash × Key1, Key2)
 - Rate-limit cache: HTTP 429 → 90s cooldown per (model, key) combo. All exhausted → sleep until next expiry
 - No free-quota models in rotation
 
@@ -56,7 +56,7 @@ Kiro maintained these key pieces of context across development sessions, enablin
 ## Session 6: Security Fixes
 
 **Memory ID: `security-remediations`**
-- Aikido found 8 issues, all remediated
+- Aikido found 9 issues, all remediated
 - CSP headers in `next.config.ts`: allow `apis.google.com`, `accounts.google.com` for Firebase Auth popup
 - X-Frame-Options: DENY, X-Content-Type-Options: nosniff
 - Path traversal fixed: input validation on all dynamic route params

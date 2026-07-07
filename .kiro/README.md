@@ -27,7 +27,7 @@ Kiro's persistent context enabled rapid iteration without context loss:
 
 - **30+ consecutive commits** of Kiro-generated code
 - Bug fixes identified through natural language — e.g., "login redirect doesn't work" → Kiro traced the issue to missing `onboardingComplete` check in `AuthGuard`
-- Security remediations — Kiro fixed all 8 Aikido findings (CSP headers, path traversal, dependency CVEs) through guided prompts
+- Security remediations — Kiro fixed all 9 Aikido findings (CSP headers, path traversal, dependency CVEs) through guided prompts
 - UI polish — "make the design warm and cute" → Kiro redesigned the entire color palette, typography, and component styling
 
 ### 3. Testing Suite (22 Tests)
@@ -47,15 +47,16 @@ test("compatibility score is always between 0 and 100", () => {
 });
 ```
 
-### 4. Documentation Generation
+### 4. Documentation Generation (5 Project Docs)
 
 Kiro produced all project documentation in this repository:
 
-- **README.md** (~400 lines) — Complete project overview, screen-by-screen feature map, setup instructions, architecture
+- **README.md** — Complete project overview, screen-by-screen feature map, setup instructions, architecture
 - **docs/architecture.md** — System design, component tree, data flow, API routes
 - **docs/security.md** — CSP policies, Firebase security rules, vulnerability remediation log
 - **docs/project-report.md** — Hackathon submission report (12 sections)
-- **AGENTS.md** / **CLAUDE.md** — AI agent rules for consistent code generation
+- **docs/api.md** — API endpoint schemas, request/response examples, error codes
+- **docs/data-model.md** — Complete TypeScript types + Firestore field reference
 
 ### 5. Design Decisions Guided by Kiro
 
@@ -87,7 +88,7 @@ Kiro's persistent memory across sessions was critical for a project of this scal
 | Files generated/edited by Kiro | 151+ |
 | Commits with Kiro-authored code | 20+ |
 | Test cases written by Kiro | 22 |
-| Documentation pages produced | 4 |
+| Documentation pages produced | 5 |
 | AI API routes implemented | 3 |
-| Security vulnerabilities remediated (via Kiro) | 8 |
+| Security vulnerabilities remediated (via Kiro) | 9 |
 | Design iterations through Kiro conversation | 5+ |
