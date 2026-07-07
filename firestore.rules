@@ -209,6 +209,24 @@ service cloud.firestore {
     }
     
     // ============================================
+    // ACTIVE ADOPTIONS
+    // ============================================
+    // Users can read their own active adoptions (14-day coach tracking).
+    // Created server-side via /api/adoption-requests.
+    match /activeAdoptions/{adoptionId} {
+      allow read: if request.auth != null &&
+        resource.data.adopterUid is string &&
+        request.auth.uid == resource.data.adopterUid;
+      allow create: if request.auth != null &&
+        request.resource.data.adopterUid is string &&
+        request.auth.uid == request.resource.data.adopterUid;
+      allow update: if request.auth != null &&
+        resource.data.adopterUid is string &&
+        request.auth.uid == resource.data.adopterUid;
+      allow delete: if false;
+    }
+
+    // ============================================
     // USERS (Root Collection)
     // ============================================
     // Users can read and write only their own user document.

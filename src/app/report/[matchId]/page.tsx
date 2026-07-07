@@ -86,7 +86,7 @@ export default function ReportPage() {
   const [matchLoading, setMatchLoading] = useState(true);
   const [adopterProfile, setAdopterProfile] = useState<AdopterProfile | null>(null);
   const [explanation, setExplanation] = useState<string>("");
-  const [loadingExplanation, setLoadingExplanation] = useState(false);
+  const [loadingExplanation, setLoadingExplanation] = useState(true); // start true — wait for AI
   const [explanationIsAI, setExplanationIsAI] = useState(false);
   const [explanationSource, setExplanationSource] = useState<string>("loading");
   const [aiProtectiveFactors, setAiProtectiveFactors] = useState<string[]>([]);

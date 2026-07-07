@@ -90,10 +90,12 @@ export async function POST(req: NextRequest) {
       scenarioQA
     );
 
-    // Determine if AI was actually used (not a canned fallback)
-    const isFallback = !aiResponse.explanation || 
+    // Determine if AI was actually used (not a canned fallback).
+    // fallbackCounselorResponse returns very specific strings; match those exactly.
+    const FALLBACK_CONCERN = "System was unable to complete the detailed AI compatibility check.";
+    const isFallback = !aiResponse.explanation ||
       aiResponse.explanation.includes("couldn't run our full") ||
-      aiResponse.riskLevel === "moderate" && aiResponse.concerns[0]?.includes("System was unable");
+      (aiResponse.concerns.length === 1 && aiResponse.concerns[0] === FALLBACK_CONCERN);
     const source = isFallback ? "fallback" : "gemini";
 
     // Log AI interaction (fire-and-forget, never blocks response)
