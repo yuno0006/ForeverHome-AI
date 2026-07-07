@@ -591,6 +591,67 @@ export async function fetchCoachMessages(
   }
 }
 
+// ─── AI Counselor Report (Compatibility Report) ──────────
+// Path: users/{uid}/compatibilityReports/{matchId}
+// Authenticated users → Firestore; guests → localStorage (handled in page)
+
+export interface AICounselorReport {
+  explanation: string;
+  explanationIsAI: boolean;
+  explanationSource: string;
+  aiProtectiveFactors: string[];
+  resultLevel: "low" | "moderate" | "high";
+  concerns: Array<{ ruleId: string; severity: "significant" | "moderate"; description: string; triggeredBy: string }>;
+  strengths: Array<{ description: string }>;
+  updatedAt: string; // ISO timestamp
+}
+
+/**
+ * Save AI counselor report to Firestore for an authenticated user.
+ */
+export async function saveAICounselorReport(
+  uid: string,
+  matchId: string,
+  report: Omit<AICounselorReport, "updatedAt">
+): Promise<void> {
+  if (!uid || uid.trim() === "" || uid === "guest") return;
+
+  if (!USE_FIRESTORE) return;
+
+  try {
+    const reportRef = doc(db, "users", uid, "compatibilityReports", matchId);
+    await setDoc(reportRef, {
+      ...report,
+      updatedAt: new Date().toISOString(),
+    }, { merge: true });
+  } catch (err) {
+    console.error("Failed to save AI counselor report to Firestore:", err);
+  }
+}
+
+/**
+ * Fetch AI counselor report from Firestore for an authenticated user.
+ * Returns null if not found.
+ */
+export async function fetchAICounselorReport(
+  uid: string,
+  matchId: string
+): Promise<AICounselorReport | null> {
+  if (!uid || uid.trim() === "" || uid === "guest") return null;
+
+  if (!USE_FIRESTORE) return null;
+
+  try {
+    const reportRef = doc(db, "users", uid, "compatibilityReports", matchId);
+    const snap = await getDoc(reportRef);
+    if (!snap.exists()) return null;
+    return snap.data() as AICounselorReport;
+  } catch (err) {
+    console.error("Failed to fetch AI counselor report from Firestore:", err);
+    return null;
+  }
+}
+
 export async function removeCatFromWishlist(uid: string, catId: string): Promise<string[]> {
   if (!uid || uid.trim() === "") throw new Error("Invalid UID: UID cannot be empty");
 

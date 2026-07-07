@@ -11,11 +11,16 @@ import { WhiskerRunnerDialog } from "@/components/game/WhiskerRunnerDialog";
 import { getCatById, demoCats } from "@/data/demoCats";
 import { getShelterById } from "@/data/demoShelters";
 import { getFallbackExplanation } from "@/lib/fallbackExplanations";
-import { fetchAssessment, fetchAdopterProfile } from "@/lib/firestoreService";
+import {
+  fetchAssessment,
+  fetchAdopterProfile,
+  saveAICounselorReport,
+  fetchAICounselorReport,
+} from "@/lib/firestoreService";
 import { assessCompatibility } from "@/lib/compatibilityEngine";
 import { useAuth } from "@/hooks/useAuth";
 import { AdopterProfile } from "@/types/adopterProfile";
-import { Match } from "@/types/match";
+import { Match, Concern, Strength } from "@/types/match";
 import CompatibilityBadge from "@/components/report/CompatibilityBadge";
 import ConcernList from "@/components/report/ConcernList";
 import MitigationList from "@/components/report/MitigationList";
@@ -39,6 +44,22 @@ import {
   Bot,
   Sparkles,
 } from "lucide-react";
+
+// localStorage keys for persistence across tab refreshes
+const REPORT_KEY_PREFIX = "fh_report_";
+const AI_REPORT_KEY_PREFIX = "fh_ai_report_";
+// 60s client-side timeout — AI is given a full minute before showing fallback
+const AI_TIMEOUT_MS = 60_000;
+
+interface StoredAIReport {
+  explanation: string;
+  explanationIsAI: boolean;
+  explanationSource: string;
+  aiProtectiveFactors: string[];
+  resultLevel: "low" | "moderate" | "high";
+  concerns: Concern[];
+  strengths: Strength[];
+}
 
 // Mirrors buildAdopterAnswers() in the assessment flow so a report can be
 // rebuilt from a persisted AdopterProfile when the sessionStorage copy of
@@ -75,6 +96,47 @@ function buildAdopterAnswersFromProfile(
     comfortableWithRoutineCare: true,
     scenarioAnswers: [],
   };
+}
+
+/** Persist AI report: Firestore for authenticated users, localStorage always as cache. */
+async function persistAIReport(
+  uid: string | undefined,
+  matchId: string,
+  report: StoredAIReport
+) {
+  // Always cache in localStorage (works offline, instant loads)
+  try {
+    localStorage.setItem(AI_REPORT_KEY_PREFIX + matchId, JSON.stringify(report));
+  } catch { /* quota exceeded */ }
+
+  // Authenticated user → also persist to Firestore for cross-device access
+  if (uid && uid !== "guest") {
+    saveAICounselorReport(uid, matchId, report).catch((err) => {
+      console.error("Failed to save AI report to Firestore:", err);
+    });
+  }
+}
+
+/** Load cached AI report: Firestore first (user), then localStorage. */
+async function loadCachedAIReport(
+  uid: string | undefined,
+  matchId: string
+): Promise<StoredAIReport | null> {
+  // 1. Authenticated user → try Firestore first
+  if (uid && uid !== "guest") {
+    try {
+      const fromFS = await fetchAICounselorReport(uid, matchId);
+      if (fromFS) return fromFS;
+    } catch { /* fall through to localStorage */ }
+  }
+
+  // 2. Guest or Firestore miss → localStorage
+  try {
+    const raw = localStorage.getItem(AI_REPORT_KEY_PREFIX + matchId);
+    if (raw) return JSON.parse(raw) as StoredAIReport;
+  } catch { /* not found or corrupt */ }
+
+  return null;
 }
 
 export default function ReportPage() {
@@ -144,7 +206,8 @@ export default function ReportPage() {
 
   useEffect(() => {
     async function loadMatch() {
-      const stored = sessionStorage.getItem(matchId);
+      const reportKey = REPORT_KEY_PREFIX + matchId;
+      const stored = localStorage.getItem(reportKey);
       if (stored) {
         setMatch(JSON.parse(stored));
         setMatchLoading(false);
@@ -179,7 +242,7 @@ export default function ReportPage() {
             ? record.createdAt.toDate().toISOString()
             : new Date().toISOString(),
         };
-        sessionStorage.setItem(matchId, JSON.stringify(rebuilt));
+        localStorage.setItem(reportKey, JSON.stringify(rebuilt));
         setMatch(rebuilt);
       } catch (err) {
         console.error("Failed to rebuild assessment report:", err);
@@ -192,7 +255,11 @@ export default function ReportPage() {
   }, [matchId]);
 
   // Fetch adopter profile + AI explanation — SINGLE effect, ONE API call.
-  // Merged from two separate effects to eliminate double-call race condition.
+  // Authenticated users load from Firestore first, then localStorage.
+  // Guests use localStorage only. If no cached report exists, calls
+  // /api/counselor with a 60s timeout — only after a full minute of
+  // waiting does it show the rule-based fallback. Once the AI responds,
+  // the result is persisted (Firestore for users, localStorage for all).
   useEffect(() => {
     let cancelled = false;
 
@@ -201,6 +268,30 @@ export default function ReportPage() {
 
       const cat = getCatById(match.catId);
       if (!cat) return;
+
+      // ── 0. Check for a previously saved AI report (Firestore → localStorage) ──
+      const cached = await loadCachedAIReport(user?.uid, matchId);
+      if (cached) {
+        setExplanationSource(cached.explanationSource);
+        setExplanationIsAI(cached.explanationIsAI);
+        setExplanation(cached.explanation);
+        setAiProtectiveFactors(cached.aiProtectiveFactors);
+        setMatch((prev) =>
+          prev
+            ? {
+                ...prev,
+                result: {
+                  ...prev.result,
+                  level: cached.resultLevel,
+                  concerns: cached.concerns,
+                  strengths: cached.strengths,
+                },
+              }
+            : prev
+        );
+        setLoadingExplanation(false);
+        return; // ✅ instantly restored — no API call needed
+      }
 
       // 1. Fetch adopter profile first (if available)
       let profile: AdopterProfile | null = null;
@@ -212,8 +303,11 @@ export default function ReportPage() {
 
       if (cancelled) return;
 
-      // 2. Call AI counselor ONCE with the best data available
+      // 2. Call AI counselor with 60s client-side timeout.
+      //    The user wants the AI a FULL minute before any fallback appears.
       setLoadingExplanation(true);
+      setExplanationSource("loading");
+
       try {
         const adopterData = profile
           ? {
@@ -245,6 +339,10 @@ export default function ReportPage() {
               }
             : null;
 
+        // 60s AbortController — wait a full minute for AI
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), AI_TIMEOUT_MS);
+
         const res = await fetch("/api/counselor", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -266,7 +364,10 @@ export default function ReportPage() {
             adopter: adopterData,
             scenarioQA: match.scenarioQA,
           }),
+          signal: controller.signal,
         });
+
+        clearTimeout(timeoutId);
 
         if (cancelled) return;
 
@@ -277,24 +378,81 @@ export default function ReportPage() {
         if (data.aiResult) {
           // AI succeeded — use its result as the single source of truth
           setExplanationIsAI(true);
+          const newConcerns: Concern[] = data.aiResult.concerns.map((c: string) => ({
+            ruleId: "ai-counselor",
+            severity: "significant" as const,
+            description: c,
+            triggeredBy: "gemini",
+          }));
+          const newStrengths: Strength[] = data.aiResult.strengths.map((s: string) => ({
+            description: s,
+          }));
           const newResult = {
             ...match.result,
             level: data.aiResult.riskLevel,
-            concerns: data.aiResult.concerns.map((c: string) => ({ description: c, severity: "significant" as const })),
-            strengths: data.aiResult.strengths.map((s: string) => ({ description: s })),
+            concerns: newConcerns,
+            strengths: newStrengths,
           };
           setMatch({ ...match, result: newResult });
           setAiProtectiveFactors(data.aiResult.protectiveFactors || []);
-          setExplanation(data.aiResult.explanation || getFallbackExplanation(newResult));
+          const aiExplanation = data.aiResult.explanation || getFallbackExplanation(newResult);
+          setExplanation(aiExplanation);
+
+          // ✅ Persist: Firestore for users, localStorage for all
+          const toStore: StoredAIReport = {
+            explanation: aiExplanation,
+            explanationIsAI: true,
+            explanationSource: data.source || "gemini",
+            aiProtectiveFactors: data.aiResult.protectiveFactors || [],
+            resultLevel: data.aiResult.riskLevel,
+            concerns: newConcerns,
+            strengths: newStrengths,
+          };
+          persistAIReport(user?.uid, matchId, toStore);
         } else {
-          // AI failed — keep rule-based result as the truth, show fallback explanation
+          // AI failed — keep rule-based result, show fallback explanation
           setExplanationIsAI(false);
-          setExplanation(data.explanation || getFallbackExplanation(match.result));
+          const fallbackExplanation = data.explanation || getFallbackExplanation(match.result);
+          setExplanation(fallbackExplanation);
+
+          // Also persist the fallback so refreshes don't re-trigger the slow wait
+          const toStore: StoredAIReport = {
+            explanation: fallbackExplanation,
+            explanationIsAI: false,
+            explanationSource: "fallback",
+            aiProtectiveFactors: [],
+            resultLevel: match.result.level,
+            concerns: match.result.concerns || [],
+            strengths: match.result.strengths || [],
+          };
+          persistAIReport(user?.uid, matchId, toStore);
         }
       } catch (error) {
-        console.error("Failed to fetch AI explanation:", error);
+        // Timeout (AbortError) or network error — show fallback ONCE, persist it
+        console.error(
+          error instanceof DOMException && error.name === "AbortError"
+            ? "AI counselor timed out after 60s — showing fallback report"
+            : "Failed to fetch AI explanation:",
+          error
+        );
         if (!cancelled) {
-          setExplanation(getFallbackExplanation(match.result));
+          const fallbackExplanation = getFallbackExplanation(match.result);
+          setExplanation(fallbackExplanation);
+          setExplanationIsAI(false);
+          setExplanationSource("fallback");
+          setAiProtectiveFactors([]);
+
+          // Persist fallback so refreshes don't restart the 60s wait
+          const toStore: StoredAIReport = {
+            explanation: fallbackExplanation,
+            explanationIsAI: false,
+            explanationSource: "fallback",
+            aiProtectiveFactors: [],
+            resultLevel: match.result.level,
+            concerns: match.result.concerns || [],
+            strengths: match.result.strengths || [],
+          };
+          persistAIReport(user?.uid, matchId, toStore);
         }
       } finally {
         if (!cancelled) {
@@ -305,8 +463,11 @@ export default function ReportPage() {
 
     loadAndExplain();
 
-    return () => { cancelled = true; };
-  }, [match]);
+    return () => {
+      cancelled = true;
+    };
+    // Only re-run when match identity changes (not on every explanation render)
+  }, [match?.id]);
 
   const handleSubmitAdoptionRequest = async () => {
     if (!match) return;

@@ -19,12 +19,14 @@
  * "Start Adoption Process" -> fill form -> "Send Request" UI flow so
  * `requestSent` becomes `true` via the component's own
  * `handleSubmitAdoptionRequest`, rather than reaching into internal
- * state directly. `sessionStorage.getItem(matchId)` is seeded with a
+ * state directly. `localStorage.getItem("fh_report_" + matchId)` is seeded with a
  * `Match` fixture referencing "luna" (a real id from `demoCats`) so
  * `loadMatch` resolves synchronously from session storage and never
  * needs to call `fetchAssessment`/`fetchAdopterProfile`. `ttsSupported`
  * naturally evaluates to `false` in jsdom (no `speechSynthesis`), so no
- * TTS mocking is needed either.
+ * TTS mocking is needed either. AI reports are now persisted in
+ * localStorage ("fh_ai_report_*"), so seeding that key in beforeEach
+ * prevents any real /api/counselor call from being attempted.
  *
  * _Requirements: 1.2, 1.3, 1.4, 1.5_
  */
@@ -50,7 +52,7 @@ vi.mock("@/hooks/useAuth", () => ({
   useAuth: () => ({ user: null, userDoc: null }),
 }));
 
-// `loadMatch` resolves synchronously from `sessionStorage` in these tests,
+// `loadMatch` resolves synchronously from `localStorage` in these tests,
 // so these are never actually invoked — but `firestoreService.ts` eagerly
 // initializes Firebase Auth at import time (`src/lib/firebase.ts`), which
 // throws in this test environment without real Firebase config. Mocking
@@ -105,18 +107,23 @@ function buildMatchFixture(): Match {
 }
 
 beforeEach(() => {
-  sessionStorage.clear();
-  sessionStorage.setItem(MATCH_ID, JSON.stringify(buildMatchFixture()));
+  localStorage.clear();
+  localStorage.setItem("fh_report_" + MATCH_ID, JSON.stringify(buildMatchFixture()));
+  // Also seed a fake AI report so the component doesn't try to call /api/counselor
+  // and bypasses the 60s timeout in tests.
+  localStorage.setItem("fh_ai_report_" + MATCH_ID, JSON.stringify({
+    explanation: "This is a great match!",
+    explanationIsAI: true,
+    explanationSource: "gemini",
+    aiProtectiveFactors: [],
+    resultLevel: "high",
+    concerns: [],
+    strengths: [],
+  }));
   routerControls.push.mockClear();
 
   global.fetch = vi.fn((url: unknown) => {
     const href = String(url);
-    if (href.includes("/api/counselor")) {
-      return Promise.resolve({
-        ok: true,
-        json: async () => ({ explanation: "This is a great match!" }),
-      } as Response);
-    }
     if (href.includes("/api/adoption-request")) {
       return Promise.resolve({
         ok: true,

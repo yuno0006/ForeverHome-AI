@@ -445,7 +445,7 @@ export default function AssessmentPage() {
             matchData.id = assessmentId;
           }
 
-          sessionStorage.setItem(matchData.id, JSON.stringify(matchData));
+          localStorage.setItem("fh_report_" + matchData.id, JSON.stringify(matchData));
           router.push(`/report/${matchData.id}`);
         } catch (err) {
           console.error("Failed to save assessment:", err);
