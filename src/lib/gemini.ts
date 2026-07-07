@@ -95,7 +95,7 @@ async function callModel(
   prompt: string,
   image?: ImageInput
 ): Promise<{ text: string | null; status: number | null }> {
-  const TIMEOUT_MS = 50000; // Increased to 50s to match Vercel limits
+  const TIMEOUT_MS = 20000; // 20s — keep well under Vercel's 60s function limit
   try {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), TIMEOUT_MS);
@@ -143,6 +143,10 @@ async function callAI(
   image?: ImageInput,
   purpose: AIPurpose = "listing",
 ): Promise<string | null> {
+  const FUNC_START = Date.now();
+  // Safety cap: abort entirely after 55s to leave 5s for response serialization
+  const SAFETY_TIMEOUT_MS = 55000;
+
   pruneRateLimitCache();
   const keys = getActiveKeys();
   if (keys.length === 0) {
@@ -154,24 +158,27 @@ async function callAI(
   const result = await raceModels(models, keys, prompt, image);
   if (result !== null) return result;
 
-  // Fallback: if listing models all failed, try chat models as last resort
-  if (purpose === "listing") {
+  // Fallback: if listing models all failed, try chat models — but only if enough time remains
+  if (purpose === "listing" && (Date.now() - FUNC_START) < SAFETY_TIMEOUT_MS - 25000) {
     console.warn("[gemini] All listing models exhausted, falling back to chat models...");
     const fallback = await raceModels(CHAT_MODELS, keys, prompt, image);
     if (fallback !== null) return fallback;
   }
 
-  // If ALL combos failed, wait until the soonest rate-limit expiry then retry once
-  let minExpiry = Infinity;
-  for (const [, v] of _RATE_LIMIT_CACHE) {
-    const remaining = v.exhaustedAt + RATE_LIMIT_TTL_MS - Date.now();
-    if (remaining < minExpiry) minExpiry = remaining;
-  }
-  if (minExpiry > 0 && minExpiry < RATE_LIMIT_TTL_MS) {
-    console.warn(`[gemini] All key/model combos rate-limited, waiting ${Math.ceil(minExpiry / 1000)}s...`);
-    await new Promise(r => setTimeout(r, minExpiry + 500));
-    pruneRateLimitCache();
-    return callAI(prompt, image, purpose);
+  // Rate-limit retry only if we have time
+  if ((Date.now() - FUNC_START) < SAFETY_TIMEOUT_MS - 15000) {
+    let minExpiry = Infinity;
+    for (const [, v] of _RATE_LIMIT_CACHE) {
+      const remaining = v.exhaustedAt + RATE_LIMIT_TTL_MS - Date.now();
+      if (remaining < minExpiry) minExpiry = remaining;
+    }
+    if (minExpiry > 0 && minExpiry < RATE_LIMIT_TTL_MS && minExpiry < SAFETY_TIMEOUT_MS - (Date.now() - FUNC_START)) {
+      console.warn(`[gemini] All key/model combos rate-limited, waiting ${Math.ceil(minExpiry / 1000)}s...`);
+      await new Promise(r => setTimeout(r, minExpiry + 500));
+      if ((Date.now() - FUNC_START) >= SAFETY_TIMEOUT_MS - 5000) return null;
+      pruneRateLimitCache();
+      return callAI(prompt, image, purpose);
+    }
   }
 
   console.error(`[gemini] All models exhausted (purpose=${purpose}), no response available`);
