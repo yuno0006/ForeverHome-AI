@@ -45,11 +45,12 @@ function markRateLimited(model: string, key: string) {
 
 // ─── Model chains ───────────────────────────────────────
 
-// Listing AI: heavy tasks (counselor, questions, general assistant)
+// Listing AI: counselor, quiz questions, general assistant
+// gemini-3.1-flash-lite is first because it has 500 free daily credits.
 // PARALLEL RACE: all models + all keys fire simultaneously, first to respond wins.
 const LISTING_MODELS = [
+  "gemini-3.1-flash-lite",
   "gemini-3.5-flash",
-  "gemini-3-flash-preview",
   "gemini-2.5-flash",
 ];
 
