@@ -214,8 +214,10 @@ async function raceModels(
   console.log(`[gemini] Racing ${combos.length} model×key combo(s)...`);
   const startTime = Date.now();
 
-  // Fire all combos simultaneously — first to respond with data wins
-  const race = Promise.race(
+  // Fire all combos simultaneously — first to respond with valid data wins.
+  // Promise.any: ignores rejections, returns first fulfilled value.
+  // A combo "rejects" (throw) when it has no text, so only combos with text fulfill.
+  const race = Promise.any(
     combos.map(async ({ model, key }) => {
       const { text, status } = await callModel(model, key, prompt, image);
       if (text) {
@@ -226,13 +228,16 @@ async function raceModels(
       if (status === 429) {
         // Already marked by callModel
       }
-      // 400/403/5xx/timeout: just ignore, other combos may still win
-      return { text: null, winner: false };
+      throw new Error(`Model ${model} with key ${key} failed or returned no text`);
     })
   );
 
-  const result = await race;
-  return result.text;
+  try {
+    const result = await race;
+    return result.text;
+  } catch (err) {
+    return null;
+  }
 }
 
 /**
@@ -255,20 +260,24 @@ async function sequentialModels(
 
     console.log(`[gemini] Trying ${model} (sequential, ${validCombos.length} key(s))...`);
     const startTime = Date.now();
-    const race = Promise.race(
-      validCombos.map(async (key) => {
-        const { text, status } = await callModel(model, key, prompt, image);
-        if (text) return { text, winner: true };
-        if (status === 429) { /* already marked */ }
-        return { text: null, winner: false };
-      })
-    );
-    const result = await race;
-    if (result.text) {
-      console.log(`[gemini] 🏆 Winner (sequential): ${model} (${Date.now() - startTime}ms)`);
-      return result.text;
+
+    // Promise.any: first key to return valid text wins. Failed keys reject.
+    try {
+      const result = await Promise.any(
+        validCombos.map(async (key) => {
+          const { text, status } = await callModel(model, key, prompt, image);
+          if (text) return { text, winner: true };
+          if (status === 429) { /* already marked */ }
+          throw new Error(`Key ${key} failed or returned no text`);
+        })
+      );
+      if (result.text) {
+        console.log(`[gemini] 🏆 Winner (sequential): ${model} (${Date.now() - startTime}ms)`);
+        return result.text;
+      }
+    } catch (err) {
+      console.warn(`[gemini] ${model} failed, trying next model...`);
     }
-    console.warn(`[gemini] ${model} failed, trying next model...`);
   }
   return null;
 }

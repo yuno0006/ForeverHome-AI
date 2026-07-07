@@ -82,12 +82,21 @@ export async function POST(req: NextRequest) {
     const catProfileStr = catProfileParts.join("\n") || `${catName}'s profile`;
     const adopterProfileStr = adopterProfileParts.join("\n") || "No adopter profile available";
 
+    // Serialize scenario QA for the AI prompt (arrays → readable string)
+    const scenarioQAText = scenarioQA
+      ? (Array.isArray(scenarioQA)
+          ? scenarioQA.map((a: Record<string, unknown>) =>
+              `Q${a.questionIndex}: chose "${a.selectedOption}" (score: ${a.selectedScore})`
+            ).join("\n")
+          : String(scenarioQA))
+      : undefined;
+
     // Try Gemini AI first, fall back to deterministic
     const aiResponse = await generateCounselorExplanation(
       catName,
       catProfileStr,
       adopterProfileStr,
-      scenarioQA
+      scenarioQAText
     );
 
     // Determine if AI was actually used (not a canned fallback).
