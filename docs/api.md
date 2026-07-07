@@ -70,7 +70,7 @@ Generate an AI coach response for post-adoption support.
 
 ### POST `/api/counselor`
 
-Generate an AI explanation for compatibility assessment results.
+Generate an AI explanation for compatibility assessment results. Uses **sequential model fallback** — models are tried one-by-one, the first to return valid JSON wins. If all AI models fail, a deterministic rule-based fallback is returned.
 
 **Request Body:**
 ```json
@@ -81,20 +81,26 @@ Generate an AI explanation for compatibility assessment results.
     "strengths": [{ "ruleId": "experience-match", "description": "..." }]
   },
   "cat": { "id": "barnaby", "name": "Barnaby", "behavior": { "energy": "low", ... } },
-  "adopter": { "id": "user-uid", "homeType": "apartment", ... }
+  "adopter": { "id": "user-uid", "homeType": "apartment", ... },
+  "scenarioQA": [{ "questionIndex": 0, "selectedScore": 1, ... }]
 }
 ```
 
-**Response (200):**
+**Response (200 — AI success):**
 ```json
 {
-  "explanation": "Based on the assessment, Barnaby's low stress tolerance...",
   "source": "gemini",
-  "disclaimer": null
+  "aiResult": {
+    "riskLevel": "high_risk",
+    "concerns": ["Barnaby's low stress tolerance conflicts with...", "..."],
+    "strengths": ["Your experience with cats...", "..."],
+    "protectiveFactors": ["You work from home", "You have no children"],
+    "explanation": "Based on the assessment, Barnaby's low stress tolerance..."
+  }
 }
 ```
 
-**Fallback (when Gemini unavailable):**
+**Response (200 — AI fallback):**
 ```json
 {
   "explanation": "This explanation was generated without AI...",
@@ -102,6 +108,8 @@ Generate an AI explanation for compatibility assessment results.
   "disclaimer": "This explanation was generated without AI."
 }
 ```
+
+**Fallback detection**: The client checks if `aiResult` exists in the response. If yes, the AI result **replaces** the rule-based compatibility result as the single source of truth. If no `aiResult`, the rule-based engine result is kept and the fallback explanation is shown.
 
 ---
 

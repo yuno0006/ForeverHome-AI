@@ -85,7 +85,7 @@ This project was scanned using [Aikido Security](https://www.aikido.dev/) automa
 
 ### Firestore RBAC (`firestore.rules`)
 
-12 collections with granular access control:
+13 collections with granular access control:
 
 | Collection | Read | Write | Notes |
 |-----------|------|-------|-------|
@@ -94,6 +94,7 @@ This project was scanned using [Aikido Security](https://www.aikido.dev/) automa
 | `users/{uid}/adopterProfile` | Self only | Self only | Subcollection isolation |
 | `users/{uid}/meta` | Self only | Self only | Wishlist data |
 | `assessments` | Self (adopterUid) | Self (adopterUid) | `is string` guard, immutable |
+| `activeAdoptions` | Self (adopterUid) | Self (adopterUid) | `is string` guard, 14-day coach tracking |
 | `aiLogs` | None (admin only) | Authenticated | Write-only, immutable |
 | `shelters` | Public | Admin only | `is string` + `size()` guards |
 | `escalationReports` | Shelter owner | Field-validated | `size()` bounds, immutable |
@@ -109,7 +110,9 @@ This project was scanned using [Aikido Security](https://www.aikido.dev/) automa
 - All AI calls happen server-side in Next.js API route handlers
 - Keys are stored in server-side environment variables only (`GEMINI_API_KEY`)
 - Rate-limit caching prevents wasted requests on depleted quotas (HTTP 429 → 90s cooldown)
-- Model race strategy: ALL models fire simultaneously → first to respond wins (gemini-3.5-flash, gemini-3-flash-preview, gemini-2.5-flash with lite variants for chat)
+- Model parallel race: Listing AI (questions, assistant) fires ALL models simultaneously → first to respond wins
+- Model sequential fallback: Counselor (compatibility report) tries models one-by-one to conserve free-tier credits
+- Rate-limit caching: HTTP 429 → 90s cooldown per (model, key) combo
 
 ---
 

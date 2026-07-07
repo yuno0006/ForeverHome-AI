@@ -13,6 +13,7 @@ Complete field-level reference for all Firestore collections and TypeScript type
 | Cats | `cats/{catId}` | Auth: r; Shelter staff: r/w |
 | Matches | `matches/{matchId}` | Owner: r/w; Shelter: r |
 | Assessments | `assessments/{sessionId}` | Owner: r |
+| Active Adoptions | `activeAdoptions/{adoptionId}` | Owner: r/w (by adopterUid) |
 | Adoptions | `adoptions/{adoptionId}` | Shelter: r/w; Owner: r |
 | Wishlists | `users/{uid}/savedCats` | Owner: r/w |
 | Check-ins | `checkIns/{checkInId}` | Owner: r/w |

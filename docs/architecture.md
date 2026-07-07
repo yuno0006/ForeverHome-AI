@@ -153,9 +153,9 @@ ForeverHome AI is a Next.js 16 (App Router) full-stack application that helps sh
 │                                                                │
 │  ┌──────────────────────┐  ┌───────────────────────────────┐ │
 │  │ Gemini AI (v1beta)    │  │ Firebase Auth + Firestore     │ │
-│  │ • Parallel race, 2 keys│  │ • 12 collections RBAC       │ │
+│  │ • Race/sequential, 2 keys│  │ • 13 collections RBAC      │ │
 │  │ • Rate-limit fallback │  │ • jose JWKS verification     │ │
-│  │ • 8s timeout per call │  │ • aiLogs (write-only)        │ │
+│  │ • 8-20s timeout       │  │ • aiLogs (write-only)        │ │
 │  │ • Image input support │  │ • UID-enforced isolation     │ │
 │  └──────────────────────┘  └───────────────────────────────┘ │
 │                                                                │
@@ -210,11 +210,11 @@ All Gemini API calls happen in Next.js API routes (`src/app/api/`), never in the
 - `POST /api/coach` — 14-Day coach conversations
 - `POST /api/assistant` — General site assistant (Mr. Cat)
 
-**Model Failover Chain (Parallel Race — 2 API Keys)**:
+**Model Failover Chain (2 API Keys)**:
 
-All models × all keys fire simultaneously. First to respond with valid data wins — no waiting for slower models.
+Two strategies depending on the AI use case:
 
-Listing AI (counselor, questions, general assistant) — all 6 combos race at once:
+**Listing AI (questions, general assistant) — PARALLEL RACE**, all 6 combos race at once:
 ```
 gemini-3.5-flash × Key1 ──┐
 gemini-3.5-flash × Key2 ──┤
@@ -222,9 +222,18 @@ gemini-3-flash-preview × K1┤─── FIRST TO RESPOND WINS ──▶  respon
 gemini-3-flash-preview × K2┤
 gemini-2.5-flash × Key1 ──┤
 gemini-2.5-flash × Key2 ──┘
-  → Fallback: Chat AI models (if listing all fail)
   → Deterministic fallback response
 ```
+
+**Counselor (compatibility report) — SEQUENTIAL fallback**, models tried one-by-one:
+```
+gemini-3.1-flash-lite × Key1+Key2 ──▶ first valid JSON wins
+  → if fails: gemini-3.5-flash × Key1+Key2
+  → if fails: gemini-3-flash-preview × Key1+Key2
+  → if fails: gemini-2.5-flash × Key1+Key2
+  → if all fail: rule-based fallback
+```
+This avoids burning free-tier credits on parallel calls for the high-quality report.
 
 Chat AI (14-day coach) — all 4 combos race at once:
 ```
@@ -263,7 +272,8 @@ User → Browse Cats → Select Cat → 5 Lifestyle Pre-Questions
   → 4 Dynamic AI-Generated Scenarios (cat-specific)
   → Compatibility Engine (deterministic, client-side)
   → Compatibility Report (risk level + triggered rules + mitigations)
-  → AI Counselor Explanation (server-side, reads quiz 11 + scenario 5 data)
+  → AI Counselor Explanation (server-side, sequential model fallback)
+  → Single API call: profile fetched, then counselor called ONCE in merged useEffect
   → Alternative Cat Recommendations (if moderate/high risk)
 ```
 
@@ -339,7 +349,7 @@ Compatibility Report → "Start Adoption Process"
           │ 2 API keys      │     │ aiLogs (write-only)  │
           │ Model-outer     │     │ assessments          │
           │ Rate-limit 90s  │     │ escalations          │
-          │ 15s timeout     │     │ adoptionRequests     │
+          │ 8-20s timeout     │     │ adoptionRequests     │
           └────────┬────────┘     │ activeAdoptions      │
                    │              │ users/{uid}/...       │
                    │              └───────────┬───────────┘
@@ -372,6 +382,7 @@ Compatibility Report → "Start Adoption Process"
 | `adopterProfile` | `/users/{uid}/adopterProfile/{uid}` | Self read/write | Adopter profiles |
 | `meta` | `/users/{uid}/meta/{docId}` | Self read/write | Wishlist, preferences |
 | `assessments` | `/assessments/{id}` | Self read/create (adopterUid) | Compatibility assessments |
+| `activeAdoptions` | `/activeAdoptions/{id}` | Owner r/w (adopterUid) | Active adoptions (14-day coach) |
 | `adoptions` | `/adoptions/{id}` | Self read, Admin write | Active adoptions + check-ins |
 | `matches` | `/matches/{id}` | Self read | Compatibility results |
 | `aiLogs` | `/aiLogs/{id}` | Create only (users), Admin read | AI interaction logs |
