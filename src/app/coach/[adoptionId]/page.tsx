@@ -195,7 +195,7 @@ export default function CoachPage() {
       role: "user",
       content: inputValue.trim() || "Take a look at this photo of my cat",
       timestamp: new Date().toISOString(),
-      imagePreview: imagePreview || undefined,
+      ...(imagePreview ? { imagePreview } : {}),
     };
     setMessages((prev) => [...prev, userMsg]);
     setInputValue("");

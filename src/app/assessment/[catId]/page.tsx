@@ -191,11 +191,13 @@ export default function AssessmentPage() {
   const [profileError, setProfileError] = useState<string | null>(null);
 
   // Assessment state
-  const [currentStep, setCurrentStep] = useState(-1); // -1 = lifestyle questions
+  const [currentStep, setCurrentStep] = useState(0); // 0 = first scenario question
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
   
-  const [dynamicQuestions, setDynamicQuestions] = useState<ScenarioQuestionData[]>(scenarioQuestions);
+  const [dynamicQuestions, setDynamicQuestions] = useState<ScenarioQuestionData[]>(
+    isGeneralMode ? scenarioQuestions.slice(0, 5) : scenarioQuestions
+  );
   const [generatingQuestions, setGeneratingQuestions] = useState(false);
 
   // Lifestyle pre-questions state
@@ -219,6 +221,7 @@ export default function AssessmentPage() {
       // Guest mode: use the hardcoded default profile — no login needed
       if (!user) {
         setProfile(GUEST_PROFILE);
+        setCurrentStep(-1);
         setProfileLoading(false);
         return;
       }
@@ -247,8 +250,16 @@ export default function AssessmentPage() {
   useEffect(() => {
     async function loadDynamicQuestions() {
       if (isGeneralMode || !cat || profileLoading || !profile) return;
+      
+      const mockQuestions: ScenarioQuestionData[] = cat.quizQuestions?.map((q) => ({
+        id: q.id,
+        scenario: q.question(cat.name),
+        options: q.options.map((o) => ({ value: o.value, label: o.label, score: 0 })),
+        traits: []
+      })) || scenarioQuestions.slice(0, 4);
+
       if (isGuest) {
-        setDynamicQuestions(scenarioQuestions.slice(0, 4));
+        setDynamicQuestions(mockQuestions);
         return;
       }
       
@@ -264,15 +275,16 @@ export default function AssessmentPage() {
           const data = await res.json();
           if (data.questions && data.questions.length === 4) {
             setDynamicQuestions(data.questions);
+            setQuestionsAreAI(true);
           } else {
-            setDynamicQuestions(scenarioQuestions.slice(0, 4));
+            setDynamicQuestions(mockQuestions);
           }
         } else {
-          setDynamicQuestions(scenarioQuestions.slice(0, 4));
+          setDynamicQuestions(mockQuestions);
         }
       } catch (e) {
         console.error("Failed to generate questions:", e);
-        setDynamicQuestions(scenarioQuestions.slice(0, 4));
+        setDynamicQuestions(mockQuestions);
       } finally {
         setGeneratingQuestions(false);
       }
@@ -292,17 +304,29 @@ export default function AssessmentPage() {
 
   // Build adopter answers from profile (used by both modes)
   function buildAdopterAnswers(profile: AdopterProfile): AdopterAnswers {
+    let homeType = profile.homeType;
+    let householdNoise: "low" | "moderate" | "high" = profile.householdNoise === "quiet" ? "low" :
+        profile.householdNoise === "active" ? "high" : "moderate";
+    let hoursAway = 8;
+    
+    if (isGuest && lifestyleAnswers.livingSpace) {
+      homeType = lifestyleAnswers.livingSpace.includes("apartment") ? "apartment" : "house";
+      householdNoise = lifestyleAnswers.activityLevel === "very-quiet" ? "low" : 
+                       lifestyleAnswers.activityLevel === "moderate" ? "moderate" : "high";
+      hoursAway = lifestyleAnswers.workSchedule === "home-all-day" ? 2 :
+                  lifestyleAnswers.workSchedule === "home-half-day" ? 5 : 9;
+    }
+
     return {
-      homeType: profile.homeType,
+      homeType,
       adultsInHome: 1,
       children: profile.childrenAges
         .filter((age): age is "0-4" | "5-9" | "10-14" | "15+" =>
           ["0-4", "5-9", "10-14", "15+"].includes(age))
         .map((age) => ({ ageRange: age })),
       existingPets: profile.existingPets,
-      householdNoise: profile.householdNoise === "quiet" ? "low" :
-        profile.householdNoise === "active" ? "high" : "moderate",
-      hoursAway: 8,
+      householdNoise,
+      hoursAway,
       travelFrequency: profile.travelFrequency === "rarely" ? "rare" :
         profile.travelFrequency === "frequent" ? "frequent" : "occasional",
       previousCatExperience: profile.catExperience !== "none",

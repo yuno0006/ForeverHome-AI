@@ -30,6 +30,12 @@ export interface CatPhoto {
   isPrimary?: boolean;
 }
 
+export interface CatQuizQuestion {
+  id: string;
+  question: (catName: string) => string;
+  options: { value: string; label: string }[];
+}
+
 export interface Cat {
   id: string;
   name: string;
@@ -54,4 +60,5 @@ export interface Cat {
   adoptionFee?: number;
   microchipped?: boolean;
   vaccinated?: boolean;
+  quizQuestions?: CatQuizQuestion[];
 }

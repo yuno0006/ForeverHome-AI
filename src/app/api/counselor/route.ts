@@ -90,7 +90,11 @@ export async function POST(req: NextRequest) {
       scenarioQA
     );
 
-    const source = aiResponse.explanation && !aiResponse.explanation.includes("couldn't run our full") ? "gemini" : "fallback";
+    // Determine if AI was actually used (not a canned fallback)
+    const isFallback = !aiResponse.explanation || 
+      aiResponse.explanation.includes("couldn't run our full") ||
+      aiResponse.riskLevel === "moderate" && aiResponse.concerns[0]?.includes("System was unable");
+    const source = isFallback ? "fallback" : "gemini";
 
     // Log AI interaction (fire-and-forget, never blocks response)
     logAIInteractionAsync({
@@ -103,11 +107,11 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({
       aiResult: source === "gemini" ? aiResponse : undefined,
-      explanation: source === "fallback" ? aiResponse.explanation : undefined,
+      explanation: isFallback ? aiResponse.explanation : undefined,
       source,
       disclaimer:
         source === "fallback"
-          ? "This report was generated without AI. Connect a Gemini API key for personalized assessments."
+          ? "AI assessment unavailable — using rule-based compatibility instead. Add valid Gemini API keys to enable AI-powered reports."
           : undefined,
     });
   } catch (error) {

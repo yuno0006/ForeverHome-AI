@@ -50,7 +50,45 @@ export const demoCats: Cat[] = [
     idealHome: "A calm, quiet household with patient humans who understand that trust takes time. Perfect for a single person or couple who work from home. No young children. May do well with another calm, non-dominant cat. Needs a designated 'safe space' where he can retreat when overwhelmed.",
     adoptionFee: 75,
     microchipped: true,
-    vaccinated: true
+    vaccinated: true,
+    quizQuestions: [
+      {
+        id: "barnaby_q1",
+        question: (name: string) => `How would you describe the noise level in your home?`,
+        options: [
+          { value: "quiet", label: "🔇 Very quiet — peaceful sanctuary" },
+          { value: "moderate", label: "🏠 Moderate — some activity but calm" },
+          { value: "lively", label: "🎉 Lively — kids, guests, activity" },
+        ],
+      },
+      {
+        id: "barnaby_q2",
+        question: (name: string) => `Do you have or plan to have young children at home?`,
+        options: [
+          { value: "no-kids", label: "👤 No children — adult-only home" },
+          { value: "older-kids", label: "🧒 Teenagers only" },
+          { value: "young-kids", label: "👶 Young children at home" },
+        ],
+      },
+      {
+        id: "barnaby_q3",
+        question: (name: string) => `How important is it that ${name} is immediately affectionate?`,
+        options: [
+          { value: "patience", label: "⏳ I'm patient — trust takes time" },
+          { value: "gradual", label: "🤝 Gradual bonding is fine" },
+          { value: "instant", label: "❤️ I want instant cuddles" },
+        ],
+      },
+      {
+        id: "barnaby_q4",
+        question: (name: string) => `What does your daily routine look like?`,
+        options: [
+          { value: "predictable", label: "📅 Very predictable — same schedule daily" },
+          { value: "somewhat", label: "🔄 Somewhat regular with minor variations" },
+          { value: "unpredictable", label: "🎢 Unpredictable — every day is different" },
+        ],
+      },
+    ],
   },
   {
     id: "luna",
@@ -101,7 +139,45 @@ export const demoCats: Cat[] = [
     idealHome: "An active household looking for a social companion. Great with children of any age, other cats, and cat-friendly dogs. Perfect for first-time cat owners who want an easy, rewarding adoption experience. Will thrive in a home where she's included in daily activities.",
     adoptionFee: 100,
     microchipped: true,
-    vaccinated: true
+    vaccinated: true,
+    quizQuestions: [
+      {
+        id: "luna_q1",
+        question: (name: string) => `Who else lives in your household?`,
+        options: [
+          { value: "family+kids", label: "👨‍👩‍👧‍👦 Family with children" },
+          { value: "other-pets", label: "🐕🐱 Home with other pets" },
+          { value: "solo", label: "👤 Just me — solo household" },
+        ],
+      },
+      {
+        id: "luna_q2",
+        question: (name: string) => `How would you describe your home's daily activity level?`,
+        options: [
+          { value: "busy", label: "🏃 Busy — people coming and going" },
+          { value: "moderate", label: "🚶 Moderate — steady but not chaotic" },
+          { value: "quiet", label: "🧘 Quiet and calm most days" },
+        ],
+      },
+      {
+        id: "luna_q3",
+        question: (name: string) => `How do you feel about a cat who follows you everywhere?`,
+        options: [
+          { value: "love-it", label: "😍 I'd love a constant companion!" },
+          { value: "fine", label: "👍 That sounds fine" },
+          { value: "alone-time", label: "🤚 I prefer some personal space" },
+        ],
+      },
+      {
+        id: "luna_q4",
+        question: (name: string) => `What's your experience level with cats?`,
+        options: [
+          { value: "experienced", label: "😺 Experienced cat owner" },
+          { value: "first-time", label: "🐱 First-time cat owner" },
+          { value: "some", label: "📘 Some experience with cats" },
+        ],
+      },
+    ],
   },
   {
     id: "milo",
@@ -152,7 +228,45 @@ export const demoCats: Cat[] = [
     idealHome: "Active individuals or families who can provide 30+ minutes of interactive play daily. Needs cat trees, climbing shelves, or a 'catio'. Will do well with another playful cat as a companion. Not recommended for those seeking a calm, low-energy pet. Previous cat experience helpful but not required.",
     adoptionFee: 125,
     microchipped: true,
-    vaccinated: true
+    vaccinated: true,
+    quizQuestions: [
+      {
+        id: "milo_q1",
+        question: (name: string) => `How much daily interactive playtime can you provide for ${name}?`,
+        options: [
+          { value: "30plus", label: "⚡ 30+ minutes of active play" },
+          { value: "15min", label: "🎯 10-15 minutes when I can" },
+          { value: "minimal", label: "🐾 A few minutes here and there" },
+        ],
+      },
+      {
+        id: "milo_q2",
+        question: (name: string) => `Does your home have vertical space (cat trees, shelves)?`,
+        options: [
+          { value: "yes", label: "🏔️ Yes — cat trees, shelves, climbing spots" },
+          { value: "will-add", label: "🛠️ Not yet, but willing to set up" },
+          { value: "no", label: "🏠 No — mostly floor-level living" },
+        ],
+      },
+      {
+        id: "milo_q3",
+        question: (name: string) => `How would you handle a cat that gets destructive when bored?`,
+        options: [
+          { value: "more-play", label: "🎾 Increase playtime and enrichment" },
+          { value: "puzzles", label: "🧩 Add puzzle feeders and toys" },
+          { value: "frustrated", label: "😤 I'd find it challenging" },
+        ],
+      },
+      {
+        id: "milo_q4",
+        question: (name: string) => `Are you looking for a calm lap cat or an energetic companion?`,
+        options: [
+          { value: "energetic", label: "🐆 Energetic — bring on the zoomies!" },
+          { value: "both", label: "⚖️ A mix of play and cuddles" },
+          { value: "calm", label: "🛋️ Calm and low-key" },
+        ],
+      },
+    ],
   },
   {
     id: "shadow",
@@ -203,7 +317,45 @@ export const demoCats: Cat[] = [
     idealHome: "A calm, quiet home with someone who appreciates the quiet companionship of a senior cat. No dogs, and children should be teenagers or older. Needs easy access to litter boxes (low-sided) and soft, accessible sleeping spots. Someone willing to give joint supplements daily and monitor for any health changes. Previous senior cat experience a plus.",
     adoptionFee: 50,
     microchipped: true,
-    vaccinated: true
+    vaccinated: true,
+    quizQuestions: [
+      {
+        id: "shadow_q1",
+        question: (name: string) => `Are you comfortable providing daily supplements or medication for ${name}?`,
+        options: [
+          { value: "yes", label: "💊 Yes — happy to provide daily care" },
+          { value: "willing", label: "🤝 Willing to learn with vet guidance" },
+          { value: "no", label: "😕 Prefer a cat with no medical needs" },
+        ],
+      },
+      {
+        id: "shadow_q2",
+        question: (name: string) => `How do you feel about adopting a senior cat?`,
+        options: [
+          { value: "love-seniors", label: "❤️ I love senior cats — they deserve the best" },
+          { value: "open", label: "🤔 Open to it, want to learn more" },
+          { value: "prefer-younger", label: "🐱 I'd prefer a younger cat" },
+        ],
+      },
+      {
+        id: "shadow_q3",
+        question: (name: string) => `Can you provide easy-access spaces (low litter boxes, no high jumps needed)?`,
+        options: [
+          { value: "yes", label: "✅ Yes — my home is accessible" },
+          { value: "can-adapt", label: "🔧 I can make adjustments" },
+          { value: "no", label: "🏠 My home has lots of stairs/levels" },
+        ],
+      },
+      {
+        id: "shadow_q4",
+        question: (name: string) => `What kind of daily routine can you offer ${name}?`,
+        options: [
+          { value: "consistent", label: "📅 Very consistent — same schedule daily" },
+          { value: "mostly", label: "🔄 Mostly regular, some flexibility" },
+          { value: "unpredictable", label: "🎢 Unpredictable schedule" },
+        ],
+      },
+    ],
   },
   {
     id: "pepper",
@@ -254,7 +406,45 @@ export const demoCats: Cat[] = [
     idealHome: "An active home with plenty of vertical space (cat trees, shelves). Great with kids, other cats, and cat-friendly dogs. Needs interactive play sessions and mental enrichment daily. Perfect for someone who wants an entertaining, engaging companion who will keep them on their toes. Experienced cat owners preferred but enthusiastic beginners welcome.",
     adoptionFee: 125,
     microchipped: true,
-    vaccinated: true
+    vaccinated: true,
+    quizQuestions: [
+      {
+        id: "pepper_q1",
+        question: (name: string) => `How much enrichment can you provide (puzzles, toys, play)?`,
+        options: [
+          { value: "lots", label: "🧩 Lots — puzzle feeders, varied toys, daily play" },
+          { value: "some", label: "🎯 Some — a few toys and occasional play" },
+          { value: "minimal", label: "🐾 Basic — food, water, and a scratch post" },
+        ],
+      },
+      {
+        id: "pepper_q2",
+        question: (name: string) => `Do you have other pets at home?`,
+        options: [
+          { value: "yes-cats", label: "🐱 Yes — other cats" },
+          { value: "yes-dogs", label: "🐕 Yes — dogs" },
+          { value: "no", label: "👤 No — they'd be the only pet" },
+        ],
+      },
+      {
+        id: "pepper_q3",
+        question: (name: string) => `How would you handle a cat who needs constant mental stimulation?`,
+        options: [
+          { value: "excited", label: "🤩 Excited — I love an interactive cat!" },
+          { value: "try-best", label: "👍 I'll do my best with enrichment" },
+          { value: "overwhelming", label: "😰 That sounds overwhelming" },
+        ],
+      },
+      {
+        id: "pepper_q4",
+        question: (name: string) => `What's your home setup for an active climber?`,
+        options: [
+          { value: "cat-paradise", label: "🏔️ Cat trees, shelves, window perches galore" },
+          { value: "some-setup", label: "🪜 A cat tree and some climbing spots" },
+          { value: "no-setup", label: "🏠 No climbing structures yet" },
+        ],
+      },
+    ],
   },
   {
     id: "mochi",
@@ -305,7 +495,45 @@ export const demoCats: Cat[] = [
     idealHome: "An indoor-only home (required for FIV+ cats) with someone educated about or willing to learn about FIV. Can live with other FIV+ cats, or as an only cat. No dogs. Great with gentle children. Needs regular vet check-ups (annually at minimum). Previous FIV+ cat experience a plus but not required—we'll provide all the education needed!",
     adoptionFee: 50,
     microchipped: true,
-    vaccinated: true
+    vaccinated: true,
+    quizQuestions: [
+      {
+        id: "mochi_q1",
+        question: (name: string) => `Are you comfortable adopting an FIV+ cat like ${name}?`,
+        options: [
+          { value: "yes-informed", label: "💚 Yes — I understand FIV+ cats live normal lives" },
+          { value: "learning", label: "📚 I'd like to learn more about FIV" },
+          { value: "unsure", label: "🤔 I'm unsure — need more information" },
+        ],
+      },
+      {
+        id: "mochi_q2",
+        question: (name: string) => `Can you commit to keeping ${name} as an indoor-only cat?`,
+        options: [
+          { value: "yes", label: "🏠 Absolutely — indoor-only is best" },
+          { value: "mostly", label: "🚪 Mostly indoor, supervised outdoor time" },
+          { value: "outdoor", label: "🌳 I'd prefer a cat with outdoor access" },
+        ],
+      },
+      {
+        id: "mochi_q3",
+        question: (name: string) => `How important is regular vet care to you?`,
+        options: [
+          { value: "priority", label: "🏥 Top priority — regular check-ups always" },
+          { value: "when-needed", label: "🩺 Vet visits when something seems wrong" },
+          { value: "minimal", label: "📅 Only for emergencies" },
+        ],
+      },
+      {
+        id: "mochi_q4",
+        question: (name: string) => `Do you have other cats at home?`,
+        options: [
+          { value: "no", label: "👤 No — they'd be the only cat" },
+          { value: "fiv-cat", label: "🐱 Yes — another FIV+ cat" },
+          { value: "non-fiv", label: "😺 Yes — non-FIV cats" },
+        ],
+      },
+    ],
   },
   {
     id: "cleo",
@@ -356,7 +584,45 @@ export const demoCats: Cat[] = [
     idealHome: "An active household with experienced cat owners. Needs vertical space and room to run. No young children (her speed can be overwhelming). May do well with another active cat for play. Someone who appreciates an independent but loving companion and won't be offended when she wants alone time.",
     adoptionFee: 150,
     microchipped: true,
-    vaccinated: true
+    vaccinated: true,
+    quizQuestions: [
+      {
+        id: "cleo_q1",
+        question: (name: string) => `Do you have space for a fast, athletic cat like ${name} to run?`,
+        options: [
+          { value: "yes", label: "🏃 Yes — long hallways or open spaces" },
+          { value: "some", label: "🚶 Some space — apartment with room to zoom" },
+          { value: "small", label: "🏠 Small/cozy space" },
+        ],
+      },
+      {
+        id: "cleo_q2",
+        question: (name: string) => `How do you feel about a cat who values their independence?`,
+        options: [
+          { value: "respect", label: "🐱 I respect that — affection on their terms" },
+          { value: "fine", label: "👍 Fine — I don't need a lap cat" },
+          { value: "want-cuddly", label: "🤗 I really want a cuddly lap cat" },
+        ],
+      },
+      {
+        id: "cleo_q3",
+        question: (name: string) => `Do you have young children at home?`,
+        options: [
+          { value: "no", label: "👤 No children or only teenagers" },
+          { value: "older", label: "🧒 Children over 10 years old" },
+          { value: "young", label: "👶 Young children under 10" },
+        ],
+      },
+      {
+        id: "cleo_q4",
+        question: (name: string) => `Can you provide daily interactive play sessions?`,
+        options: [
+          { value: "yes", label: "🎾 Yes — daily dedicated playtime" },
+          { value: "most-days", label: "📅 Most days — when I'm available" },
+          { value: "occasional", label: "🐾 Occasional — when there's time" },
+        ],
+      },
+    ],
   },
   {
     id: "oliver",
@@ -407,7 +673,45 @@ export const demoCats: Cat[] = [
     idealHome: "Almost any loving home! Great with children of all ages, other cats, and cat-friendly dogs. Perfect for families who want a social, involved companion. His size means he needs sturdy furniture and a decent-sized litter box. May need dental work in the future, so someone willing to provide ongoing care.",
     adoptionFee: 100,
     microchipped: true,
-    vaccinated: true
+    vaccinated: true,
+    quizQuestions: [
+      {
+        id: "oliver_q1",
+        question: (name: string) => `What's your household composition?`,
+        options: [
+          { value: "family", label: "👨‍👩‍👧‍👦 Family with children" },
+          { value: "couple", label: "💑 Couple or roommates" },
+          { value: "solo", label: "👤 Living alone" },
+        ],
+      },
+      {
+        id: "oliver_q2",
+        question: (name: string) => `Do you have space for a large cat like ${name} (16 lbs)?`,
+        options: [
+          { value: "plenty", label: "🏠 Plenty of space — big house/apartment" },
+          { value: "enough", label: "📦 Enough room — cozy but comfortable" },
+          { value: "small", label: "🏢 Small studio or shared space" },
+        ],
+      },
+      {
+        id: "oliver_q3",
+        question: (name: string) => `How do you feel about a cat who acts more like a dog?`,
+        options: [
+          { value: "love-it", label: "🐕‍🦺 I'd love a dog-like cat!" },
+          { value: "fine", label: "👍 Sounds interesting" },
+          { value: "prefer-cat", label: "😺 I prefer classic cat behavior" },
+        ],
+      },
+      {
+        id: "oliver_q4",
+        question: (name: string) => `Can you commit to potential future dental care for ${name}?`,
+        options: [
+          { value: "yes", label: "🦷 Yes — I'm prepared for ongoing care" },
+          { value: "willing", label: "💰 Willing if needed within budget" },
+          { value: "concerned", label: "🤔 Concerned about veterinary costs" },
+        ],
+      },
+    ],
   },
   {
     id: "bella",
@@ -458,7 +762,45 @@ export const demoCats: Cat[] = [
     idealHome: "A home where she can be the only cat (required). Great with children who can respect her boundaries. Unknown with dogs. Perfect for someone who wants a deeply bonded, interactive relationship with their cat. Should be an indoor-only home. Someone who appreciates (or doesn't mind) a chatty cat!",
     adoptionFee: 125,
     microchipped: true,
-    vaccinated: true
+    vaccinated: true,
+    quizQuestions: [
+      {
+        id: "bella_q1",
+        question: (name: string) => `Do you have other cats at home?`,
+        options: [
+          { value: "no", label: "👤 No — they'd be the only cat" },
+          { value: "yes", label: "🐱 Yes — I have other cats" },
+          { value: "planning", label: "🤔 Not now, but might in the future" },
+        ],
+      },
+      {
+        id: "bella_q2",
+        question: (name: string) => `How do you feel about a very vocal, chatty cat?`,
+        options: [
+          { value: "love-it", label: "🗣️ I'd love conversations with my cat!" },
+          { value: "fine", label: "👍 A chatty cat sounds fun" },
+          { value: "quiet-please", label: "🤫 I prefer a quiet cat" },
+        ],
+      },
+      {
+        id: "bella_q3",
+        question: (name: string) => `Can you handle a cat who wants to be with you constantly?`,
+        options: [
+          { value: "yes", label: "❤️ Yes — I want a velcro cat!" },
+          { value: "mostly", label: "👋 Mostly — I enjoy companionship" },
+          { value: "need-space", label: "🤚 I need personal space sometimes" },
+        ],
+      },
+      {
+        id: "bella_q4",
+        question: (name: string) => `What's your tolerance for a cat who demands attention?`,
+        options: [
+          { value: "high", label: "🤩 I love an attention-seeking cat!" },
+          { value: "moderate", label: "😊 Moderate — as long as it's not constant" },
+          { value: "low", label: "😰 I prefer an independent cat" },
+        ],
+      },
+    ],
   }
 ];
 

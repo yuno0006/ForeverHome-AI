@@ -7,8 +7,14 @@
 //   Listing AI  (counselor, questions, general assistant): 3 models × 2 keys = 6 parallel
 //   Chat AI     (14-day coach): 2 models × 2 keys = 4 parallel
 
-const GEMINI_KEY1 = process.env.GEMINI_API_KEY;
-const GEMINI_KEY2 = process.env.GEMINI_API_KEY_2;
+function getGeminiKeys(): string[] {
+  const keys: string[] = [];
+  const key1 = process.env.GEMINI_API_KEY;
+  const key2 = process.env.GEMINI_API_KEY_2;
+  if (key1) keys.push(key1);
+  if (key2) keys.push(key2);
+  return keys;
+}
 
 // ─── Rate-limit cache ───────────────────────────────────
 
@@ -127,10 +133,7 @@ async function callModel(
 // ─── callAI (parallel race: all models × all keys fire simultaneously) ──
 
 function getActiveKeys(): string[] {
-  const keys: string[] = [];
-  if (GEMINI_KEY1) keys.push(GEMINI_KEY1);
-  if (GEMINI_KEY2) keys.push(GEMINI_KEY2);
-  return keys;
+  return getGeminiKeys();
 }
 
 type AIPurpose = "listing" | "chat";
