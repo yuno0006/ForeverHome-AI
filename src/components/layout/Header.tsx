@@ -141,29 +141,33 @@ export default function Header() {
                   </span>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56 rounded-2xl border-2 border-cocoa/15 shadow-[4px_4px_0px_0px_rgba(42,29,20,1)] p-2 bg-cream">
-                  <DropdownMenuItem asChild className="rounded-xl cursor-pointer hover:bg-cocoa/5 font-semibold text-cocoa focus:bg-cocoa/5">
-                    <Link href="/profile" className="flex items-center w-full">
-                      <User className="mr-2 h-4 w-4" />
-                      Profile
-                    </Link>
+                  <DropdownMenuItem
+                    render={<Link href="/profile" className="flex items-center w-full" />}
+                    className="rounded-xl cursor-pointer hover:bg-cocoa/5 font-semibold text-cocoa focus-visible:bg-cocoa/5"
+                  >
+                    <User className="mr-2 h-4 w-4" />
+                    Profile
                   </DropdownMenuItem>
-                  <DropdownMenuItem asChild className="rounded-xl cursor-pointer hover:bg-cocoa/5 font-semibold text-cocoa focus:bg-cocoa/5">
-                    <Link href={getDashboardHref()} className="flex items-center w-full">
-                      <LayoutDashboard className="mr-2 h-4 w-4" />
-                      {role === "shelter_staff" ? "Shelter Hub" : "Dashboard"}
-                    </Link>
+                  <DropdownMenuItem
+                    render={<Link href={getDashboardHref()} className="flex items-center w-full" />}
+                    className="rounded-xl cursor-pointer hover:bg-cocoa/5 font-semibold text-cocoa focus-visible:bg-cocoa/5"
+                  >
+                    <LayoutDashboard className="mr-2 h-4 w-4" />
+                    {role === "shelter_staff" ? "Shelter Hub" : "Dashboard"}
                   </DropdownMenuItem>
-                  <DropdownMenuItem asChild className="rounded-xl cursor-pointer hover:bg-cocoa/5 font-semibold text-cocoa focus:bg-cocoa/5">
-                    <Link href="/saved" className="flex items-center w-full">
-                      <Bookmark className="mr-2 h-4 w-4" />
-                      Wishlist
-                    </Link>
+                  <DropdownMenuItem
+                    render={<Link href="/saved" className="flex items-center w-full" />}
+                    className="rounded-xl cursor-pointer hover:bg-cocoa/5 font-semibold text-cocoa focus-visible:bg-cocoa/5"
+                  >
+                    <Bookmark className="mr-2 h-4 w-4" />
+                    Wishlist
                   </DropdownMenuItem>
-                  <DropdownMenuItem asChild className="rounded-xl cursor-pointer hover:bg-cocoa/5 font-semibold text-cocoa focus:bg-cocoa/5">
-                    <Link href="/about" className="flex items-center w-full">
-                      <Info className="mr-2 h-4 w-4" />
-                      About
-                    </Link>
+                  <DropdownMenuItem
+                    render={<Link href="/about" className="flex items-center w-full" />}
+                    className="rounded-xl cursor-pointer hover:bg-cocoa/5 font-semibold text-cocoa focus-visible:bg-cocoa/5"
+                  >
+                    <Info className="mr-2 h-4 w-4" />
+                    About
                   </DropdownMenuItem>
                   <DropdownMenuSeparator className="bg-cocoa/10 my-1 h-[2px]" />
                   <DropdownMenuItem onClick={() => logout()} className="rounded-xl cursor-pointer hover:bg-coral/10 font-bold text-coral focus:bg-coral/10 focus:text-coral">
