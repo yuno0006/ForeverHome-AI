@@ -4,12 +4,24 @@
 // Strategy: ALL models × ALL keys fire simultaneously. First to respond with valid
 // data wins. This means the fastest model (regardless of name) always serves the user.
 // Two separate pools:
-//   Listing AI  (questions, general assistant):  4 models × 2 keys = 8 parallel RACE
-//   Chat AI     (14-day coach):                   2 models × 2 keys = 4 parallel RACE
+//   Listing AI  (questions, general assistant):  4 models × 2 keys = 8 parallel RACE (Promise.any)
+//   Chat AI     (14-day coach):                   2 models × 2 keys = 4 parallel RACE (Promise.any)
 //
 // EXCEPTION: The Adoption Counselor (compatibility report) uses SEQUENTIAL fallback.
-// Models are tried one-by-one in order — the first to return valid JSON wins.
-// This avoids burning free-tier credits unnecessarily on parallel calls.
+// Models are tried one-by-one — the first to return valid JSON wins. Each model
+// has an 18s deadline, with a 50s hard cap to stay within Vercel's 60s limit.
+
+// Boot-time key check
+(() => {
+  const k1 = process.env.GEMINI_API_KEY;
+  const k2 = process.env.GEMINI_API_KEY_2;
+  const count = [k1, k2].filter(Boolean).length;
+  console.log(`[gemini] Boot: ${count} API key(s) present${count === 0 ? " — ALL AI CALLS WILL FAIL" : ""}`);
+  if (count > 0) {
+    if (k1) console.log(`[gemini]   Key1: ...${k1.slice(-4)}`);
+    if (k2) console.log(`[gemini]   Key2: ...${k2.slice(-4)}`);
+  }
+})();
 
 function getGeminiKeys(): string[] {
   const keys: string[] = [];
@@ -101,7 +113,8 @@ async function callModel(
   prompt: string,
   image?: ImageInput
 ): Promise<{ text: string | null; status: number | null }> {
-  const TIMEOUT_MS = 20000; // 20s — keep well under Vercel's 60s function limit
+  const TIMEOUT_MS = 15000; // 15s — sequential calls need room within Vercel's 60s
+  const keyTail = apiKey.slice(-4); // last 4 chars for safe identification
   try {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), TIMEOUT_MS);
@@ -124,14 +137,24 @@ async function callModel(
     if (res.ok) {
       const data: GeminiResponse = await res.json();
       const text = data.candidates?.[0]?.content?.parts?.[0]?.text ?? null;
+      if (!text) {
+        console.warn(`[gemini] ${model} (key ...${keyTail}) returned 200 but no text — safety filter? empty candidates?`);
+      }
       return { text, status: res.status };
     }
+
+    // Log errors so we can debug model name / key validity issues
+    const body = await res.text().catch(() => "(unreadable)");
+    const preview = body.length > 200 ? body.slice(0, 200) + "…" : body;
+    console.error(`[gemini] ${model} (key ...${keyTail}) HTTP ${res.status}: ${preview}`);
 
     if (res.status === 429) {
       markRateLimited(model, apiKey);
     }
     return { text: null, status: res.status };
-  } catch {
+  } catch (err: unknown) {
+    const reason = err instanceof Error ? err.message : String(err);
+    console.error(`[gemini] ${model} (key ...${keyTail}) network/abort error: ${reason}`);
     return { text: null, status: null };
   }
 }
@@ -251,34 +274,54 @@ async function sequentialModels(
   prompt: string,
   image?: ImageInput,
 ): Promise<string | null> {
-  for (const model of models) {
-    if (isRateLimited(model, keys[0]) && isRateLimited(model, keys[1] || "")) continue;
+  const SEQUENTIAL_START = Date.now();
+  const PER_MODEL_DEADLINE_MS = 18_000; // per-model hard cap (generous but bounded)
 
-    // For this one model, race both keys
+  for (const model of models) {
+    // Safety: abort if we're close to Vercel's 60s function timeout
+    if (Date.now() - SEQUENTIAL_START > 50_000) {
+      console.error("[gemini] sequentialModels: aborting after 50s (near Vercel 60s limit)");
+      return null;
+    }
+
+    if (isRateLimited(model, keys[0]) && isRateLimited(model, keys[1] || "")) {
+      console.warn(`[gemini] Skipping ${model} (all keys rate-limited)`);
+      continue;
+    }
+
     const validCombos = keys.filter(k => !isRateLimited(model, k));
     if (validCombos.length === 0) continue;
 
     console.log(`[gemini] Trying ${model} (sequential, ${validCombos.length} key(s))...`);
     const startTime = Date.now();
 
-    // Promise.any: first key to return valid text wins. Failed keys reject.
+    // Wrap Promise.any with a per-model deadline so a slow model doesn't eat
+    // all 60s of Vercel time. If the model hasn't responded in 18s, move on.
     try {
-      const result = await Promise.any(
-        validCombos.map(async (key) => {
-          const { text, status } = await callModel(model, key, prompt, image);
-          if (text) return { text, winner: true };
-          if (status === 429) { /* already marked */ }
-          throw new Error(`Key ${key} failed or returned no text`);
-        })
-      );
+      const result = await Promise.race([
+        Promise.any(
+          validCombos.map(async (key) => {
+            const { text, status } = await callModel(model, key, prompt, image);
+            if (text) return { text, winner: true };
+            if (status === 429) { /* already marked */ }
+            throw new Error(`Key ...${key.slice(-4)} failed or returned no text (status=${status})`);
+          })
+        ),
+        new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error(`Timeout: ${model} exceeded ${PER_MODEL_DEADLINE_MS}ms`)), PER_MODEL_DEADLINE_MS)
+        ),
+      ]);
+
       if (result.text) {
         console.log(`[gemini] 🏆 Winner (sequential): ${model} (${Date.now() - startTime}ms)`);
         return result.text;
       }
-    } catch (err) {
-      console.warn(`[gemini] ${model} failed, trying next model...`);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      console.warn(`[gemini] ${model} failed (${Date.now() - startTime}ms): ${msg}`);
     }
   }
+  console.error(`[gemini] sequentialModels: all ${models.length} models exhausted after ${Date.now() - SEQUENTIAL_START}ms`);
   return null;
 }
 
@@ -377,9 +420,21 @@ DO NOT output any text before or after the JSON.`;
   // Counselor uses SEQUENTIAL fallback: try one model at a time.
   // This avoids burning free credits on parallel calls for a one-time report.
   const keys = getActiveKeys();
-  if (keys.length === 0) return fallbackCounselorResponse(catName);
+  if (keys.length === 0) {
+    console.error("[gemini] counselor: NO API keys configured — cannot call any model");
+    return fallbackCounselorResponse(catName);
+  }
+  console.log(`[gemini] counselor: starting with ${keys.length} key(s), ${LISTING_MODELS.length} models`);
+
   const result = await sequentialModels(LISTING_MODELS, keys, prompt);
-  if (!result) return fallbackCounselorResponse(catName);
+  if (!result) {
+    console.error("[gemini] counselor: ALL models returned null — using fallback response");
+    return fallbackCounselorResponse(catName);
+  }
+
+  // Log raw response preview for debugging JSON parse failures
+  const rawPreview = result.length > 300 ? result.slice(0, 300) + "…" : result;
+  console.log(`[gemini] counselor: raw response (${result.length} chars): ${rawPreview}`);
 
   try {
     const jsonMatch = result.match(/\{[\s\S]*\}/);
@@ -395,7 +450,8 @@ DO NOT output any text before or after the JSON.`;
       explanation: parsed.explanation || fallbackCounselorResponse(catName).explanation
     };
   } catch (e) {
-    console.error("Failed to parse counselor JSON:", e);
+    console.error("[gemini] counselor: JSON parse failed —", e);
+    console.error("[gemini] counselor: failed content:", rawPreview);
     return fallbackCounselorResponse(catName);
   }
 }

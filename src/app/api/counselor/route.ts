@@ -91,6 +91,8 @@ export async function POST(req: NextRequest) {
           : String(scenarioQA))
       : undefined;
 
+    console.log(`[counselor] Request: cat="${catName}", catProfile=${catProfileStr.length} chars, adopterProfile=${adopterProfileStr.length} chars, scenarioQA=${scenarioQAText ? scenarioQAText.length + " chars" : "none"}`);
+
     // Try Gemini AI first, fall back to deterministic
     const aiResponse = await generateCounselorExplanation(
       catName,
@@ -106,6 +108,8 @@ export async function POST(req: NextRequest) {
       aiResponse.explanation.includes("couldn't run our full") ||
       (aiResponse.concerns.length === 1 && aiResponse.concerns[0] === FALLBACK_CONCERN);
     const source = isFallback ? "fallback" : "gemini";
+
+    console.log(`[counselor] Result: source=${source}, riskLevel=${aiResponse.riskLevel}, concerns=${aiResponse.concerns.length}, strengths=${aiResponse.strengths.length}, protectiveFactors=${aiResponse.protectiveFactors.length}`);
 
     // Log AI interaction (fire-and-forget, never blocks response)
     logAIInteractionAsync({
